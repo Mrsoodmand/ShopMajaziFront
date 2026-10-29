@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+
+# env and local files
+.env
+.env*.local
+.DS_Store
+
+# design tool caches
+.impeccable/hook.cache.json
+.impeccable/live/

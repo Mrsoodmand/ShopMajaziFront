@@ -1,0 +1,222 @@
+/* Entrance motion for the "How to use" steps (see HowToSteps.tsx).
+   Content is visible by default: nothing is hidden until JS arms the list (data-state="armed"), and it plays when the
+   list scrolls into view (data-state="play"). Reduced motion never arms, so the steps simply show. */
+
+.root {
+  --dir: 1;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --accent: #047857; /* emerald-700 */
+  --accent-soft: #a7f3d0; /* emerald-200 */
+  --gap: 1rem;
+}
+:global([dir="rtl"]) .root { --dir: -1; }
+:global(.dark) .root { --accent: #34d399; --accent-soft: #065f46; }
+
+.card { --i: 0; }
+
+/* Elements only some variants use stay out of sight by default. */
+.bar, .ring, .track, .meter { display: none; }
+
+/* ---------- A · Cascade: cards rise in reading order ---------- */
+.root[data-v="a"][data-state="armed"] .card { opacity: 0; }
+.root[data-v="a"][data-state="play"] .card { animation: rise 700ms var(--ease) calc(var(--i) * 90ms) both; }
+
+/* ---------- B · Number first: empty cards, the numbers count in, then the words ---------- */
+.root[data-v="b"][data-state="armed"] :is(.badge, .body) { opacity: 0; }
+.root[data-v="b"][data-state="play"] .badge { animation: pop 520ms var(--ease) calc(var(--i) * 150ms) both; }
+.root[data-v="b"][data-state="play"] .body { animation: slide-in 560ms var(--ease) calc(var(--i) * 150ms + 200ms) both; }
+
+/* ---------- C · Progress line: a line runs across the tops, each number fills as it passes ---------- */
+.root[data-v="c"] .bar {
+  display: block; position: absolute; top: -1px; inset-inline: 1.5rem; height: 2px; border-radius: 2px;
+  background: var(--accent); transform-origin: left;
+}
+:global([dir="rtl"]) .root[data-v="c"] .bar { transform-origin: right; }
+.root[data-v="c"][data-state="armed"] .bar { transform: scaleX(0); }
+.root[data-v="c"][data-state="armed"] .badge { animation: none; background: transparent; color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.root[data-v="c"][data-state="play"] .bar { animation: grow 460ms linear calc(var(--i) * 460ms) both; }
+.root[data-v="c"][data-state="play"] .badge { animation: fill 320ms var(--ease) calc(var(--i) * 460ms + 260ms) both; }
+
+/* ---------- D · Wipe: each card is unveiled in reading direction ---------- */
+.root[data-v="d"][data-state="armed"] .card { clip-path: inset(0 100% 0 0 round 1.5rem); }
+:global([dir="rtl"]) .root[data-v="d"][data-state="armed"] .card { clip-path: inset(0 0 0 100% round 1.5rem); }
+.root[data-v="d"][data-state="play"] .card { animation: wipe-ltr 720ms var(--ease) calc(var(--i) * 130ms) both; }
+:global([dir="rtl"]) .root[data-v="d"][data-state="play"] .card { animation-name: wipe-rtl; }
+.root[data-v="d"][data-state="play"] .body { animation: slide-in 600ms var(--ease) calc(var(--i) * 130ms + 180ms) both; }
+
+/* ---------- E · Focus: cards come into focus one by one. Fast, and it lets go of the card when done (backwards
+   fill) so the hover lift still works. ---------- */
+.root[data-v="e"][data-state="armed"] .card { opacity: 0; }
+.root[data-v="e"][data-state="play"] .card { animation: focus 420ms var(--ease) calc(var(--i) * 60ms) backwards; }
+
+/* ---------- F · Flip: cards swing down like pages ---------- */
+.root[data-v="f"] .list { perspective: 1100px; }
+.root[data-v="f"][data-state="armed"] .card { opacity: 0; }
+.root[data-v="f"][data-state="play"] .card { transform-origin: top center; animation: flip 780ms var(--ease) calc(var(--i) * 120ms) both; }
+
+/* ---------- G · Spotlight: after a quick entrance, one step at a time is lit, with a timer bar ---------- */
+.root[data-v="g"][data-state="armed"] .card { opacity: 0; }
+.root[data-v="g"][data-state="play"] .card { animation: rise 600ms var(--ease) calc(var(--i) * 80ms) both; }
+.root[data-v="g"] .card { transition: transform 450ms var(--ease), border-color 300ms ease, box-shadow 450ms var(--ease); }
+.root[data-v="g"] .card[data-on] { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 18px 32px -18px rgb(4 120 87 / 0.45); }
+.root[data-v="g"] .badge { transition: transform 450ms var(--ease); }
+.root[data-v="g"] .card[data-on] .badge { transform: scale(1.08); }
+.root[data-v="g"] .meter {
+  display: block; position: absolute; bottom: -1px; inset-inline: 1.5rem; height: 2px; border-radius: 2px;
+  background: var(--accent); transform-origin: left; transform: scaleX(0);
+}
+:global([dir="rtl"]) .root[data-v="g"] .meter { transform-origin: right; }
+.root[data-v="g"] .card[data-on] .meter[data-run] { animation: grow var(--cycle, 2600ms) linear both; }
+
+/* ---------- H · Ring: a ring draws round each number, then it fills ---------- */
+.root[data-v="h"] .ring { display: block; position: absolute; inset: -5px; width: calc(100% + 10px); height: calc(100% + 10px); color: var(--accent); pointer-events: none; opacity: 0; }
+.root[data-v="h"][data-state="armed"] .badge { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent-soft); }
+.root[data-v="h"][data-state="play"] .ring { animation: ring 900ms var(--ease) calc(var(--i) * 360ms) both; }
+.root[data-v="h"][data-state="play"] .ring circle { animation: draw 560ms cubic-bezier(0.65, 0, 0.35, 1) calc(var(--i) * 360ms) both; }
+.root[data-v="h"][data-state="play"] .badge { animation: fill 300ms var(--ease) calc(var(--i) * 360ms + 480ms) both; }
+
+/* ---------- I · Travelling dot: a dot walks the line from number to number, each one pings as it arrives ---------- */
+/* Wide screens only: the line needs the steps in one row. Smaller screens get the cascade. */
+@media (min-width: 1024px) {
+  .root[data-v="i"] .track {
+    display: block; position: absolute; z-index: 1; pointer-events: none; top: calc(1.5rem + 20px - 1px); height: 2px;
+    inset-inline-start: calc(1.5rem + 20px);
+    inset-inline-end: calc((100% - (var(--n) - 1) * var(--gap)) / var(--n) - 1.5rem - 20px);
+    background-image: linear-gradient(to right, var(--accent-soft) 50%, transparent 0);
+    background-size: 8px 2px;
+  }
+  .root[data-v="i"] .walker { position: absolute; inset: 0; }
+  .root[data-v="i"] .dot {
+    position: absolute; top: 50%; inset-inline-start: 0; width: 12px; height: 12px; margin: -6px; border-radius: 999px;
+    background: var(--accent); box-shadow: 0 0 0 4px rgb(16 185 129 / 0.18), 0 2px 8px rgb(4 120 87 / 0.4);
+    opacity: 0;
+  }
+  .root[data-v="i"][data-state="play"] .walker { animation: walk-4 var(--cycle) cubic-bezier(0.65, 0, 0.35, 1) 500ms infinite; }
+  .root[data-v="i"][data-n="3"][data-state="play"] .walker { animation-name: walk-3; }
+  .root[data-v="i"][data-state="play"] .dot { animation: dot-life var(--cycle) linear 500ms infinite; }
+  .root[data-v="i"] .badge { position: relative; z-index: 2; } /* the dot passes under the numbers */
+  .root[data-v="i"] .badge::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 2px var(--accent); opacity: 0;
+  }
+  .root[data-v="i"][data-state="play"] .badge::after {
+    animation: ping var(--cycle) var(--ease) calc(500ms + var(--i) * var(--cycle) * 0.75 / (var(--n) - 1)) infinite;
+  }
+  .root[data-v="i"][data-paused] :is(.walker, .dot),
+  .root[data-v="i"][data-paused] .badge::after { animation-play-state: paused; }
+}
+@media (max-width: 1023.98px) {
+  .root[data-v="i"][data-state="armed"] .card { opacity: 0; }
+  .root[data-v="i"][data-state="play"] .card { animation: rise 700ms var(--ease) calc(var(--i) * 90ms) both; }
+}
+
+/* ---------- J · Deal: the steps sit stacked as one card, then deal out into their places ---------- */
+@media (min-width: 1024px) {
+  .root[data-v="j"] .card { z-index: calc(10 - var(--i)); }
+  .root[data-v="j"][data-state="armed"] .card { opacity: 0; }
+  .root[data-v="j"][data-state="play"] .card { animation: deal 900ms var(--ease) calc(350ms + var(--i) * 70ms) both; }
+  .root[data-v="j"][data-state="play"] .card:first-child { animation: rise 500ms var(--ease) both; }
+}
+@media (max-width: 1023.98px) {
+  .root[data-v="j"][data-state="armed"] .card { opacity: 0; }
+  .root[data-v="j"][data-state="play"] .card { animation: rise 700ms var(--ease) calc(var(--i) * 90ms) both; }
+}
+
+/* ---------- keyframes (each animates from a start state to the element's own resting style) ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(28px); } }
+@keyframes pop { from { opacity: 0; transform: scale(0.35); } 50% { opacity: 1; } }
+@keyframes slide-in { from { opacity: 0; transform: translateX(calc(var(--dir) * -14px)); } }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes fill { from { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); transform: scale(0.9); } }
+@keyframes wipe-ltr { from { clip-path: inset(0 100% 0 0 round 1.5rem); } to { clip-path: inset(0 0 0 0 round 1.5rem); } }
+@keyframes wipe-rtl { from { clip-path: inset(0 0 0 100% round 1.5rem); } to { clip-path: inset(0 0 0 0 round 1.5rem); } }
+@keyframes focus { from { opacity: 0; filter: blur(8px); transform: scale(0.97); } }
+@keyframes flip { from { opacity: 0; transform: rotateX(-78deg); } 40% { opacity: 1; } }
+@keyframes ring { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes ping {
+  0% { opacity: 0.9; transform: scale(1); }
+  16% { opacity: 0; transform: scale(1.9); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+@keyframes dot-life { 0% { opacity: 0; } 4% { opacity: 1; } 90% { opacity: 1; } 97%, 100% { opacity: 0; } }
+/* The walker moves by its own width (= the line's length) in reading direction, pausing at every number. */
+@keyframes walk-4 {
+  0%, 8% { transform: none; }
+  25%, 33% { transform: translateX(calc(var(--dir) * 100% / 3)); }
+  50%, 58% { transform: translateX(calc(var(--dir) * 200% / 3)); }
+  75%, 100% { transform: translateX(calc(var(--dir) * 100%)); }
+}
+@keyframes walk-3 {
+  0%, 12% { transform: none; }
+  37.5%, 50% { transform: translateX(calc(var(--dir) * 50%)); }
+  75%, 100% { transform: translateX(calc(var(--dir) * 100%)); }
+}
+@keyframes deal {
+  from {
+    opacity: 1;
+    transform: translateX(calc(var(--dir) * -1 * (100% + var(--gap)) * var(--i))) translateY(calc(var(--i) * 4px)) rotate(calc(var(--dir) * var(--i) * -2.5deg));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track { display: none !important; }
+}
+
+/* Comparison page only: shows a frame in Persian (the design pages themselves are English). */
+.fa, .fa :is(.font-sans, .font-display, button) { font-family: var(--font-iransans), ui-sans-serif, system-ui, sans-serif; letter-spacing: 0; }
+.fa :is(h2, h3) { line-height: 1.45; letter-spacing: 0; }
+.fa p { line-height: 1.75; letter-spacing: 0; }
+
+/* ==========  Card details (tone look), on top of the entrance. data-d on .root picks one.  ========== */
+/* --t: the page's strong tone (set inline from HowToSteps), lighter in dark theme. */
+.root { --t: var(--tone, #4f46e5); }
+:global(.dark) .root { --t: var(--tone-d, #a5b4fc); }
+.numMask { display: block; overflow: hidden; padding-block: 0.12em; margin-block: -0.12em; }
+.fill { transform-origin: left; }
+:global([dir="rtl"]) .fill { transform-origin: right; }
+.sheen { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.sheen::after {
+  content: ""; position: absolute; inset-block: 0; inset-inline-start: -70%; width: 70%; opacity: 0;
+  background: linear-gradient(105deg, transparent 15%, color-mix(in srgb, var(--t) 16%, transparent) 50%, transparent 85%);
+}
+:global(.dark) .sheen::after { background: linear-gradient(105deg, transparent 15%, color-mix(in srgb, var(--t) 12%, transparent) 50%, transparent 85%); }
+
+/* Fill · Roll · Sheen: the progress bars fill one after another as the cards land, step 1 first. */
+.root:is([data-d="fill"], [data-d="roll"], [data-d="sheen"])[data-state="armed"] .fill { transform: scaleX(0); }
+.root:is([data-d="fill"], [data-d="roll"], [data-d="sheen"])[data-state="play"] .fill {
+  animation: grow 520ms var(--ease) calc(280ms + var(--i) * 200ms) backwards;
+}
+/* Fill: each number lights up in the page colour as its bar fills, then settles back. */
+.root[data-d="fill"][data-state="play"] .num { animation: tint 1000ms ease calc(280ms + var(--i) * 200ms); }
+
+/* Roll: the numbers roll up into place from under their line. */
+.root[data-d="roll"][data-state="armed"] .num { transform: translateY(115%); }
+.root[data-d="roll"][data-state="play"] .num { animation: roll-up 620ms var(--ease) calc(160ms + var(--i) * 90ms) backwards; }
+
+/* Sheen: a soft band of the page colour passes over each card once, in reading order. */
+.root[data-d="sheen"][data-state="play"] .sheen::after { animation: sheen 900ms cubic-bezier(0.4, 0, 0.2, 1) calc(220ms + var(--i) * 150ms) both; }
+
+/* Relay: the arrows keep flowing towards the next step, one gap after another (loops while on screen). */
+.root[data-d="relay"][data-state="play"] .chev { animation: relay 2400ms ease-in-out calc(600ms + var(--i) * 360ms + var(--k) * 140ms) infinite; }
+
+/* Walk: one step at a time is lifted and outlined in the page colour, its number lights up, its bar refills over
+   its turn, and the arrows after it point on. Hover a step to hold it. */
+.root[data-d="walk"] .card { transition: translate 300ms var(--ease), transform 450ms var(--ease), box-shadow 450ms var(--ease); }
+.root[data-d="walk"] .card[data-on] {
+  transform: translateY(-6px);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--t) 70%, transparent), 0 22px 40px -22px color-mix(in srgb, var(--t) 60%, transparent);
+}
+.root[data-d="walk"] .card[data-on] .num { color: var(--t); }
+.root[data-d="walk"] .card[data-on] .fill[data-run] { animation: grow var(--cycle) linear both; }
+.root[data-d="walk"] .card[data-on] .chev { color: var(--t); animation: relay 1100ms ease-in-out calc(var(--k) * 150ms) infinite; }
+
+.root[data-paused] :is(.chev, .fill) { animation-play-state: paused; }
+
+@keyframes tint { 35%, 55% { color: var(--t); } }
+@keyframes roll-up { from { transform: translateY(115%); } }
+@keyframes sheen { from { opacity: 1; transform: none; } to { opacity: 1; transform: translateX(calc(var(--dir) * 260%)); } }
+@keyframes relay {
+  0%, 100% { opacity: 0.35; translate: 0 0; }
+  25% { opacity: 1; translate: calc(var(--dir) * 3px) 0; color: var(--t); }
+  50% { opacity: 0.35; translate: 0 0; }
+}

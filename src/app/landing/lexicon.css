@@ -1,0 +1,118 @@
+/* The ShopMajazi Lexicon: the shared world of the /landing pages.
+   Engraving black on uncoated stock. Colour lives only inside bordered plates; the one ink outside them is the
+   vermilion rubric, kept for the Look up action and the current-entry mark. Always light: it is a printed page. */
+
+.lx {
+  --paper: #ede7d9;
+  --paper-deep: #e3dbc8;
+  --paper-field: #f6f2e8;
+  --ink: #17140f;
+  --ink-2: #3a342b;
+  --ink-3: #574e42;
+  --rubric: #a92a1c;
+  --rubric-deep: #861f14;
+  --ring: #047857;
+
+  /* Plate inks (inside plates only). */
+  --vermilion: #c63a20;
+  --chrome: #e0a51c;
+  --emerald: #1e6a46;
+  --ultramarine: #27429a;
+  --madder: #a83a5a;
+  --sepia: #73482a;
+  --violet: #634a8e;
+
+  color-scheme: light;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-lexicon), "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.6;
+  font-variant-numeric: lining-nums;
+  caret-color: var(--rubric);
+  -webkit-font-smoothing: antialiased;
+}
+@media (min-width: 1024px) { .lx { font-size: 18px; } }
+
+.lx ::selection { background: var(--ink); color: var(--paper); }
+.lx a { text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+.lx :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 1px; }
+.lx * { scrollbar-color: var(--ink-3) var(--paper-deep); }
+
+/* Small capitals, set by hand: the face has no smcp. */
+.lx-caps { font-size: 0.74em; letter-spacing: 0.14em; text-transform: uppercase; }
+.lx-num { font-variant-numeric: lining-nums tabular-nums; }
+
+/* Rules. */
+.lx-rule-b { border-bottom: 1px solid var(--ink); }
+.lx-rule-t { border-top: 1px solid var(--ink); }
+.lx-double-b { border-bottom: 3px double var(--ink); }
+.lx-double-t { border-top: 3px double var(--ink); }
+
+/* The rubric button: a printed label in vermilion with a fine inner line, as on a title page. */
+.lx-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
+  min-height: 3.25rem; padding: 0.7rem 1.6rem;
+  background: var(--rubric); color: #fbf7ee;
+  border: 1px solid var(--rubric-deep);
+  box-shadow: inset 0 0 0 3px var(--rubric), inset 0 0 0 4px rgba(251, 247, 238, 0.55);
+  font-size: 1.125rem; line-height: 1.2; text-decoration: none; cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+.lx-btn:hover { background: var(--rubric-deep); box-shadow: inset 0 0 0 3px var(--rubric-deep), inset 0 0 0 4px rgba(251, 247, 238, 0.55); }
+.lx-btn:active { transform: translateY(1px); }
+
+/* The plain printed label: ink on paper inside a double rule. */
+.lx-btn-2 {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
+  min-height: 3.25rem; padding: 0.6rem 1.4rem;
+  background: transparent; color: var(--ink);
+  border: 3px double var(--ink);
+  font-size: 1.0625rem; line-height: 1.2; text-decoration: none; cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+.lx-btn-2:hover { background: var(--paper-deep); }
+
+/* A link that closes in a solid arrow. */
+.lx-see { color: var(--ink); text-decoration: underline; }
+.lx-see:hover { color: var(--rubric); }
+
+/* Fields: a white-ish well inside a double rule. */
+.lx-field {
+  width: 100%; min-height: 3.25rem; padding: 0.55rem 2.5rem 0.55rem 0.85rem;
+  background: var(--paper-field); color: var(--ink);
+  border: 3px double var(--ink-2); border-radius: 0;
+  font: inherit; font-size: 1.0625rem; line-height: 1.3;
+  appearance: none; -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position: calc(100% - 20px) 55%, calc(100% - 14px) 55%;
+  background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
+}
+.lx[dir="rtl"] .lx-field { background-position: 20px 55%, 14px 55%; padding-inline: 0.85rem 2.5rem; }
+.lx-field:hover { border-color: var(--ink); }
+
+/* Dot-leader listing rows: name ........ price. */
+.lx-leader { display: flex; align-items: baseline; gap: 0.4em; break-inside: avoid; }
+.lx-leader > .lx-dots {
+  flex: 1; min-width: 1.5em; height: 0.5em; align-self: baseline;
+  background-image: radial-gradient(circle, var(--ink-2) 0.95px, transparent 1.25px);
+  background-size: 0.42em 4px; background-repeat: repeat-x; background-position: 0 100%;
+}
+
+/* Listings flow in columns of a fixed measure, like a dictionary page: the measure sets the column count. */
+.lx-columns { columns: 16rem; column-gap: 2.5rem; column-rule: 1px solid rgba(23, 20, 15, 0.35); }
+.lx-columns-wide { columns: 20rem; column-gap: 3rem; column-rule: 1px solid rgba(23, 20, 15, 0.35); }
+
+/* Plates: an ink border, a fine vermilion inner frame, and colour only inside. */
+.lx-plate { border: 1px solid var(--ink); padding: 6px; background: var(--paper); }
+.lx-plate-frame { border: 1px solid var(--vermilion); padding: 1rem; }
+/* Engraved hatching laid over a plate ink, so fields read printed rather than flat. */
+.lx-hatch { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0 1px, transparent 1px 4px); }
+.lx-hatch-empty { background-image: repeating-linear-gradient(135deg, rgba(23, 20, 15, 0.22) 0 1px, transparent 1px 5px); }
+
+/* Guide words change like a page turning: a short wipe from the start side. */
+@keyframes lx-turn { from { clip-path: inset(0 100% 0 0); opacity: 0.4; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
+.lx-turn { animation: lx-turn 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Anchor jumps land below the sticky head rule. */
+.lx [id] { scroll-margin-top: 6.5rem; }

@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "ai-color-palette",
+        "value": "*",
+        "files": [
+          "src/design/telegram/PremiumL.tsx"
+        ],
+        "createdAt": "2026-10-26T06:24:10.033Z",
+        "reason": "user confirmed: kept the Telegram Premium night-sky (purple) look when asked what must stay, 2026-10-26"
+      },
+      {
+        "rule": "ai-color-palette",
+        "value": "*",
+        "files": [
+          "src/design/telegram/premiumGlow.tsx"
+        ],
+        "createdAt": "2026-10-26T15:09:17.154Z",
+        "reason": "Telegram Premium's own violet-to-fuchsia brand gradient, documented as premium-violet/premium-fuchsia tokens in DESIGN.md; user chose the Premium S design that uses it"
+      },
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "src/design/numbers/orderScreens.tsx"
+        ],
+        "createdAt": "2026-10-27T21:04:58.060Z",
+        "reason": "Claude: L26 is text-slate-800 on bg-slate-100, a neutral fill, not a coloured background"
+      },
+      {
+        "rule": "ai-color-palette",
+        "value": "*",
+        "files": [
+          "src/design/service/HowToSteps.tsx"
+        ],
+        "createdAt": "2026-10-27T22:10:30.286Z",
+        "reason": "Claude triage: the indigo-to-fuchsia and violet-to-cyan bars reuse the site's existing palette (How to buy E progress bar in src/design/how/HowE.tsx, violet+cyan glow for virtual numbers in HeaderGlow.tsx); user asked for cards 'like site design'"
+      }
+    ]
+  }
+}
