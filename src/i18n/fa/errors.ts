@@ -46,4 +46,7 @@ export const errors: Record<string, string> = {
   "Pro charts, alerts and market tools": "نمودارهای حرفه‌ای، هشدار و ابزارهای بازار",
   "3 to 18 months": "۳ تا ۱۸ ماه",
   "Pro plans": "پلن‌های حرفه‌ای",
+  "AI assistant, Pro to Ultra": "دستیار هوش مصنوعی، Pro تا Ultra",
+  "Premium photos and templates": "عکس و قالب‌های پرمیوم",
+  "Pro charts and alerts": "نمودار حرفه‌ای و هشدار",
 };

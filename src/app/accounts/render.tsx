@@ -73,7 +73,8 @@ export async function accountsMetadata(slug?: string): Promise<Metadata> {
   });
   let raw: ApiSubDetail | null = null;
   try { raw = await loadSub(slug); } catch { /* backend down: the page says so */ }
-  if (!raw) return {};
+  // Unknown or switched-off product: the 404 page (app/not-found.tsx) is shown, so give it its title.
+  if (!raw) return { title: `${t("We couldn't find that page")} — ${t("ShopMajazi")}`, robots: { index: false } };
   const locale = await localeOf();
   const p = toSubProduct(raw, locale);
   const from = Math.min(...p.plans.map((pl) => pl.price));

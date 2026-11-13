@@ -1,6 +1,6 @@
 import {
   Smartphone, Apple, Sparkles, Users, MessageSquareCode, Phone, CalendarClock, UserPen, BadgeCheck,
-  Bot, Clapperboard, Headphones, Palette, Send, Instagram, MessagesSquare, Info, Crown, Megaphone, Star, type LucideIcon,
+  Bot, LineChart, Headphones, Palette, Send, Instagram, MessagesSquare, Info, Crown, Megaphone, Star, type LucideIcon,
 } from "lucide-react";
 
 // Site navigation, grouped the same way as the hero G tabs.
@@ -26,10 +26,11 @@ export const navGroups: NavGroup[] = [
   {
     id: "subs", label: "Subscriptions", icon: Sparkles, viewAll: { label: "All subscriptions", href: "/accounts" },
     items: [
-      { label: "ChatGPT Plus", desc: "On your own account", href: "/accounts/chatgpt-plus", icon: Bot, from: "$22.00" },
-      { label: "Netflix Premium", desc: "4K on every screen", href: "/accounts/netflix", icon: Clapperboard, from: "$8.00" },
-      { label: "Spotify Premium", desc: "Ad-free, offline listening", href: "/accounts/spotify", icon: Headphones, from: "$4.00" },
-      { label: "Canva Pro", desc: "Every premium tool", href: "/accounts/canva", icon: Palette, from: "$12.00" },
+      // The live account products (backend type "accounts"), from each one's cheapest plan.
+      { label: "Claude", desc: "AI assistant, Pro to Ultra", href: "/accounts/buy-claude", icon: Bot, from: "$22.00" },
+      { label: "Spotify Premium", desc: "Ad-free, offline listening", href: "/accounts/buy-spotify-account", icon: Headphones, from: "$3.30" },
+      { label: "Freepik", desc: "Premium photos and templates", href: "/accounts/buy-freepick-account", icon: Palette, from: "$9.90" },
+      { label: "TradingView", desc: "Pro charts and alerts", href: "/accounts/trading-view", icon: LineChart, from: "$32.99" },
     ],
   },
   {
