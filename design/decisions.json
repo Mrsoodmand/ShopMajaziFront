@@ -162,5 +162,9 @@
   "service-faq": {
     "offer": "C",
     "savedAt": "2026-11-13T22:30:00.000Z"
+  },
+  "page-errors": {
+    "offer": "D",
+    "savedAt": "2026-11-13T21:10:27.000Z"
   }
 }

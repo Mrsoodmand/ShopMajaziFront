@@ -1,5 +1,10 @@
 import type { ComponentType } from "react";
 import HeroA from "./hero/HeroA";
+import ErrorsA from "./errors/ErrorsA";
+import ErrorsB from "./errors/ErrorsB";
+import ErrorsC from "./errors/ErrorsC";
+import ErrorsD from "./errors/ErrorsD";
+import ErrorsE from "./errors/ErrorsE";
 import HeroB from "./hero/HeroB";
 import HeroC from "./hero/HeroC";
 import HeroD from "./hero/HeroD";
@@ -203,7 +208,7 @@ import AccountC from "./account/AccountC";
 
 // archived offers stay in the code but are hidden from the comparison page unless "Show archived" is on.
 // `overlay` (headers only): the header floats over the hero instead of sitting above it.
-export type Offer = { id: string; name: string; summary: string; Component: ComponentType<{ card?: string; bare?: "overlay" | "flow"; orderView?: string; slug?: string; topic?: string; method?: string; panel?: string; hero?: string; texture?: string; icons?: string; object?: string; bg?: string }>; archived?: boolean; overlay?: boolean };
+export type Offer = { id: string; name: string; summary: string; Component: ComponentType<{ card?: string; bare?: "overlay" | "flow"; orderView?: string; slug?: string; topic?: string; method?: string; panel?: string; hero?: string; texture?: string; icons?: string; object?: string; bg?: string; code?: string }>; archived?: boolean; overlay?: boolean };
 // A section with `variantOf` refines another section (e.g. its arrow style); on the home page its chosen offer replaces the parent's.
 // `context` is rendered under each offer on the comparison page (e.g. the hero under a header).
 // `kind: "page"` marks a whole-page design (with its own header and footer); `kind: "brand"` marks a site-wide
@@ -448,6 +453,20 @@ export const sections: Section[] = [
       { id: "H", name: "Timer Ring", summary: "A ring of time left beside the big number, so how long you have is clear at a glance; it turns rose near the end and into a green check with the code below.", Component: OrderPreviewH },
       { id: "I", name: "Checklist", summary: "The order as a checklist (paid, number, SMS, code); the current line shows its content, so the screen always says what is happening now.", Component: OrderPreviewI },
       { id: "J", name: "Slim Bar", summary: "For buying several: one short bar per order with the number, a timer chip and a small code slot that fills in; the guide sits under it while waiting.", Component: OrderPreviewJ },
+    ],
+  },
+  {
+    // Error pages: Next.js (app/not-found.tsx, app/error.tsx) and Laravel (resources/views/errors/*) use the chosen
+    // offer. Each preview has a switcher for every status code.
+    id: "page-errors",
+    title: "Page · Error pages (400, 404, 500 …)",
+    kind: "page",
+    offers: [
+      { id: "A", name: "Big Code", summary: "The status number huge and pale behind the message like a watermark; one plain sentence, Try again / Home / Back, and on 404 a search field with popular pages.", Component: ErrorsA },
+      { id: "B", name: "Search Rescue", summary: "A dead end as a fresh start: big search field and the popular services as tiles, the error only a small chip. Server errors swap the tiles for Try again.", Component: ErrorsB },
+      { id: "C", name: "Status Card", summary: "One calm card like a receipt: an icon tile coloured by kind, What happened / What you can do, the buttons, and the code + time printed small to quote to support.", Component: ErrorsC },
+      { id: "D", name: "Broken Route", summary: "Copy beside a small browser window whose route line breaks at the code, a dot pulsing along it. Maintenance (503) shows a whole line and a filling bar instead.", Component: ErrorsD },
+      { id: "E", name: "Quiet Line", summary: "Editorial, text only: code and title on one line split by a hairline, a short paragraph, then a plain list of ways out. No cards, no icons.", Component: ErrorsE },
     ],
   },
   {
