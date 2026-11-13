@@ -4,6 +4,9 @@ import { readDecisions } from "@/components/design/decisions";
 import { LiveBlogProvider } from "@/design/blog/live";
 import { getLocale } from "@/i18n/server";
 import { loadBlog } from "@/lib/blog";
+import { commentDate, loadTestimonials } from "@/lib/comments";
+import { LiveTestimonialsProvider, type LiveTestimonial } from "@/design/testimonials/live";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +21,17 @@ export default async function Home() {
   const decisions = await readDecisions();
   const pick = (id: string) => sections.find((s) => s.id === id)?.offers.find((o) => o.id === decisions[id]?.offer);
   const header = pick("header");
-  const posts = pick("blog") ? ((await loadBlog(await getLocale())) ?? []).slice(0, HOME_POSTS) : [];
+  const locale = await getLocale();
+  const posts = pick("blog") ? ((await loadBlog(locale)) ?? []).slice(0, HOME_POSTS) : [];
+  // Real, approved customer comments for the testimonials section (it is left out when there are none).
+  const t = await getT();
+  const aboutLabel: Record<string, string> = { "virtual-number": "Virtual numbers", "apple-id": "Apple ID", "google-voice": "Google Voice", "static-ip": "Static IP", "rent-number": "Rent a number", accounts: "Subscriptions", "telegram-stars": "Telegram Stars" };
+  const testimonials: LiveTestimonial[] = pick("testimonials")
+    ? (await loadTestimonials()).map((r) => ({
+        id: String(r.id), name: r.name, text: r.text, date: commentDate(r.date, locale),
+        about: r.product ?? (r.about && aboutLabel[r.about] ? t(aboutLabel[r.about]) : ""),
+      }))
+    : [];
 
   const chosen = sections
     .filter((s) => !s.variantOf && !s.kind && pick(s.id)) // whole pages and the logo never join the home page
@@ -39,11 +52,13 @@ export default async function Home() {
 
   return (
     <LiveBlogProvider value={{ posts }}>
+      <LiveTestimonialsProvider value={testimonials}>
       <main>
         {chosen.map(({ key, Component }) =>
           key === "hero" && header ? <Component key={key} bare={header.overlay ? "overlay" : "flow"} /> : <Component key={key} />,
         )}
       </main>
+      </LiveTestimonialsProvider>
     </LiveBlogProvider>
   );
 }

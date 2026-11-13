@@ -29,14 +29,18 @@ const kicker = "text-sm font-semibold uppercase tracking-widest text-emerald-800
 const h2 = "mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white";
 const card = "rounded-3xl border border-slate-200 bg-white dark:border-white/15 dark:bg-[#0E1424]";
 
-export default function ServiceExtras({ service, posts }: { service: string; posts?: Post[] }) {
+// `comments`: the page's real comments and the key new ones are posted under (LiveServiceExtras). Without it (the
+// /design previews) the placeholder comments are shown and the form only pretends to send.
+export type LiveComments = { key: string | null; list: ServiceComment[] };
+
+export default function ServiceExtras({ service, posts, comments }: { service: string; posts?: Post[]; comments?: LiveComments }) {
   const tx = useT();
   const s = useServiceExtras(service);
   return (
     <div className="space-y-24 border-t border-slate-200 pb-24 pt-20 dark:border-white/10">
       <HowToUse service={service} />
       <ContentArea service={service} />
-      <Comments key={service} service={service} />
+      <Comments key={service} service={service} live={comments} />
       {/* FAQ: offer C "Index & Answer" (chosen at /design/service-faq); ServiceFaq below is the earlier design. */}
       <FaqC service={service} />
       <RelatedPosts service={service} live={posts} />
@@ -163,7 +167,7 @@ function CommentItem({ c }: { c: ServiceComment }) {
   );
 }
 
-function Comments({ service }: { service: string }) {
+function Comments({ service, live }: { service: string; live?: LiveComments }) {
   const tx = useT();
   const s = useServiceExtras(service);
   const [shown, setShown] = useState(PAGE);
@@ -171,6 +175,9 @@ function Comments({ service }: { service: string }) {
   const [text, setText] = useState("");
   const [tried, setTried] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [failed, setFailed] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot: hidden from people, bots fill it in
   const nId = useId(), tId = useId();
   const errName = tried && !name.trim() ? tx("Enter your name") : "";
   const errText = tried && text.trim().length < 10 ? (text.trim() ? tx("Write at least 10 characters") : tx("Write your comment")) : "";
@@ -179,23 +186,41 @@ function Comments({ service }: { service: string }) {
     setTried(true);
     if (!name.trim()) return document.getElementById(nId)?.focus();
     if (text.trim().length < 10) return document.getElementById(tId)?.focus();
-    setSent(true); setName(""); setText(""); setTried(false);
+    if (!live) { setSent(true); setName(""); setText(""); setTried(false); return; }
+    if (!live.key) return;
+    setSending(true); setFailed("");
+    // Saved as pending in the backend; it appears here once the admin approves it.
+    fetch("/api/v1/storefront/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ key: live.key, name: name.trim(), text: text.trim(), website }),
+    })
+      .then(async (r) => {
+        const body = await r.json().catch(() => null) as { success?: boolean; message?: string } | null;
+        if (r.ok && body?.success) { setSent(true); setName(""); setText(""); setTried(false); }
+        else setFailed(r.status === 429 ? tx("Too many comments in a short time. Please try again in a minute.") : body?.message || tx("Your comment couldn't be sent. Please try again."));
+      })
+      .catch(() => setFailed(tx("Your comment couldn't be sent. Please try again.")))
+      .finally(() => setSending(false));
   };
-  const total = s.comments.length;
+  const list = live ? live.list : s.comments;
+  const total = list.length;
 
   return (
     <section aria-labelledby="comments" className={wrap}>
       <p className={kicker}>{tx("Comments")}</p>
-      <h2 id="comments" className={h2}>{total} {tx(total === 1 ? "comment" : "comments")}{" "}{tx("on")}{" "}{s.name}</h2>
+      <h2 id="comments" className={h2}>{total > 0 ? <>{total} {tx(total === 1 ? "comment" : "comments")}{" "}{tx("on")}{" "}{s.name}</> : tx("Comments on {0}", { 0: s.name })}</h2>
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div>
-          <ul className="space-y-4">{s.comments.slice(0, shown).map((c) => <CommentItem key={c.id} c={c} />)}</ul>
+          {total === 0 && <p className="text-[15px] leading-7 text-slate-600 dark:text-slate-400">{tx("No comments yet. Ask a question or share how your order went; our team replies here.")}</p>}
+          <ul className="space-y-4">{list.slice(0, shown).map((c) => <CommentItem key={c.id} c={c} />)}</ul>
           {shown < total && <button onClick={() => setShown(shown + PAGE)} className={`${secondary} mt-5`}>{tx("Show more comments (")}{total - shown})</button>}
         </div>
 
         <div className={`${tx.tr(card)} h-fit p-6 lg:sticky lg:top-24`}>
           <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-slate-900 dark:text-white"><MessageSquare aria-hidden className="h-5 w-5" />{tx("Leave a comment")}</h3>
           <p aria-live="polite" className="mt-2 text-[15px] text-emerald-800 dark:text-emerald-300">{sent && tx("Thanks! Your comment will appear after a quick review.")}</p>
+          {failed && <p role="alert" className="mt-2 text-[15px] font-semibold text-red-700 dark:text-red-400">{failed}</p>}
           <form noValidate onSubmit={submit} className="mt-2 space-y-5">
             <div>
               <label htmlFor={nId} className="block text-base font-semibold text-slate-900 dark:text-white">{tx("Name")}</label>
@@ -210,7 +235,8 @@ function Comments({ service }: { service: string }) {
                 aria-describedby={[`${tId}-h`, errText && `${tId}-e`, `${tId}-c`].filter(Boolean).join(" ")} className={`${field} mt-2 resize-y ${errText ? "!border-red-700 dark:!border-red-400" : ""}`} />
               <p id={`${tId}-c`} className="mt-1 text-end text-sm text-slate-600 dark:text-slate-400">{text.length} / 1000</p>
             </div>
-            <button type="submit" className={`${primary} w-full`}><Send aria-hidden className="h-4 w-4" />{tx("Post comment")}</button>
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden value={website} onChange={(e) => setWebsite(e.target.value)} className="absolute -left-[9999px] h-px w-px opacity-0" />
+            <button type="submit" disabled={sending} className={`${primary} w-full disabled:opacity-60`}><Send aria-hidden className="h-4 w-4" />{tx(sending ? "Sending…" : "Post comment")}</button>
           </form>
         </div>
       </div>

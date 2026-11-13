@@ -196,4 +196,11 @@ export const extras: Record<string, string> = {
   "Short answers to what buyers ask most about {0}.": "پاسخ کوتاه به سؤال‌هایی که خریداران درباره {0} زیاد می‌پرسند.",
   "Still have a question?": "هنوز سؤالی دارید؟",
   "Write to our support team; we reply around the clock.": "به تیم پشتیبانی پیام بدهید؛ شبانه‌روز پاسخ می‌دهیم.",
+  // Real comments and testimonials (lib/comments.ts, design/service/ServiceExtras.tsx, design/testimonials).
+  "Too many comments in a short time. Please try again in a minute.": "در مدت کوتاهی دیدگاه زیادی فرستادید. یک دقیقه دیگر دوباره امتحان کنید.",
+  "Your comment couldn't be sent. Please try again.": "دیدگاه شما ارسال نشد. لطفاً دوباره امتحان کنید.",
+  "Comments on {0}": "دیدگاه‌ها درباره {0}",
+  "No comments yet. Ask a question or share how your order went; our team replies here.": "هنوز دیدگاهی ثبت نشده. سؤالتان را بپرسید یا تجربه خریدتان را بنویسید؛ تیم ما همین‌جا پاسخ می‌دهد.",
+  "Sending…": "در حال ارسال…",
+  "Comments our customers left on our product pages, shown as they wrote them. Every product page has its own comments and questions, with our team's answers.": "دیدگاه‌هایی که مشتریان در صفحه محصولات ما نوشته‌اند، همان‌طور که نوشته‌اند. هر صفحه محصول دیدگاه‌ها و پرسش‌های خودش را دارد، همراه با پاسخ تیم ما.",
 };

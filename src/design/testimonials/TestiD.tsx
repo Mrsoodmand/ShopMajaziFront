@@ -4,11 +4,55 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { Smartphone, Apple, Sparkles, Send, Users, type LucideIcon } from "lucide-react";
 import { ratingSummary, reviews, svcLabels, type Review } from "@/content/reviews-en";
 import { ReviewCard, Stars } from "./parts";
+import { MessageSquareQuote } from "lucide-react";
+import { useLiveTestimonials, type LiveTestimonial } from "./live";
 import { useT } from "@/i18n/client";
 
 // Offer D — "Score + Filter": the overall score with a star breakdown on the left; on the right, reviews filtered by
 // service with the same tab bar as How to buy E (icons, sliding highlight).
 export default function TestiD() {
+  const live = useLiveTestimonials();
+  // On the live home page: only real, approved customer comments; no score, stars or tabs, which would be made up.
+  if (live) return live.length ? <RealTestimonials items={live} /> : null;
+  return <PlaceholderTestimonials />;
+}
+
+// Same layout as the offer: heading and a note on the left, the comments on the right. Nothing here is invented:
+// the names, words and dates are what customers posted on the product pages and the admin approved.
+function RealTestimonials({ items }: { items: LiveTestimonial[] }) {
+  const tx = useT();
+  return (
+    <section className="bg-[#F6F5F1] py-24 dark:bg-[#070B14]">
+      <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] gap-12 px-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="lg:sticky lg:top-24 lg:self-start">
+          <span className="text-sm font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">{tx("Reviews")}</span>
+          <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">{tx("What buyers say")}</h2>
+          <div className="mt-8 rounded-3xl bg-white p-6 ring-1 ring-slate-200 dark:bg-[#0E1424] dark:ring-white/10">
+            <MessageSquareQuote aria-hidden className="h-8 w-8 text-violet-600 dark:text-violet-400" />
+            <p className="mt-4 text-[15px] leading-7 text-slate-600 dark:text-slate-300">{tx("Comments our customers left on our product pages, shown as they wrote them. Every product page has its own comments and questions, with our team's answers.")}</p>
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {items.map((r) => (
+            <figure key={r.id} className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 dark:bg-[#0E1424] dark:ring-white/10">
+              <blockquote className="text-[15px] leading-7 text-slate-700 dark:text-slate-300">“{r.text}”</blockquote>
+              <figcaption className="mt-5 flex items-center gap-3">
+                <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-sm font-bold text-white">{r.name.trim().slice(0, 1)}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-slate-900 dark:text-white">{r.name}</span>
+                  <span className="block truncate text-xs text-slate-500 dark:text-slate-400">{[r.about, r.date].filter(Boolean).join(" · ")}</span>
+                </span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// The design preview (/design/testimonials) with the placeholder reviews and score.
+function PlaceholderTestimonials() {
   const tx = useT();
   const icons: Record<Review["svc"], LucideIcon> = { numbers: Smartphone, apple: Apple, subs: Sparkles, telegram: Send, social: Users };
   const tabs = (Object.keys(tx.tr(svcLabels)) as Review["svc"][]).map((id) => ({ id, label: tx.tr(svcLabels)[id] }));
