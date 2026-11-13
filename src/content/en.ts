@@ -17,7 +17,7 @@ export const services: Service[] = [
   { id: "virtual-number", name: "Virtual Numbers", short: "One-time SMS numbers from 150+ countries", from: "$0.30", href: "/virtual-numbers" },
   { id: "google-voice", name: "Google Voice", short: "Permanent US numbers you fully own", from: "$9.90", href: "/google-voice" },
   { id: "apple-id", name: "Apple ID", short: "Ready & custom Apple IDs, any region", from: "$6.50", href: "/apple-id" },
-  { id: "subscriptions", name: "Subscriptions", short: "ChatGPT, Netflix, Spotify, Canva & more", from: "$4.00", href: "/accounts" },
+  { id: "subscriptions", name: "Subscriptions", short: "Claude, Spotify, Freepik, TradingView & more", from: "$4.00", href: "/accounts" },
   { id: "telegram", name: "Telegram", short: "Telegram Stars, Premium & Ads", from: "$0.83", href: "/telegram/stars" },
   { id: "social", name: "Social Media Services", short: "Members, followers, views & likes", from: "$0.90", href: "/virtual-service" },
   { id: "static-ip", name: "Static IP", short: "Dedicated IPs for stable access", from: "$7.00", href: "/static-ip" },

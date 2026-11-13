@@ -56,9 +56,9 @@ export const seoSections: SeoSection[] = [
   },
   {
     id: "subscriptions",
-    heading: "Premium subscriptions: ChatGPT, Netflix, Spotify and Canva",
+    heading: "Premium subscriptions: Claude, Spotify, Freepik and TradingView",
     paragraphs: [
-      "Paying for international subscriptions can be hard without a foreign card. ShopMajazi lets you buy ChatGPT Plus, Netflix Premium, Spotify Premium, Canva Pro and other services with local payment methods or crypto, activated on your own account or delivered as a ready account.",
+      "Paying for international subscriptions can be hard without a foreign card. ShopMajazi lets you buy Claude, Spotify Premium, Freepik, TradingView and Telegram Premium with your wallet, a bank card or crypto. Claude and Telegram Premium are activated on your own account; for Spotify, Freepik and TradingView we sign in to your account once to activate the plan.",
     ],
     link: { label: "See all subscriptions", href: "/accounts" },
   },

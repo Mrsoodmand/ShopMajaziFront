@@ -24,7 +24,7 @@ export const content: Record<string, string> = {
   "One-time SMS numbers from 150+ countries": "شماره پیامکی یک‌بارمصرف از بیش از ۱۵۰ کشور",
   "Permanent US numbers you fully own": "شماره دائمی آمریکا با مالکیت کامل",
   "Ready & custom Apple IDs, any region": "اپل آیدی آماده و سفارشی، هر ریجن",
-  "ChatGPT, Netflix, Spotify, Canva & more": "ChatGPT، نتفلیکس، اسپاتیفای، کنوا و بیشتر",
+  "Claude, Spotify, Freepik, TradingView & more": "کلاد، اسپاتیفای، فری‌پیک، تریدینگ‌ویو و بیشتر",
   "Telegram Stars, Premium & Ads": "استارز، پرمیوم و تبلیغات تلگرام",
   "Members, followers, views & likes": "ممبر، فالوور، بازدید و لایک",
   "Dedicated IPs for stable access": "آی‌پی اختصاصی برای دسترسی پایدار",

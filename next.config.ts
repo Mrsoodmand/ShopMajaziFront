@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   async redirects() {
     return [
+      // Persian is the default and has no prefix (see src/middleware.ts).
+      { source: "/fa", destination: "/", permanent: true },
+      { source: "/fa/:path*", destination: "/:path*", permanent: true },
       // Older links use the plural form; the live page is /virtual-number.
       { source: "/virtual-numbers", destination: "/virtual-number", permanent: true },
       // Tech news used to have its own section on the old site; it's the "Tech News" topic of the blog now.
@@ -20,7 +23,12 @@ const nextConfig: NextConfig = {
     // uploads it serves (app logos, flags, blog images), whose paths the API returns as "/image/...", "/upload/...".
     return {
       // The blog's sitemap (listed in robots.txt) is the old site's; without this, /blog/[slug] would answer it.
-      beforeFiles: [{ source: "/blog/sitemap.xml", destination: `${BACKEND_URL}/blog/sitemap.xml` }],
+      beforeFiles: [
+        { source: "/blog/sitemap.xml", destination: `${BACKEND_URL}/blog/sitemap.xml` },
+        // English: "/en/x" is served by the page at "/x"; src/middleware.ts has already marked the request as English.
+        { source: "/en", destination: "/" },
+        { source: "/en/:path*", destination: "/:path*" },
+      ],
       afterFiles: [
         { source: "/api/v1/:path*", destination: `${BACKEND_URL}/api/v1/:path*` },
         { source: "/image/:path*", destination: `${BACKEND_URL}/image/:path*` },
