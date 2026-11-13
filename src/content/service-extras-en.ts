@@ -286,7 +286,7 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
         "Many of the best apps only take international cards. ShopMajazi lets you pay with your wallet, a local card or crypto, and we take care of the subscription for you.",
       ] },
       { id: "own", title: "On your account or a ready account", paragraphs: [
-        "Most subscriptions are activated on your own account: you give us the email or username, and the plan appears on it. Your history, playlists and files stay yours. Some come as a ready account with its own login instead; each one says which.",
+        "Every subscription is activated on your own account, so your history, playlists and files stay yours. For Claude and Telegram Premium you only give us the email or username; for Spotify, Freepik and TradingView we sign in once to activate the plan, and you change your password afterwards. Each one says which.",
       ] },
       { id: "safe", title: "Safe by design", paragraphs: [
         "Most plans only need your email or username. When a service can only be activated by signing in, we use your login just for that, and you can change your password as soon as it's active. If something stops working before the plan ends, support fixes it, replaces it or refunds the unused time.",
@@ -294,7 +294,6 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
     ],
     faq: subsFaq,
     comments: [
-      { id: "c1", name: "Parisa J.", date: "3 days ago", text: "ChatGPT Plus on my own account in about 10 minutes. All my chats were still there.", replies: [support("Thanks Parisa, enjoy!")] },
       { id: "c2", name: "Customer V.", date: "1 week ago", text: "Spotify yearly plan is great value. Playlists untouched." },
     ],
     blogCat: "guides",
