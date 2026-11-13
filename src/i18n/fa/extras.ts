@@ -151,7 +151,7 @@ export const extras: Record<string, string> = {
   "Pay and enjoy": "پرداخت کنید و لذت ببرید",
   "Premium subscriptions without a foreign card": "اشتراک‌های پریمیوم بدون کارت خارجی",
   "Many of the best apps only take international cards. ShopMajazi lets you pay with your wallet, a local card or crypto, and we take care of the subscription for you.": "بسیاری از بهترین اپ‌ها فقط کارت بین‌المللی می‌پذیرند. در شاپ مجازی با کیف پول، کارت بانکی یا ارز دیجیتال پرداخت می‌کنید و ما اشتراک را برایتان فعال می‌کنیم.",
-  "On your account or a ready account": "روی اکانت شما یا اکانت آماده",
+  "Always on your own account": "همیشه روی اکانت خودتان",
   "Most subscriptions are activated on your own account: you give us the email or username, and the plan appears on it. Your history, playlists and files stay yours. A few services, like Netflix and Adobe, come as a ready account with its own login instead.": "بیشتر اشتراک‌ها روی اکانت خودتان فعال می‌شوند: ایمیل یا یوزرنیم را می‌دهید و پلن روی آن فعال می‌شود. سوابق، پلی‌لیست‌ها و فایل‌هایتان مال خودتان می‌ماند. چند سرویس مثل نتفلیکس و ادوبی به‌صورت اکانت آماده با اطلاعات ورود جداگانه تحویل داده می‌شوند.",
   "Safe by design": "امن از پایه",
   "We never ask for your password. If something stops working before the plan ends, support fixes it, replaces it or refunds the unused time.": "هیچ‌وقت رمز عبورتان را نمی‌خواهیم. اگر قبل از پایان پلن مشکلی پیش بیاید، پشتیبانی آن را رفع یا جایگزین می‌کند یا مبلغ زمان استفاده‌نشده را برمی‌گرداند.",

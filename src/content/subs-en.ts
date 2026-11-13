@@ -80,7 +80,7 @@ export const cheapestPlan = (p: SubProduct) => p.plans.reduce((a, b) => (b.price
 export const savePct = (pl: SubPlan) => (pl.was ? Math.round((1 - pl.price / pl.was) * 100) : 0);
 
 export const subsFaq = [
-  { q: "Is the subscription activated on my own account?", a: "For most services, yes: you give us your account email and we activate the plan on it. Some come as a ready account instead. Each product says which." },
+  { q: "Is the subscription activated on my own account?", a: "Yes, always. For Claude and Telegram Premium you give us your email or username; for Spotify, Freepik and TradingView we sign in once to activate the plan, then you change your password. Each product says which." },
   { q: "Do you need my password?", a: "For most services, no: we only need the email or username. A few can only be activated by signing in; their page says so before you pay, and you can change your password once the plan is active." },
   { q: "How long does activation take?", a: "It depends on the service; each one shows its time before you pay." },
   { q: "What if it stops working before the end?", a: "Tell support from your order page. We fix it, replace it or refund the unused time." },

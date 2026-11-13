@@ -285,7 +285,7 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
       { id: "what", title: "Premium subscriptions without a foreign card", paragraphs: [
         "Many of the best apps only take international cards. ShopMajazi lets you pay with your wallet, a local card or crypto, and we take care of the subscription for you.",
       ] },
-      { id: "own", title: "On your account or a ready account", paragraphs: [
+      { id: "own", title: "Always on your own account", paragraphs: [
         "Every subscription is activated on your own account, so your history, playlists and files stay yours. For Claude and Telegram Premium you only give us the email or username; for Spotify, Freepik and TradingView we sign in once to activate the plan, and you change your password afterwards. Each one says which.",
       ] },
       { id: "safe", title: "Safe by design", paragraphs: [
