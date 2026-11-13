@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import Link from "@/i18n/Link";
 import {
   ArrowRight, Search, Flame, Check, Smartphone, Apple, Sparkles, Users, Send, Instagram, Zap, ShieldCheck,
-  MessageSquareCode, Phone, CalendarClock, UserPen, BadgeCheck, Bot, Clapperboard, Headphones, Palette, Crown, Megaphone, type LucideIcon,
+  MessageSquareCode, Phone, CalendarClock, UserPen, BadgeCheck, Bot, LineChart, Headphones, Palette, Crown, Megaphone, type LucideIcon,
 } from "lucide-react";
 import { brand } from "@/content/en";
 import { useT } from "@/i18n/client";
@@ -32,10 +32,12 @@ const catalog: Tab[] = [
   {
     id: "subs", name: "Subscriptions", icon: Sparkles, viewAll: "/accounts",
     cards: [
-      { name: "ChatGPT Plus", desc: "GPT access on your own account", features: ["1 month", "Your account"], from: "$22.00", href: "/accounts/chatgpt-plus", icon: Bot, tint: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300", hot: true },
-      { name: "Netflix Premium", desc: "4K streaming on every screen", features: ["1 month", "4K UHD"], from: "$8.00", href: "/accounts/netflix", icon: Clapperboard, tint: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-300" },
-      { name: "Spotify Premium", desc: "Ad-free music, offline listening", features: ["1 month", "Individual"], from: "$4.00", href: "/accounts/spotify", icon: Headphones, tint: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300" },
-      { name: "Canva Pro", desc: "Every premium template and tool", features: ["1 year", "All Pro features"], from: "$12.00", href: "/accounts/canva", icon: Palette, tint: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300" },
+      // The live account products (backend type "accounts"); prices are each one's cheapest plan in dollars at the
+      // backend's rate, shown in Toman on the Persian site.
+      { name: "Claude", desc: "Anthropic's AI assistant on a ready account", features: ["1 month", "Pro, Max or Ultra"], from: "$22.00", href: "/accounts/buy-claude", icon: Bot, tint: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300", hot: true },
+      { name: "Spotify Premium", desc: "Ad-free music and offline listening", features: ["1 to 12 months", "Individual"], from: "$3.30", href: "/accounts/buy-spotify-account", icon: Headphones, tint: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300" },
+      { name: "Freepik", desc: "Premium photos, vectors and templates", features: ["1 or 12 months", "All premium assets"], from: "$9.90", href: "/accounts/buy-freepick-account", icon: Palette, tint: "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300" },
+      { name: "TradingView", desc: "Pro charts, alerts and market tools", features: ["3 to 18 months", "Pro plans"], from: "$32.99", href: "/accounts/trading-view", icon: LineChart, tint: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" },
     ],
   },
   {

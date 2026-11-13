@@ -35,4 +35,15 @@ export const errors: Record<string, string> = {
   "Home page": "صفحه اصلی",
   "Support on Telegram": "پشتیبانی در تلگرام",
   "Premium accounts": "اکانت‌های پرمیوم",
+  // Home page catalog tabs: live account products (design/hero/HeroG.tsx).
+  "Anthropic's AI assistant on a ready account": "دستیار هوش مصنوعی Anthropic روی اکانت آماده",
+  "Pro, Max or Ultra": "پلن Pro، Max یا Ultra",
+  "Ad-free music and offline listening": "موسیقی بدون تبلیغ و پخش آفلاین",
+  "1 to 12 months": "۱ تا ۱۲ ماه",
+  "Premium photos, vectors and templates": "عکس، وکتور و قالب‌های پرمیوم",
+  "1 or 12 months": "۱ یا ۱۲ ماه",
+  "All premium assets": "همه منابع پرمیوم",
+  "Pro charts, alerts and market tools": "نمودارهای حرفه‌ای، هشدار و ابزارهای بازار",
+  "3 to 18 months": "۳ تا ۱۸ ماه",
+  "Pro plans": "پلن‌های حرفه‌ای",
 };

@@ -11,7 +11,7 @@ export const footerColumns: FooterColumn[] = [
     title: "Accounts & Subscriptions",
     links: [
       ...navGroups.find((g) => g.id === "apple")!.items.map((i) => ({ label: i.label, href: i.href })),
-      { label: "ChatGPT Plus", href: "/accounts/chatgpt-plus" },
+      { label: "Claude", href: "/accounts/buy-claude" },
       { label: "All subscriptions", href: "/accounts" },
     ],
   },
