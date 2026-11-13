@@ -22,10 +22,12 @@ export function useOrderState(order: Order) {
     { label: order.status === "cancelled" ? tx("Cancelled · refunded") : order.status === "expired" ? tx("Expired · refunded") : tx("Waiting for SMS"), done: !waiting, active: waiting },
     { label: tx("Code received"), done: order.status === "received" },
   ];
-  const paid = `${usd(order.offer.price)}${order.paidWith ? ` · ${tx(order.paidWith[0].toUpperCase() + order.paidWith.slice(1))}` : ""}`;
+  const price = usd(order.offer.price);
+  const method = order.paidWith ? tx(order.paidWith[0].toUpperCase() + order.paidWith.slice(1)) : null;
+  const paid = `${price}${method ? ` · ${method}` : ""}`;
   // Some providers send the whole SMS, not just the code: show long ones as a message.
   const longCode = (order.code?.length ?? 0) > 12;
-  return { waiting, received: order.status === "received", cancelled: order.status === "cancelled" || order.status === "expired", expired: order.status === "expired", text, fraction, stages, paid, longCode };
+  return { waiting, received: order.status === "received", cancelled: order.status === "cancelled" || order.status === "expired", expired: order.status === "expired", text, fraction, stages, paid, price, method, longCode };
 }
 
 // Cancel with a one-step inline confirmation: the button turns into "Cancel this number? / Keep waiting".
@@ -53,7 +55,7 @@ export function CancelButton({ order, flow, tone = "outline", full = false, clas
     outline: "text-rose-600 ring-1 ring-rose-200 hover:bg-rose-50 dark:text-rose-300 dark:ring-rose-500/30 dark:hover:bg-rose-500/10",
     soft: "bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20",
     ghost: "text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300",
-    onDark: "bg-white/10 text-white ring-1 ring-white/20 hover:bg-rose-500/80 hover:ring-rose-400",
+    onDark: "bg-rose-500/15 text-rose-200 ring-1 ring-rose-400/40 hover:bg-rose-500 hover:text-white hover:ring-rose-500",
   }[tone];
 
   if (confirming || busy) {

@@ -10,6 +10,15 @@
 /* Belt and braces for browsers that ignore color-scheme on the option list. */
 .dark option { background-color: #0E1424; color: #fff; }
 
+/* Theme switch (ThemeToggle in design/header/shared.tsx): the whole page crossfades from one theme to the other through
+   a view transition. While it runs, element transitions are held off so nothing lags behind in the old colours.
+   Browsers without view transitions switch at once. */
+:root.theme-swap *, :root.theme-swap *::before, :root.theme-swap *::after { transition: none !important; }
+:root.theme-swap::view-transition-old(root), :root.theme-swap::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
@@ -305,6 +314,64 @@ html[lang="fa"] :is(h1, h2, h3, h4) { line-height: 1.45; }
 button:not(:disabled), [role="button"], summary, label[for] { cursor: pointer; }
 body { -webkit-font-smoothing: antialiased; }
 
+/* Persian text on English pages: live blog posts are written in Persian (marked by design/blog/live.tsx › textLang). */
+html[lang="en"] [lang="fa"], html[lang="en"] [lang="fa"] :is(.font-sans, .font-display, .font-serif) {
+  font-family: var(--font-iransans), ui-sans-serif, system-ui, sans-serif;
+}
+html[lang="en"] [lang="fa"], html[lang="en"] [lang="fa"] * { letter-spacing: 0 !important; }
+
+/* A live blog post's body (design/blogPost/parts.tsx › Body): the admin's HTML, cleaned by the backend, styled like the
+   placeholder article blocks. Headings keep the page's own font (IRANSans for Persian). */
+.article-html { font-size: 17px; line-height: 2rem; overflow-wrap: break-word; }
+.article-html-lg { font-size: 19px; line-height: 2.25rem; }
+.article-html :is(p, ul, ol, dl, pre, figure, blockquote, .table-wrap, iframe, hr) { margin-top: 1.5rem; }
+.article-html > img, .article-html p > img:only-child { margin-top: 2rem; }
+.article-html :is(h2, h3, h4, h5, h6) { color: var(--color-slate-900, #0f172a); scroll-margin-top: 7rem; }
+.article-html h2 { margin-top: 3.5rem; font-size: 1.5rem; line-height: 1.45; font-weight: 700; }
+.article-html h3 { margin-top: 2.25rem; font-size: 1.25rem; line-height: 1.5; font-weight: 600; }
+.article-html :is(h4, h5, h6) { margin-top: 1.75rem; font-size: 1.0625rem; font-weight: 600; }
+@media (min-width: 40rem) { .article-html h2 { font-size: 1.875rem; } }
+.article-html a { color: var(--color-indigo-600, #4f46e5); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.article-html a:hover { text-decoration-thickness: 2px; }
+.article-html :is(strong, b) { font-weight: 600; color: var(--color-slate-900, #0f172a); }
+.article-html :is(ul, ol) { padding: 0; list-style: none; }
+.article-html li { position: relative; padding-inline-start: 2.25rem; }
+.article-html li + li, .article-html li > :is(ul, ol) { margin-top: 0.75rem; }
+.article-html ul > li::before {
+  content: ""; position: absolute; inset-inline-start: 0.25rem; top: calc(0.5lh - 0.5rem); width: 1rem; height: 1rem;
+  background: var(--color-emerald-500, #10b981);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.article-html ol { counter-reset: step; }
+.article-html ol > li { counter-increment: step; }
+.article-html ol > li::before {
+  content: counter(step); position: absolute; inset-inline-start: 0; top: calc(0.5lh - 0.75rem); display: grid; place-items: center;
+  width: 1.5rem; height: 1.5rem; border-radius: 9999px; background: var(--color-indigo-600, #4f46e5); color: #fff;
+  font-size: 0.75rem; font-weight: 700; line-height: 1;
+}
+.article-html img { display: block; max-width: 100%; height: auto; margin-inline: auto; border-radius: 1rem; }
+.article-html figcaption { margin-top: 0.75rem; text-align: center; font-size: 0.875rem; line-height: 1.5; color: var(--color-slate-500, #64748b); }
+.article-html blockquote {
+  margin-block: 2.5rem; border-inline-start: 4px solid var(--color-indigo-500, #6366f1); padding-inline-start: 1.5rem;
+  font-size: 1.25rem; line-height: 1.6; font-weight: 600; color: var(--color-slate-900, #0f172a);
+}
+.article-html .table-wrap { overflow-x: auto; border-radius: 1rem; box-shadow: 0 0 0 1px var(--color-slate-200, #e2e8f0); }
+.article-html table { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 1.6; }
+.article-html :is(th, td) { padding: 0.75rem 1rem; text-align: start; vertical-align: top; }
+.article-html tr + tr { border-top: 1px solid var(--color-slate-200, #e2e8f0); }
+.article-html :is(thead, th) { background: var(--color-slate-50, #f8fafc); font-weight: 600; color: var(--color-slate-900, #0f172a); }
+.article-html iframe { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border: 0; border-radius: 1rem; }
+.article-html hr { margin-block: 3rem; border: 0; border-top: 1px solid var(--color-slate-200, #e2e8f0); }
+.article-html :not(pre) > code { border-radius: 0.375rem; background: var(--color-slate-100, #f1f5f9); padding: 0.125rem 0.375rem; font-size: 0.875em; }
+.article-html pre { overflow-x: auto; border-radius: 1rem; background: var(--color-slate-900, #0f172a); padding: 1rem 1.25rem; color: var(--color-slate-100, #f1f5f9); font-size: 0.875rem; line-height: 1.7; direction: ltr; text-align: left; }
+.dark .article-html :is(h2, h3, h4, h5, h6, strong, b, blockquote) { color: #fff; }
+.dark .article-html a { color: var(--color-indigo-300, #a5b4fc); }
+.dark .article-html .table-wrap { box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1); }
+.dark .article-html tr + tr, .dark .article-html hr { border-color: rgb(255 255 255 / 0.1); }
+.dark .article-html :is(thead, th) { background: rgb(255 255 255 / 0.05); color: #fff; }
+.dark .article-html :not(pre) > code { background: rgb(255 255 255 / 0.1); }
+.dark .article-html figcaption { color: var(--color-slate-400, #94a3b8); }
+
 /* Virtual-number hero (HeroSms.tsx). Each ends on the element's resting style, so reduced motion shows it finished. */
 @keyframes sms-phone { from { opacity: 0; transform: translateY(14px) rotate(-4deg); } to { opacity: 1; transform: none; } }
 @keyframes sms-tile { from { opacity: 0; transform: scale(0.6); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
@@ -368,3 +435,35 @@ body { -webkit-font-smoothing: antialiased; }
 /* Page-change loader (components/brand). */
 @keyframes brand-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(.9); } }
 @keyframes brand-bar { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+
+/* Landing hero "Spotlight × Grid" (design/service/spotlight.tsx): the beam breathes, rings spread out of the icon tile. */
+@keyframes spot-beam { 0%, 100% { opacity: .8; } 50% { opacity: 1; } }
+@keyframes spot-ring { from { transform: scale(.75); opacity: .8; } to { transform: scale(1.9); opacity: 0; } }
+/* Its background animations (compared at /design/hero-motion). */
+@property --scan { syntax: "<length-percentage>"; inherits: false; initial-value: -10%; }
+@property --rip { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@keyframes spot-sweep { 0%, 100% { transform: rotate(-9deg); opacity: .85; } 50% { transform: rotate(9deg); opacity: 1; } }
+@keyframes spot-comet-y { 0% { transform: translateY(-40px); opacity: 0; } 10% { opacity: 1; } 70% { opacity: .8; } 100% { transform: translateY(520px); opacity: 0; } }
+@keyframes spot-comet-x { 0% { transform: translateX(calc(var(--dir) * 0px - 50%)); opacity: 0; } 12% { opacity: 1; } 100% { transform: translateX(calc(var(--dir) * 620px - 50%)); opacity: 0; } }
+@keyframes spot-scan { 0% { --scan: -10%; opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } 100% { --scan: 85%; opacity: 0; } }
+@keyframes spot-ripple { from { --rip: 0px; opacity: 1; } to { --rip: 640px; opacity: 0; } }
+@keyframes spot-in-y { 0% { transform: translateY(460px); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
+@keyframes spot-in-x { 0% { transform: translateX(calc(var(--dir) * 620px - 50%)); opacity: 0; } 15% { opacity: 1; } 88% { opacity: 1; } 100% { transform: translateX(calc(var(--dir) * 40px - 50%)); opacity: 0; } }
+@keyframes spot-trace { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; } 80% { opacity: .9; } 100% { offset-distance: 100%; opacity: 0; } }
+@keyframes spot-orbit { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes spot-node { 0% { opacity: 0; transform: scale(.6); } 6% { opacity: 1; transform: scale(1); } 22% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes spot-rain { 0% { transform: translateY(-80px); opacity: 0; } 10% { opacity: 1; } 75% { opacity: .7; } 100% { transform: translateY(560px); opacity: 0; } }
+@keyframes spot-dust { 0% { transform: translateY(0) scale(.6); opacity: 0; } 20% { opacity: .9; } 60% { opacity: .5; } 100% { transform: translateY(-160px) scale(1); opacity: 0; } }
+
+/* Why offers F–J: a glossy icon bobbing gently, and a feed row sliding in. */
+@keyframes why-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes why-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[why-"] { animation: none !important; }
+}

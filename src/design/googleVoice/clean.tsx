@@ -11,7 +11,12 @@ import { useT } from "@/i18n/client";
 // control, selection shown by a check mark and text as well as colour, and a polite live region for changes.
 
 export const ring = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-emerald-400 dark:focus-visible:ring-offset-[#070B14]";
-export const field = `w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-500 dark:border-white/20 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-400 ${ring}`;
+// Text fields don't turn green when clicked (a text field shows its focus style on a mouse click too, unlike a
+// button): the border only darkens a step. Red error borders (!border-red-…) still win. Used site-wide.
+export const fieldFocus = "transition-[border-color,background-color] duration-200 focus:outline-none focus:border-slate-500 dark:focus:border-white/40";
+// The same on a dark band (Telegram night pages, dark heroes).
+export const fieldFocusDark = "transition-[border-color,background-color] duration-200 focus:outline-none focus:border-white/45";
+export const field = `w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-500 dark:border-white/20 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-400 ${fieldFocus}`;
 export const primary = `inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-base font-semibold text-white transition-colors hover:bg-emerald-800 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400 ${ring}`;
 export const secondary = `inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-6 py-3.5 text-base font-semibold text-slate-800 transition-colors hover:bg-slate-50 dark:border-white/20 dark:text-slate-100 dark:hover:bg-white/5 ${ring}`;
 

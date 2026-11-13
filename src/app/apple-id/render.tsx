@@ -4,7 +4,7 @@ import { getSection } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
 import { applePaths, appleTitles, type AppleMethod } from "@/content/apple-en";
 import { ExtrasSlot } from "@/design/service/slot";
-import ServiceExtras from "@/design/service/ServiceExtras";
+import LiveServiceExtras from "@/design/service/LiveServiceExtras";
 import { LiveAppleProvider, type LiveApple } from "@/design/appleId/live";
 import { MoneyProvider } from "@/lib/money";
 import { storefront } from "@/lib/backend";
@@ -59,7 +59,7 @@ export async function ApplePage({ method }: { method?: AppleMethod }) {
     <PageHeadingProvider h1={seo.h1}>
       <MoneyProvider currency="toman">
         <LiveAppleProvider value={live}>
-          <ExtrasSlot extras={<ServiceExtras service={service} />} glow="sky"><Component method={method} /></ExtrasSlot>
+          <ExtrasSlot extras={<LiveServiceExtras service={service} />} glow="sky"><Component method={method} /></ExtrasSlot>
         </LiveAppleProvider>
       </MoneyProvider>
     </PageHeadingProvider>

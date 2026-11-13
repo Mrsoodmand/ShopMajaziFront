@@ -45,7 +45,7 @@ export default function GvA() {
         )}
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
-          <label className="flex min-w-60 flex-1 items-center gap-2 rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-emerald-500 sm:max-w-xs dark:bg-white/5 dark:ring-white/10">
+          <label className="flex min-w-60 flex-1 items-center gap-2 rounded-2xl bg-white px-4 py-3 ring-1 ring-slate-200 focus-within:ring-slate-400 sm:max-w-xs dark:bg-white/5 dark:ring-white/10 dark:focus-within:ring-white/35">
             <Search className="h-4 w-4 text-slate-400" />
             <input value={q} onChange={(e) => setQ(e.target.value)} inputMode="search" placeholder={t("Area code, digits or city")} className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white" />
           </label>

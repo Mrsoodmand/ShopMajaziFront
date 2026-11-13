@@ -7,7 +7,7 @@ import { Apple, Check, Loader2, ChevronRight, Clock, Eye, EyeOff, KeyRound, Minu
 import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
 import { appleFaq, applePaths, compareRows, CUSTOM_PRICE, MAX_QTY, methodInfo, months, packs, READY_PRICE, sampleApple, type AppleMethod } from "@/content/apple-en";
 import { CopyButton } from "../otp/parts";
-import { field, primary, ring, secondary } from "../googleVoice/clean";
+import { field, fieldFocus, primary, ring, secondary } from "../googleVoice/clean";
 import { useLocale, useT } from "@/i18n/client";
 import { formatNum } from "@/i18n/translate";
 import { useLocalePath } from "@/i18n/Link";
@@ -318,7 +318,7 @@ export function Quantity({ a, packsOpen = false, showPacks = true, hint = true, 
               <button type="button" onClick={() => go(steps[at - 1])} disabled={at === 0} aria-label={tx("Fewer")} className={stepBtn}><Minus aria-hidden className="h-5 w-5" /></button>
               <input id={id} type="number" inputMode="numeric" min={1} value={a.count} aria-describedby={`${id}-hint ${id}-sum`}
                 onChange={(e) => { const n = Math.round(Number(e.target.value)) || 1; go(fitting.some((p) => p.qty === n) ? n : Math.min(a.maxQty, Math.max(1, n))); }}
-                className={`h-14 w-24 rounded-2xl border bg-white text-center font-display text-2xl font-bold tabular-nums text-slate-900 [appearance:textfield] dark:bg-white/5 dark:text-white [&::-webkit-inner-spin-button]:appearance-none ${a.pack ? "border-sky-600 dark:border-sky-400" : "border-slate-300 dark:border-white/20"} ${ring}`} />
+                className={`h-14 w-24 rounded-2xl border bg-white text-center font-display text-2xl font-bold tabular-nums text-slate-900 [appearance:textfield] dark:bg-white/5 dark:text-white [&::-webkit-inner-spin-button]:appearance-none ${a.pack ? "border-sky-600 dark:border-sky-400" : "border-slate-300 dark:border-white/20"} ${fieldFocus}`} />
               <button type="button" onClick={() => go(steps[at + 1])} disabled={at === steps.length - 1} aria-label={tx("More")} className={stepBtn}><Plus aria-hidden className="h-5 w-5" /></button>
             </div>
             <p id={`${id}-sum`} aria-live="polite" className="min-w-0 text-slate-700 dark:text-slate-300">

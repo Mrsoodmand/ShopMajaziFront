@@ -36,7 +36,7 @@ export default function StarsB() {
             <div className="relative min-w-0">
               <StarGlyph className="pointer-events-none absolute start-0 top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" />
               <input id="stars-big" type="number" inputMode="numeric" min={STAR_MIN} max={STAR_MAX} value={st.amount || ""} onChange={(e) => st.setAmount(Number(e.target.value))} aria-describedby="stars-big-hint"
-                className={`w-full max-w-[16rem] rounded-2xl bg-transparent ps-11 text-center font-display text-5xl font-bold tabular-nums text-slate-900 [appearance:textfield] sm:ps-14 sm:text-7xl dark:text-white [&::-webkit-inner-spin-button]:appearance-none ${ring}`} />
+                className={`w-full max-w-[16rem] rounded-2xl bg-transparent ps-11 text-center font-display text-5xl font-bold tabular-nums text-slate-900 [appearance:textfield] sm:ps-14 sm:text-7xl dark:text-white [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-white/25`} />
             </div>
             <button type="button" onClick={() => step(1)} disabled={st.amount >= STAR_MAX} aria-label="More Stars" className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border border-slate-300 text-slate-800 disabled:opacity-40 dark:border-white/20 dark:text-white ${ring}`}><Plus aria-hidden className="h-5 w-5" /></button>
           </div>

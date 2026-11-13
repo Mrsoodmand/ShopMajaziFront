@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { AlertCircle, ArrowRight, CheckCircle2, MapPin } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle2, MapPin, Phone } from "lucide-react";
 import { matches, type GvNumber } from "@/content/google-voice-en";
 import { PageShell } from "../otp/parts";
 import { useHasExtras } from "../service/slot";
@@ -9,7 +9,10 @@ import { Faq, Features, GvCheckout, GvIcon, Guarantees, gvPrice, OrderView, Sect
 import { NumberRadios, primary } from "../googleVoice/clean";
 import { useLiveGv } from "../googleVoice/live";
 import { GreenMesh } from "../social/heroBackdrops";
-import { CatalogCard, CatalogHero, CatalogLayout, CatalogPanel, NoMatch, PanelStep, showPanel } from "./kit";
+import { CatalogCard, CatalogHero, CatalogLayout, CatalogPanel, CatalogSearch, NoMatch, PanelStep, showPanel } from "./kit";
+import { useSpotlight } from "@/design/service/spotlight";
+import { useSteadyPanel } from "./steadyPanel";
+import { QuickPicks } from "../quickPicks";
 import { cityCards, cityGrid, type City } from "./gvCityCards";
 import { useMoney } from "@/lib/money";
 import { useT } from "@/i18n/client";
@@ -25,12 +28,15 @@ const keyOf = (n: GvNumber) => `${n.city}|${n.state}`;
 export default function GvCatalog({ card }: { card?: string }) {
   const Card = card ? cityCards[card] : undefined;
   const t = useT();
+  const spot = useSpotlight();
   const money = useMoney();
   const gv = useGv();
   const live = useLiveGv();
   const extras = useHasExtras();
   const [q, setQ] = useState("");
   const panel = useRef<HTMLDivElement>(null);
+  // Picking a city swaps the panel's number list; keep the panel from jumping when its height changes.
+  useSteadyPanel(panel, !gv.order);
 
   // Cities in stock, the ones with the most numbers first.
   const cities = useMemo<City[]>(() => {
@@ -60,13 +66,15 @@ export default function GvCatalog({ card }: { card?: string }) {
 
   const from = cities.length ? Math.min(...cities.map((c) => c.from)) : 0;
   const inCity = city && keyOf(gv.selected) === city.key;
+  // The cities with the most numbers, as quick picks over the grid.
+  const popular = cities.slice(0, 4).map((c) => ({ key: c.key, name: c.city, on: city?.key === c.key, onPick: () => pickCity(c), icon: <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-emerald-600 text-white"><MapPin className="h-3.5 w-3.5" /></span> }));
 
   return (
-    <PageShell heroDark>
-      <CatalogHero id="gv-h1" title={t("Your own permanent US number")} backdrop={<GreenMesh />}
+    <PageShell heroDark={!spot}>
+      {/* The search and quick picks sit over the city grid (see the toolbar below), not in the band. */}
+      <CatalogHero id="gv-h1" icon={Phone} title={t("Your own permanent US number")} backdrop={<GreenMesh />}
         sub={empty ? t("Calls and texts, on a Google account you control. One payment, no monthly fee.") : t("Calls and texts, on a Google account you control. One payment, from {0}.", { 0: money.format(from) })}
-        q={q} setQ={setQ} label={t("Search numbers")} placeholder={t("Area code, digits or city")}
-        popular={cities.slice(0, 4).map((c) => ({ key: c.key, name: c.city, on: city?.key === c.key, onPick: () => pickCity(c), icon: <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-emerald-600 text-white"><MapPin className="h-3.5 w-3.5" /></span> }))}
+        popular={[]}
         stats={!empty && (
           // A live dot: the stock comes straight from the supplier.
           <span className="inline-flex animate-fade-up items-center gap-2 rounded-full bg-emerald-800 px-3.5 py-1.5 font-semibold text-white shadow-lg shadow-emerald-900/20 [animation-delay:200ms] [animation-fill-mode:backwards] dark:bg-white/10">
@@ -88,7 +96,16 @@ export default function GvCatalog({ card }: { card?: string }) {
           <p className="rounded-3xl border border-dashed border-slate-300 p-10 text-center text-slate-600 dark:border-white/15 dark:text-slate-400">{gv.error ?? t("All Google Voice numbers are sold right now. New ones are added often; check back soon.")}</p>
         ) : (
           <CatalogLayout label={t("Cities")}
-            toolbar={<p aria-live="polite" className="text-sm text-slate-600 dark:text-slate-400">{t("{0} cities", { 0: list.length })}</p>}
+            toolbar={
+              // Search and the popular cities right over the cards they filter; the count follows the search.
+              <div>
+                <CatalogSearch q={q} setQ={setQ} label={t("Search numbers")} placeholder={t("Area code, digits or city")} />
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <QuickPicks items={popular} tone="page" align="start" className="" />
+                  <p aria-live="polite" className="text-sm text-slate-600 dark:text-slate-400">{t("{0} cities", { 0: list.length })}</p>
+                </div>
+              </div>
+            }
             panel={city && (
               <CatalogPanel ref={panel}>
                 <div key={city.key} className="animate-fade-up [animation-duration:250ms]">

@@ -73,7 +73,7 @@ export default function SocialB() {
             <h1 className="text-balance font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl dark:text-white">{tx(socialHeadings.h1)}</h1>
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg dark:text-slate-300">{tx(socialHeadings.sub)}</p>
           </div>
-          <div aria-hidden className="hidden shrink-0 -space-x-3 sm:flex rtl:space-x-reverse">{socialPlatforms.map((p) => <PlatformIcon key={p.id} p={p.id} size="lg" className="ring-4 ring-[#F5F6FB] dark:ring-[#070B14]" />)}</div>
+          <div aria-hidden className="hidden shrink-0 -space-x-3 sm:flex">{socialPlatforms.map((p) => <PlatformIcon key={p.id} p={p.id} size="lg" className="ring-4 ring-[#F5F6FB] dark:ring-[#070B14]" />)}</div>
         </div>
         <div className="mt-5"><Trust items={[tx("No password needed"), tx("Starts in minutes"), tx("Refund if it can't start")]} /></div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "@/i18n/Link";
 import { ChevronDown, Globe, X, ArrowRight, Sun, Moon, Search, CornerDownLeft } from "lucide-react";
@@ -47,6 +48,9 @@ export function Logo({ dark = false }: { dark?: boolean }) {
   );
 }
 
+// The theme crossfade in progress, so a quick second click doesn't clear the first one's class too early.
+let themeSwap: ViewTransition | undefined;
+
 // Light / dark switch. The choice is saved in localStorage; layout.tsx applies it before first paint.
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const tx = useT();
@@ -62,9 +66,16 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   }, []);
   const flip = () => {
     const next = !isDark;
-    document.documentElement.classList.toggle("dark", next);
+    const html = document.documentElement;
     try { localStorage.setItem("theme", next ? "dark" : "light"); } catch {}
-    setIsDark(next);
+    const apply = () => { html.classList.toggle("dark", next); flushSync(() => setIsDark(next)); };
+    if (typeof document.startViewTransition !== "function") { apply(); return; }
+    // The whole page crossfades from one theme to the other (globals.css, "Theme switch"). Element transitions are
+    // held off meanwhile, so the new theme is already settled when it fades in.
+    html.classList.add("theme-swap");
+    const vt = document.startViewTransition(apply);
+    themeSwap = vt;
+    vt.finished.finally(() => { if (themeSwap === vt) html.classList.remove("theme-swap"); });
   };
   return (
     <button onClick={flip} aria-label={isDark ? tx("Switch to light mode") : tx("Switch to dark mode")} title={isDark ? tx("Light mode") : tx("Dark mode")}

@@ -10,6 +10,7 @@ import HeroH from "./hero/HeroH";
 import HeroI from "./hero/HeroI";
 import HeroJ from "./hero/HeroJ";
 import HeroK from "./hero/HeroK";
+import { HeroSysA, HeroSysB, HeroSysC, HeroSysD, HeroSysE } from "./heroSystem/offers";
 import HowA from "./how/HowA";
 import HowB from "./how/HowB";
 import HowC from "./how/HowC";
@@ -49,6 +50,11 @@ import WhyB from "./why/WhyB";
 import WhyC from "./why/WhyC";
 import WhyD from "./why/WhyD";
 import WhyE from "./why/WhyE";
+import WhyF from "./why/WhyF";
+import WhyG from "./why/WhyG";
+import WhyH from "./why/WhyH";
+import WhyI from "./why/WhyI";
+import WhyJ from "./why/WhyJ";
 import TestiA from "./testimonials/TestiA";
 import TestiB from "./testimonials/TestiB";
 import TestiC from "./testimonials/TestiC";
@@ -109,6 +115,7 @@ import OtpCatalog from "./numbers/OtpCatalog";
 import RentCatalog from "./numbers/RentCatalog";
 import GvCatalog from "./numbers/GvCatalog";
 import { GvCardA, GvCardB, GvCardC, GvCardD, GvCardE, GvCardNow } from "./numbers/gvCardOffers";
+import { RentCardA, RentCardB, RentCardC, RentCardD, RentCardE, RentCardNow } from "./numbers/rentCardOffers";
 import { OtpPanelA, OtpPanelB, OtpPanelC, OtpPanelD, OtpPanelE, OtpCardA, OtpCardB, OtpCardC, OtpCardD, OtpCardE, OtpCardNow, OrderPreviewF, OrderPreviewG, OrderPreviewH, OrderPreviewI, OrderPreviewJ } from "./numbers/otpPanelOffers";
 import AppleA from "./appleId/AppleA";
 import AppleB from "./appleId/AppleB";
@@ -189,7 +196,7 @@ import SocialD from "./social/SocialD";
 import SocialE from "./social/SocialE";
 import { FooterDefault, LinksUnderline, LinksArrow, LinksPill, LinksSweep, LinksDot } from "./footer/variants";
 import { OrderPreviewA, OrderPreviewB, OrderPreviewC, OrderPreviewD, OrderPreviewE } from "./otp/order-screen";
-import { MotionA, MotionB, MotionC, MotionD, MotionE, MotionF, MotionG, MotionH, MotionI, MotionJ, DetailFill, DetailRelay, DetailWalk, DetailRoll, DetailSheen } from "./service/stepsMotionOffers";
+import { MotionA, MotionB, MotionC, MotionD, MotionE, MotionF, MotionG, MotionH, MotionI, MotionJ, DetailFill, DetailRelay, DetailWalk, DetailRoll, DetailSheen, DetailJourney } from "./service/stepsMotionOffers";
 import AccountA from "./account/AccountA";
 import AccountB from "./account/AccountB";
 import AccountC from "./account/AccountC";
@@ -245,6 +252,18 @@ export const sections: Section[] = [
     ],
   },
   {
+    id: "hero-system",
+    title: "Hero system (all pages)",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Grid Console", summary: "Centered. Hairline blueprint grid, live status eyebrow, the search field is the main action, stats row below.", Component: HeroSysA },
+      { id: "B", name: "Split Terminal", summary: "Copy on one side, a small terminal on the other that plays this page's order line by line.", Component: HeroSysB },
+      { id: "C", name: "Spotlight", summary: "Centered. One soft green beam onto the page's icon tile with breathing rings; headline, two buttons, checks.", Component: HeroSysC },
+      { id: "D", name: "Spec Bento", summary: "Copy beside four spec tiles: the key number, the three buy steps, payment methods, automatic refund.", Component: HeroSysD },
+      { id: "E", name: "Signal Lines", summary: "Copy beside a circuit board: thin traces carry pulses from apps/payments into the page's chip.", Component: HeroSysE },
+    ],
+  },
+  {
     id: "popular",
     title: "Popular products",
     offers: [
@@ -282,11 +301,16 @@ export const sections: Section[] = [
     id: "why",
     title: "Why us",
     offers: [
-      { id: "A", name: "Icon Grid", summary: "Six reasons as cards in a 3 × 2 grid with colored icon tiles; cards lift on hover.", Component: WhyA },
-      { id: "B", name: "Bento Proof", summary: "Each reason shown, not told: delivery timer, refund notice, support avatars, payment chips, big stats.", Component: WhyB },
-      { id: "C", name: "Comparison", summary: "Side-by-side table of ShopMajazi against a typical seller, with our column highlighted.", Component: WhyC },
+      { id: "A", name: "Icon Grid", summary: "Six reasons as cards in a 3 × 2 grid with colored icon tiles; cards lift on hover.", Component: WhyA, archived: true },
+      { id: "B", name: "Bento Proof", summary: "Each reason shown, not told: delivery timer, refund notice, support avatars, payment chips, big stats.", Component: WhyB, archived: true },
+      { id: "C", name: "Comparison", summary: "Side-by-side table of ShopMajazi against a typical seller, with our column highlighted.", Component: WhyC, archived: true },
       { id: "D", name: "Live Counters", summary: "A dark band of big numbers that count up when scrolled into view, with the reasons listed below.", Component: WhyD },
-      { id: "E", name: "Scroll Story", summary: "Pinned heading on the left; reasons scroll past on the right and light up one at a time.", Component: WhyE },
+      { id: "E", name: "Scroll Story", summary: "Pinned heading on the left; reasons scroll past on the right and light up one at a time.", Component: WhyE, archived: true },
+      { id: "F", name: "Glossy Bento (current)", summary: "Your first reference: soft white bento cards with a 2 × 2 cluster of glossy product icons, a 24 tile, big blue numbers and a blue brand card with fine wavy lines and the logo in the middle.", Component: WhyF },
+      { id: "G", name: "Service Cards", summary: "Your second reference: white cards with a coloured line icon by the title, a short paragraph and a pale illustration in the corner with coloured coins floating over it. One tall card, one wide refund card.", Component: WhyG },
+      { id: "H", name: "Phone Story", summary: "A phone in the middle plays an order (choose, pay, delivered) on a loop; the reason cards either side light up when the phone reaches their step. Hover holds the step.", Component: WhyH },
+      { id: "I", name: "Icon Shelf", summary: "The calm one: six big glossy icons on one shelf, bobbing gently in turn, with a title and a line each; a strip of four big blue numbers that count up underneath.", Component: WhyI },
+      { id: "J", name: "Number Mosaic", summary: "The heading is a tile inside the grid; big blue numbers share the mosaic with the reasons, plus a small feed showing orders ending as delivered or refunded.", Component: WhyJ },
     ],
   },
   {
@@ -509,6 +533,20 @@ export const sections: Section[] = [
       { id: "I", name: "Quick Pick", summary: "One compact screen: period chips and a country grid, or a country dropdown, period chips and an app grid.", Component: RentI },
       { id: "J", name: "Steps + Summary", summary: "The current question with a clickable step bar; a summary on the right fills in and shows the price.", Component: RentJ },
       { id: "K", name: "Catalog + Panel", summary: "Like /accounts and /virtual-service: a brand-colour band with a big search and popular countries; every country as a card, and all apps / one app, period, app and Continue in a panel beside the grid.", Component: RentCatalog },
+    ],
+  },
+  {
+    id: "page-rent-card",
+    title: "Page · Rent Number · Catalog K · Country card",
+    kind: "page",
+    variantOf: "page-rent",
+    offers: [
+      { id: "A", name: "Flag Row", summary: "Like the chosen Google Voice and virtual number cards: one row with the flag on the start side, country, calling code and free numbers, the weekly price lined up on the end side. Two to a row.", Component: RentCardA },
+      { id: "B", name: "Calling Code", summary: "The calling code (+44) leads in big digits, the way the number will start; flag beside it, country under it, free numbers and weekly price on a hairline at the bottom.", Component: RentCardB },
+      { id: "C", name: "Week & Month", summary: "Flag, country and free numbers on top; the 1 week and 1 month prices side by side in a small well, so countries compare on the length you want.", Component: RentCardC },
+      { id: "D", name: "Price First", summary: "The weekly price is the big figure; flag and country small above it, and a round go button that fills green on hover and turns into a check when chosen.", Component: RentCardD },
+      { id: "E", name: "Directory", summary: "One bordered list: flag, country and calling code, free numbers and weekly price in columns, a chevron at the end. Most countries on screen, prices compare down one column.", Component: RentCardE },
+      { id: "F", name: "Current", summary: "The card as it is now, for comparison.", Component: RentCardNow },
     ],
   },
   {
@@ -760,6 +798,7 @@ export const sections: Section[] = [
       { id: "C", name: "Walkthrough", summary: "Like the home page's How to buy: the steps take turns. The current one lifts with a coloured outline, its number lights up, its bar refills over its turn and the arrows after it point on. Hover a step to hold it.", Component: DetailWalk },
       { id: "D", name: "Number Roll", summary: "The big step numbers roll up into place from under their line, one after another, and the bars fill behind them. Plays once.", Component: DetailRoll },
       { id: "E", name: "Sheen", summary: "A soft band of the page colour sweeps across each card once in reading order, and the bars fill. Plays once.", Component: DetailSheen },
+      { id: "F", name: "Journey", summary: "The process walked through once: the cards rise in out of a soft blur, then each step in turn lights up in the page colour (outline, lift, a glow from its number) while its bar fills, and is ticked off as the next one lights. Ends with every step ticked; plays again when the steps come back into view. Hover a step to hold it. Live on Virtual number.", Component: DetailJourney },
     ],
   },
 ];

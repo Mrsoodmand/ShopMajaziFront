@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { getT } from "@/i18n/server";
+import { getLocale, getT } from "@/i18n/server";
 import { getSection } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
 import { blogCats } from "@/content/blog-en";
+import { LiveBlogProvider, type LiveBlog } from "@/design/blog/live";
+import { loadBlog } from "@/lib/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +21,18 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   };
 }
 
-// The live blog list: renders whichever page design is chosen in /design/page-blog (falls back to F).
-// `?topic=` opens it filtered to one topic.
+// The live blog list: every post and news item from the backend (React admin › Blog / News), in whichever page
+// design is chosen in /design/page-blog (falls back to F). `?topic=` opens it filtered to one topic.
 export default async function BlogPage({ searchParams }: Props) {
-  const [decisions, { topic }] = await Promise.all([readDecisions(), searchParams]);
+  const locale = await getLocale();
+  const [decisions, { topic }, posts, t] = await Promise.all([readDecisions(), searchParams, loadBlog(locale), getT()]);
+  const live: LiveBlog = posts ? { posts } : { posts: [], error: t("Articles are unavailable right now. Please try again in a minute.") };
   const section = getSection("page-blog")!;
   const offer = section.offers.find((o) => o.id === decisions["page-blog"]?.offer) ?? section.offers.find((o) => o.id === "F")!;
   const { Component } = offer;
-  return <Component topic={topic} />;
+  return (
+    <LiveBlogProvider value={live}>
+      <Component topic={topic} />
+    </LiveBlogProvider>
+  );
 }

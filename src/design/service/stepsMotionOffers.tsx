@@ -75,3 +75,4 @@ export const DetailRelay = () => <Frame motion="e" detail="relay" />;
 export const DetailWalk = () => <Frame motion="e" detail="walk" />;
 export const DetailRoll = () => <Frame motion="e" detail="roll" />;
 export const DetailSheen = () => <Frame motion="e" detail="sheen" />;
+export const DetailJourney = () => <Frame motion="e" detail="journey" />;

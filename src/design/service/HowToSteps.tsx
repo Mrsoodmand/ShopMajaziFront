@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import { extrasFor } from "@/content/service-extras-en";
+import { useServiceExtras } from "../subs/live";
 import { ChevronRight } from "lucide-react";
 import { useT } from "@/i18n/client";
 import { useGlow } from "./slot";
@@ -24,8 +24,9 @@ type State = "armed" | "play" | undefined;
 // What the card details do after the cards come in (tone look only; see stepsMotion.module.css):
 // fill = the bars fill one after another · relay = the arrows flow towards the next step, on a loop ·
 // walk = the steps take turns, like the home page's How to buy · roll = the numbers roll up into place ·
-// sheen = a soft light passes over each card.
-export type StepsDetail = "fill" | "relay" | "walk" | "roll" | "sheen";
+// sheen = a soft light passes over each card · journey = the process is walked through once, 1 → last: each step
+// lights up while its bar fills, then is ticked off (rewinds when the steps leave the screen, so it plays again).
+export type StepsDetail = "fill" | "relay" | "walk" | "roll" | "sheen" | "journey";
 
 const wrap = "mx-auto max-w-6xl px-4 sm:px-6";
 const kicker = "text-sm font-semibold uppercase tracking-widest text-emerald-800 dark:text-emerald-300";
@@ -76,29 +77,39 @@ const tones: Record<GlowTone, Tone> = {
 
 const CYCLE_G = 2600; // spotlight: time on each step
 const CYCLE_WALK = 2200; // walk: time on each step
-const loops = (m?: StepsMotion, d?: StepsDetail) => m === "g" || m === "i" || d === "relay" || d === "walk";
+const STEP_JOURNEY = 1500; // journey: time on each step
+const loops = (m?: StepsMotion, d?: StepsDetail) => m === "g" || m === "i" || d === "relay" || d === "walk" || d === "journey";
 
-export default function HowToSteps({ service, motion, preview, replay = 0, look = "tone", tone: toneProp, detail, steps: ownSteps, name: ownName, flush }: { service: string; motion?: StepsMotion; preview?: boolean; replay?: number; look?: "tone" | "classic"; tone?: GlowTone; detail?: StepsDetail; steps?: { title: string; text: string }[]; name?: string; flush?: boolean }) {
+// `repeat` (tone look, fill / roll / sheen details): after the entrance, the numbers and bars keep replaying it on a
+// loop while the list is on screen (see "Repeat" in stepsMotion.module.css). Never for reduced motion.
+export default function HowToSteps({ service, motion, preview, replay = 0, look = "tone", tone: toneProp, detail, repeat = false, steps: ownSteps, name: ownName, flush }: { service: string; motion?: StepsMotion; preview?: boolean; replay?: number; look?: "tone" | "classic"; tone?: GlowTone; detail?: StepsDetail; repeat?: boolean; steps?: { title: string; text: string }[]; name?: string; flush?: boolean }) {
   const tx = useT();
   const glow = useGlow();
   const tone = tones[(toneProp ?? glow) as GlowTone] ?? brand;
   // A page outside service-extras (e.g. social services) passes its own `steps` and `name`.
-  const x = ownSteps ? { name: ownName ?? "", howTo: ownSteps } : extrasFor(service, tx);
+  const extras = useServiceExtras(service);
+  const x = ownSteps ? { name: ownName ?? "", howTo: ownSteps } : extras;
   const n = x.howTo.length;
   const root = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<State>();
   const [inView, setInView] = useState(false);
+  const [looping, setLooping] = useState(false);
 
-  // Arm, then play on first sight. Re-runs on replay.
+  // Arm, then play on first sight. Re-runs on replay. A repeating list is watched even when it starts on screen
+  // (it skips the entrance then), so its loop can pause whenever it scrolls away.
   useEffect(() => {
     const el = root.current;
-    if (!motion || !el || matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
-    if (!preview && el.getBoundingClientRect().top < window.innerHeight) return; // already on screen: leave it be
-    setState("armed");
+    if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    const enter = !!motion && (preview || el.getBoundingClientRect().top >= window.innerHeight); // on screen: leave it be
+    // The journey is watched like a repeating list, so it still plays when the steps start on screen.
+    const loop = (repeat || detail === "journey") && look === "tone";
+    if (!enter && !loop) return;
+    if (enter) setState("armed");
+    setLooping(loop);
     let played = false;
     const io = new IntersectionObserver(([e]) => {
       setInView(e.isIntersecting);
-      if (e.isIntersecting && !played) {
+      if (enter && e.isIntersecting && !played) {
         played = true;
         // The armed style was committed on mount, so the motion can start straight away (no animation frames, which
         // background tabs pause: the steps must never be left hidden).
@@ -106,8 +117,8 @@ export default function HowToSteps({ service, motion, preview, replay = 0, look 
       }
     }, { threshold: 0.15 });
     io.observe(el);
-    return () => io.disconnect();
-  }, [motion, preview, replay, service]);
+    return () => { io.disconnect(); setLooping(false); };
+  }, [motion, preview, replay, service, repeat, look, detail]);
 
   // Spotlight (G) and walk: light one step at a time while the list is on screen; hovering or focusing a step pins it.
   const cycling = motion === "g" || (look === "tone" && detail === "walk");
@@ -124,39 +135,66 @@ export default function HowToSteps({ service, motion, preview, replay = 0, look 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cycling, cycle, state, inView, pinned, n]);
   useEffect(() => { setActive(-1); }, [replay, service]);
-  const pin = useCallback((i: number) => { if (cycling && state === "play") { setPinned(true); setActive(i); } }, [cycling, state]);
+  // The loop takes over from the entrance once the list has been seen (never while it is still hidden, armed).
+  const loop = looping && state !== "armed";
+
+  // Journey: after the entrance (or straight away when the steps were already on screen) the steps are walked
+  // through once: each one lights up while its bar fills, then is ticked off as the next one lights; at the end
+  // every step is ticked (active = n). Leaving the screen rewinds it, so it plays again next time it comes into view.
+  // Hovering a step holds it there.
+  const journey = look === "tone" && detail === "journey";
+  const journeyOn = journey && (state === "play" || loop);
+  const entered = useRef(false);
+  useEffect(() => {
+    if (!journeyOn || !inView || pinned || active >= n) return;
+    const wait = active >= 0 ? STEP_JOURNEY : state === "play" && !entered.current ? 650 + n * 110 : 350;
+    const t = setTimeout(() => { entered.current = true; setActive((a) => Math.min(a + 1, n)); }, wait);
+    return () => clearTimeout(t);
+  }, [journeyOn, inView, pinned, active, n, state]);
+  useEffect(() => { if (journeyOn && !inView && active >= n) setActive(-1); }, [journeyOn, inView, active, n]);
+
+  const pin = useCallback((i: number) => { if ((cycling && state === "play") || journeyOn) { setPinned(true); setActive(i); } }, [cycling, state, journeyOn]);
 
   const hid = preview ? `howto-${motion}${detail ?? ""}` : "howto"; // previews share a page, so each needs its own id
-  const vars = { "--n": n, "--cycle": motion === "i" ? `${n * 1100}ms` : `${cycle}ms`, "--tone": tone.hex, "--tone-d": tone.hexDark } as CSSProperties;
+  const vars = { "--n": n, "--cycle": motion === "i" ? `${n * 1100}ms` : journey ? `${STEP_JOURNEY}ms` : `${cycle}ms`, "--tone": tone.hex, "--tone-d": tone.hexDark } as CSSProperties;
   const d = look === "tone" ? detail : undefined;
 
   return (
     <section aria-labelledby={hid} className={flush ? undefined : wrap} data-own-motion={motion ? "" : undefined}>
       <p className={kicker}>{tx("How to use")}</p>
       <h2 id={hid} className={h2}>{x.name}{" "}{tx("in")}{" "}{n}{" "}{tx("steps")}</h2>
-      <div ref={root} className={`${s.root} relative mt-8`} data-v={motion} data-d={d} data-n={n} data-state={state} data-paused={loops(motion, d) && state === "play" && !inView ? "" : undefined} style={vars}>
+      <div ref={root} className={`${s.root} relative mt-8`} data-v={motion} data-d={d} data-n={n} data-state={state} data-loop={loop ? "" : undefined}
+        data-j={journeyOn ? "" : undefined} data-complete={journeyOn && active >= n ? "" : undefined}
+        data-paused={((loops(motion, d) && state === "play") || loop) && !inView ? "" : undefined} style={vars}>
         {motion === "i" && <div aria-hidden className={s.track}><div className={s.walker}><span className={s.dot} /></div></div>}
         {look === "tone" ? (
         <ol className={`${s.list} grid gap-4 sm:grid-cols-2 lg:gap-11 ${n === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`} onMouseLeave={() => setPinned(false)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPinned(false); }}>
           {x.howTo.map((step, i) => (
             <li key={step.title} style={{ "--i": i, zIndex: n - i } as CSSProperties}
-              data-on={d === "walk" && active === i ? "" : undefined}
+              data-on={(d === "walk" || journeyOn) && active === i ? "" : undefined}
+              data-done={journeyOn && (active >= n || i < active) ? "" : undefined}
               onMouseEnter={() => pin(i)} onFocus={() => pin(i)} tabIndex={d === "walk" ? 0 : undefined}
               className={`${s.card} group relative flex flex-col rounded-3xl bg-white p-7 shadow-sm ring-1 ring-slate-200/70 transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-xl dark:bg-[#0E1424] dark:ring-white/10 ${tone.card}`}>
               {d === "sheen" && <span aria-hidden className={s.sheen} />}
+              {d === "journey" && <span aria-hidden className={s.glow} />}
+              {d === "journey" && (
+                <span aria-hidden className={s.check}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M20 6 9 17l-5-5" pathLength={1} /></svg>
+                </span>
+              )}
               <span aria-hidden className={s.numMask}><span className={`${s.num} block font-display text-5xl font-bold leading-none transition-colors duration-300 ${tone.num}`}>{tx.num(i + 1)}</span></span>
               <h3 className="mt-4 font-display text-lg font-semibold text-slate-900 dark:text-white"><span className="sr-only">{tx("Step")}{" "}{i + 1}: </span>{step.title}</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-slate-600 dark:text-slate-400">{step.text}</p>
               {/* How far through the process this step is: a quarter, half … the whole bar on the last step. */}
               <span aria-hidden className="mt-auto block pt-6">
                 <span className="block h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                  <span key={d === "walk" ? `${active}-${pinned}` : undefined} data-run={d === "walk" && !pinned ? "" : undefined}
+                  <span key={d === "walk" ? `${active}-${pinned}` : journeyOn && active === i ? `on-${pinned}` : undefined} data-run={(d === "walk" || (journeyOn && active === i)) && !pinned ? "" : undefined}
                     className={`${s.fill} block h-full rounded-full bg-gradient-to-r rtl:bg-gradient-to-l ${tone.bar}`} style={{ width: `${((i + 1) / n) * 100}%` }} />
                 </span>
               </span>
               {i < n - 1 && (
                 <span aria-hidden className="absolute top-1/2 hidden -translate-y-1/2 items-center justify-center lg:flex" style={{ insetInlineEnd: -44, width: 44 }}>
-                  <span className="flex -space-x-2.5 rtl:space-x-reverse">
+                  <span className="flex -space-x-2.5">
                     {[0, 1].map((k) => <ChevronRight key={k} strokeWidth={3} style={{ "--k": k } as CSSProperties} className={`${s.chev} h-5 w-5 rtl:rotate-180 ${tone.chev} ${k === 0 ? "opacity-50" : ""}`} />)}
                   </span>
                 </span>

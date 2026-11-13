@@ -1,0 +1,38 @@
+/* The page ground behind every PageShell page (PageBackdrop.tsx), so the long stretch below the hero is not one flat
+   colour. Three still layers, all behind the content and none animated:
+   - fields: very large, very soft pools of the page's two colours (its header glow's), alternating sides down the
+     page, so each section sits in a slightly different light;
+   - dots: the hero glow's dot grid carried down the page edges, fading out towards the content column;
+   - grain: a fine noise that gives the dark ground some tooth and stops the soft gradients from banding.
+   --a / --b: the two colours, set inline. */
+.fields {
+  position: absolute; inset: 0;
+  --pa: 16%; --pb: 13%; --pc: 7%;
+  background:
+    radial-gradient(50rem 38rem at 4% 20%, color-mix(in srgb, var(--a) var(--pa), transparent), transparent 70%),
+    radial-gradient(54rem 40rem at 98% 38%, color-mix(in srgb, var(--b) var(--pb), transparent), transparent 70%),
+    radial-gradient(70rem 30rem at 50% 54%, color-mix(in srgb, var(--a) var(--pc), transparent), transparent 70%),
+    radial-gradient(48rem 36rem at 2% 68%, color-mix(in srgb, var(--a) calc(var(--pa) - 2%), transparent), transparent 70%),
+    radial-gradient(56rem 36rem at 96% 88%, color-mix(in srgb, var(--b) var(--pb), transparent), transparent 70%);
+}
+:global(.dark) .fields { --pa: 15%; --pb: 11%; --pc: 6%; }
+
+.dots {
+  position: absolute; inset: 44rem 0 0;
+  background-image: radial-gradient(rgb(15 23 42 / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 16rem), linear-gradient(to right, #000, transparent 20%, transparent 80%, #000);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent, #000 16rem), linear-gradient(to right, #000, transparent 20%, transparent 80%, #000);
+  mask-composite: intersect;
+}
+:global(.dark) .dots { background-image: radial-gradient(rgb(255 255 255 / 0.07) 1px, transparent 1px); }
+
+.grain {
+  position: absolute; inset: 0; opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.4 -.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:global(.dark) .grain {
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}

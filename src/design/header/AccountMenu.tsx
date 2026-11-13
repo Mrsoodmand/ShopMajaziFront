@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { UserRound, Wallet, LogOut, ListOrdered, Plus } from "lucide-react";
+import { UserRound, Wallet, LogOut, ListOrdered, Plus, Loader2 } from "lucide-react";
 import Link from "@/i18n/Link";
 import { stripLocale } from "@/i18n/config";
 import { TOP_UP_HREF, useAccount } from "@/lib/account";
@@ -33,15 +33,25 @@ export function AccountButton({ label, outline = false }: { label: string; outli
     return () => { document.removeEventListener("mousedown", away); document.removeEventListener("keydown", esc); };
   }, [open]);
 
+  // While the sign-in check runs: the same pill, with a spinner and "Loading…" in place of the label.
+  if (account.status === "loading")
+    return (
+      <span role="status" aria-live="polite"
+        className={outline
+          ? "ms-1 hidden h-10 cursor-wait items-center gap-2 whitespace-nowrap rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-500 dark:border-white/10 dark:text-slate-400 sm:flex"
+          : "ms-1 hidden cursor-wait items-center gap-2 rounded-full bg-indigo-600/80 px-4 py-2.5 text-sm font-semibold text-white sm:flex"}>
+        <Loader2 aria-hidden className="h-4 w-4 animate-spin" />{t("Loading…")}
+      </span>
+    );
   if (account.status !== "user" || !account.user) {
     if (outline)
       return (
-        <Link href={loginHref} className={`ms-1 hidden h-10 items-center gap-2 whitespace-nowrap rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/[.04] sm:flex ${account.status === "loading" ? "opacity-0" : ""}`}>
+        <Link href={loginHref} className="ms-1 hidden h-10 items-center gap-2 whitespace-nowrap rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/[.04] sm:flex">
           <UserRound className="h-4 w-4 text-slate-500 dark:text-slate-400" />{label}
         </Link>
       );
     return (
-      <Link href={loginHref} className={`ms-1 hidden items-center gap-2 rounded-full bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 hover:bg-indigo-700 sm:flex ${account.status === "loading" ? "opacity-0" : ""}`}>
+      <Link href={loginHref} className="ms-1 hidden items-center gap-2 rounded-full bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 hover:bg-indigo-700 sm:flex">
         <UserRound className="h-4 w-4" />{label}
       </Link>
     );
@@ -83,6 +93,12 @@ export function AccountMobile({ label, onClose }: { label: string; onClose: () =
   const t = useT();
   const account = useAccount();
   const loginHref = useLoginHref();
+  if (account.status === "loading")
+    return (
+      <div role="status" aria-live="polite" className="flex cursor-wait items-center justify-center gap-2 rounded-xl bg-indigo-600/80 py-3 text-sm font-semibold text-white">
+        <Loader2 aria-hidden className="h-4 w-4 animate-spin" />{t("Loading…")}
+      </div>
+    );
   if (account.status !== "user" || !account.user) {
     return <Link href={loginHref} onClick={onClose} className="block rounded-xl bg-indigo-600 py-3 text-center text-sm font-semibold text-white">{label}</Link>;
   }

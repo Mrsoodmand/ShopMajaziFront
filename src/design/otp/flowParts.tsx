@@ -76,7 +76,7 @@ export function RecentOrders({ flow, min = 2 }: { flow: OtpFlow; min?: number })
         {flow.orders.map((o) => (
           <li key={o.id}>
             <button onClick={() => flow.showOrder(o.id)} className={`flex w-full items-center gap-3 rounded-xl px-2 py-2 text-start text-sm transition hover:bg-slate-50 dark:hover:bg-white/5 ${flow.order?.id === o.id ? "bg-indigo-50 dark:bg-indigo-500/10" : ""}`}>
-              <AppTile app={o.offer.app} size="sm" /><span className="flex-1 truncate font-mono text-slate-700 dark:text-slate-200">{o.number}</span>
+              <AppTile app={o.offer.app} size="sm" /><span className="flex-1 truncate font-mono text-slate-700 dark:text-slate-200"><span dir="ltr">{o.number}</span></span>
               <span className={`text-xs font-semibold ${o.status === "received" ? "text-emerald-600" : o.status === "waiting" ? "text-amber-600" : "text-slate-400"}`}>{o.status === "received" ? <span dir="ltr" className="inline-block max-w-[9rem] truncate align-bottom">{o.code}</span> : status[o.status]}</span>
             </button>
           </li>

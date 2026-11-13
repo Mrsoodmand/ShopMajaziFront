@@ -61,7 +61,7 @@ export default function GvD() {
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <span className="text-sm font-semibold uppercase tracking-widest text-emerald-400">Google Voice · USA</span>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-6xl">Find a US number you&apos;ll remember</h1>
-          <label className="mx-auto mt-10 flex max-w-xl items-center gap-3 rounded-2xl bg-white/10 px-5 py-4 ring-1 ring-white/15 backdrop-blur focus-within:ring-2 focus-within:ring-emerald-400">
+          <label className="mx-auto mt-10 flex max-w-xl items-center gap-3 rounded-2xl bg-white/10 px-5 py-4 ring-1 ring-white/15 backdrop-blur focus-within:ring-white/40">
             <Search className="h-5 w-5 text-white/50" />
             <input value={q} onChange={(e) => setQ(e.target.value)} inputMode="search" placeholder="Digits, area code or city" className="w-full bg-transparent font-mono text-lg outline-none placeholder:font-sans placeholder:text-base placeholder:text-white/40" />
             {q && <button onClick={() => setQ("")} aria-label="Clear" className="grid h-7 w-7 place-items-center rounded-full bg-white/10"><X className="h-3.5 w-3.5" /></button>}

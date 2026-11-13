@@ -7,7 +7,7 @@ import type { BlogCat } from "./blog-en";
 import { gvFaq } from "./google-voice-en";
 import { rentFaq } from "./rent-en";
 import { appleFaq } from "./apple-en";
-import { subBySlug, subsFaq } from "./subs-en";
+import { subBySlug, subsFaq, type SubProduct } from "./subs-en";
 import { makeT, type T } from "@/i18n/translate";
 import { tgFaq } from "./telegram-en";
 
@@ -276,20 +276,20 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
   subscriptions: {
     name: "Subscriptions",
     howTo: [
-      { title: "Pick a subscription", text: "Filter by category or search: ChatGPT, Netflix, Spotify, Canva and more." },
+      { title: "Pick a subscription", text: "Filter by category or search by name." },
       { title: "Choose a plan", text: "Monthly or longer; longer plans cost less per month." },
-      { title: "Enter your account", text: "For most services, just the email of your own account. Never a password." },
-      { title: "Pay and enjoy", text: "Ready accounts arrive instantly; activations usually take 15 to 60 minutes." },
+      { title: "Enter your account", text: "Usually just the email or username of your own account. If a service needs your login to activate it, its page says so." },
+      { title: "Pay and enjoy", text: "Each subscription shows how long it takes. Follow the order on your orders page." },
     ],
     content: [
       { id: "what", title: "Premium subscriptions without a foreign card", paragraphs: [
         "Many of the best apps only take international cards. ShopMajazi lets you pay with your wallet, a local card or crypto, and we take care of the subscription for you.",
       ] },
       { id: "own", title: "On your account or a ready account", paragraphs: [
-        "Most subscriptions are activated on your own account: you give us the email or username, and the plan appears on it. Your history, playlists and files stay yours. A few services, like Netflix and Adobe, come as a ready account with its own login instead.",
+        "Most subscriptions are activated on your own account: you give us the email or username, and the plan appears on it. Your history, playlists and files stay yours. Some come as a ready account with its own login instead; each one says which.",
       ] },
       { id: "safe", title: "Safe by design", paragraphs: [
-        "We never ask for your password. If something stops working before the plan ends, support fixes it, replaces it or refunds the unused time.",
+        "Most plans only need your email or username. When a service can only be activated by signing in, we use your login just for that, and you can change your password as soon as it's active. If something stops working before the plan ends, support fixes it, replaces it or refunds the unused time.",
       ] },
     ],
     faq: subsFaq,
@@ -302,58 +302,78 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
 };
 
 // Content for one subscription's own page (/accounts/{slug}), built from the product so every page reads differently
-// and isn't a duplicate of /accounts. "subs:{slug}" keys look it up.
-function subsExtras(slug: string, t: T): ServiceExtras | null {
-  const raw = subBySlug(slug);
-  if (!raw) return null;
-  const p = t.tr(raw);
-  const own = p.activation === "own";
-  const field = p.fields.find((f) => !f.options);
+// and isn't a duplicate of /accounts. "subs:{slug}" keys look it up: in the live products when the page has them
+// (prices in toman, written with `live.format`), else in the placeholder catalog.
+export type LiveSubsExtras = { products: SubProduct[]; format: (n: number) => string };
+
+function subsExtras(slug: string, t: T, live?: LiveSubsExtras): ServiceExtras | null {
+  const found = live?.products.find((x) => x.slug === slug);
+  const raw = found ? null : subBySlug(slug);
+  if (!found && !raw) return null;
+  const p = found ?? t.tr(raw!);
+  const money = found ? live!.format : t.usd;
+  const how = p.activation;
+  const field = p.fields.find((f) => !f.options && f.type !== "password");
   // English: "Email of your Spotify account" → "the email of your Spotify account"; Persian uses the field label as is.
   const need = t.locale === "fa" ? (field ? field.label : t("your account email"))
     : field ? (/^your /i.test(field.label) ? `y${field.label.slice(1)}` : `the ${field.label.charAt(0).toLowerCase()}${field.label.slice(1)}`) : "your account email";
   const cheapest = p.plans.reduce((a, b) => (b.price < a.price ? b : a));
-  const longest = p.plans.reduce((a, b) => (b.months > a.months ? b : a));
-  const sentence = (...parts: string[]) => parts.join(t.locale === "fa" ? "، " : ". ") + ".";
-  return t.tr({
+  const timed = p.plans.filter((pl) => pl.months > 0);
+  const longest = timed.length ? timed.reduce((a, b) => (b.months > a.months ? b : a)) : null;
+  const sentence = (...parts: string[]) => parts.filter(Boolean).join(t.locale === "fa" ? "، " : ". ") + ".";
+  const when = p.delivery ? (t.locale === "fa" ? p.delivery : p.delivery.toLowerCase()) : t("once our team has activated it");
+  const content = {
     name: p.name,
     howTo: [
-      { title: t("Choose a {0} plan", { 0: p.name }), text: p.plans.map((pl) => `${pl.name} ${t.usd(pl.price)}`).join(" · ") },
-      own
-        ? { title: field ? field.label : "Your account", text: field?.hint ?? t("We activate {0} on your own account.", { 0: p.name }) }
-        : { title: "No details needed", text: t("We deliver a ready {0} account.", { 0: p.name }) },
-      { title: "Pay", text: "Wallet, card or crypto." },
-      own
-        ? { title: t("Open {0}", { 0: p.name }), text: t("The plan appears on your account {0}.", { 0: t.locale === "fa" ? p.delivery : p.delivery.toLowerCase() }) }
-        : { title: "Sign in", text: "The login is on your order page, ready to copy." },
+      { title: t("Choose a {0} plan", { 0: p.name }), text: p.plans.map((pl) => `${pl.name} ${money(pl.price)}`).join(" · ") },
+      how === "ready"
+        ? { title: t("No details needed"), text: t("We deliver a ready {0} account.", { 0: p.name }) }
+        : how === "login"
+          ? { title: t("Your {0} login", { 0: p.name }), text: t("We sign in to your {0} account once, only to activate the plan.", { 0: p.name }) }
+          : { title: field ? field.label : t("Your account"), text: field?.hint ?? t("We activate {0} on your own account.", { 0: p.name }) },
+      { title: t("Pay"), text: t(found ? "Wallet or card." : "Wallet, card or crypto.") },
+      how === "ready"
+        ? { title: t("Sign in"), text: t("The login is on your order page, ready to copy.") }
+        : { title: t("Open {0}", { 0: p.name }), text: t("The plan appears on your account {0}.", { 0: when }) },
     ],
+    // The admin's own article when the product has one (Persian site), then how it's activated and which plan.
     content: [
-      { id: "what", title: t("What you get with {0}", { 0: p.name }), paragraphs: [sentence(p.tagline, ...p.notes)] },
-      { id: "how", title: own ? "Activated on your own account" : "A ready account, delivered to you", paragraphs: [own
-        ? t("You keep using your own {0} account; we only need {1}. You never share a password, and everything already on the account stays as it is.", { 0: p.name, 1: need })
+      ...(found?.guide?.length
+        ? found.guide.map((g, i) => ({ id: `a${i + 1}`, title: g.title, paragraphs: g.paragraphs }))
+        : [{ id: "what", title: t("What you get with {0}", { 0: p.name }), paragraphs: [sentence(p.tagline, ...p.notes)] }]),
+      { id: "how", title: t(how === "ready" ? "A ready account, delivered to you" : "Activated on your own account"), paragraphs: [
+        how === "own" ? t("You keep using your own {0} account; we only need {1}. You never share a password, and everything already on the account stays as it is.", { 0: p.name, 1: need })
+        : how === "login" ? t("You keep using your own {0} account. To activate the plan we need to sign in to it once, so the order asks for its email and password. We use them only for that; change your password as soon as the plan is active.", { 0: p.name })
         : t("You receive a working {0} login on your order page. There's nothing to set up on your side; sign in and start using it.", { 0: p.name })] },
-      { id: "plans", title: "Which plan to choose", paragraphs: [p.plans.length > 1
-        ? t("The {0} plan costs {1}.", { 0: cheapest.name, 1: t.usd(cheapest.price) }) + " " + t("{0} works out cheapest per month at {1}.", { 0: longest.name, 1: t.usd(longest.price / longest.months) })
-          + (longest.was ? " " + t("That saves {0}%.", { 0: Math.round((1 - longest.price / longest.was) * 100) }) : "")
-        : t("{0} comes as {1} for {2}.", { 0: p.name, 1: cheapest.name, 2: t.usd(cheapest.price) })] },
+      { id: "plans", title: t("Which plan to choose"), paragraphs: [p.plans.length > 1
+        ? t("The {0} plan costs {1}.", { 0: cheapest.name, 1: money(cheapest.price) })
+          + (longest && longest.months > 1 ? " " + t("{0} works out cheapest per month at {1}.", { 0: longest.name, 1: money(longest.price / longest.months) }) : "")
+          + (longest?.was ? " " + t("That saves {0}%.", { 0: Math.round((1 - longest.price / longest.was) * 100) }) : "")
+        : t("{0} comes as {1} for {2}.", { 0: p.name, 1: cheapest.name, 2: money(cheapest.price) })] },
     ],
     faq: [
-      { q: t("How long does {0} take?", { 0: p.name }), a: `${p.delivery}. ${t(own ? "You'll see the plan on your account once it's active." : "The login appears on your order page.")}` },
-      own
+      { q: t("How long does {0} take?", { 0: p.name }), a: `${p.delivery || t("It depends on the queue; we start as soon as you pay")}. ${t(how === "ready" ? "The login appears on your order page." : "You'll see the plan on your account once it's active.")}` },
+      how === "own"
         ? { q: t("Do you need my {0} password?", { 0: p.name }), a: t("No. Only {0}. Never share your password with anyone.", { 0: need }) }
-        : { q: "Can I change the password?", a: "Shared ready accounts must keep their password; private profiles can set their own PIN." },
-      { q: t("What if {0} stops working?", { 0: p.name }), a: "Tell support from your order page. We fix it, replace it or refund the unused time." },
+        : how === "login"
+          ? { q: t("Why do you need my {0} password?", { 0: p.name }), a: t("{0} can only be upgraded from inside the account, so we sign in once to activate the plan. Change your password as soon as it's active.", { 0: p.name }) }
+          : { q: t("Can I change the password?"), a: t("Shared ready accounts must keep their password; private profiles can set their own PIN.") },
+      { q: t("What if {0} stops working?", { 0: p.name }), a: t("Tell support from your order page. We fix it, replace it or refund the unused time.") },
     ],
-    comments: [
-      { id: `${p.slug}-1`, name: "Customer R.", date: "5 days ago", text: t("{0} {1} quickly, exactly as described.", { 0: p.name, 1: t(own ? "was activated on my account" : "login arrived") }), replies: [support("Thanks for the feedback!")] },
+    // Live pages show real comments only (none yet); the placeholder catalog keeps a sample.
+    comments: found ? [] : [
+      { id: `${p.slug}-1`, name: "Customer R.", date: "5 days ago", text: t("{0} {1} quickly, exactly as described.", { 0: p.name, 1: t(how === "ready" ? "login arrived" : "was activated on my account") }), replies: [support("Thanks for the feedback!")] },
     ],
-    blogCat: p.cat === "ai" ? "news" : "guides",
-  });
+    blogCat: (p.cat === "ai" ? "news" : "guides") as BlogCat,
+  };
+  // Live text is already in the page's language (t() above); placeholders go through the content translation.
+  return found ? content : t.tr(content);
 }
 
 // Any extras key: a fixed service, or "subs:{slug}" for a subscription's own page.
 // `t` translates the result (English when left out).
-export function extrasFor(id: string, t: T = makeT("en")): ServiceExtras {
-  if (id.startsWith("subs:")) return subsExtras(id.slice(5), t) ?? t.tr(serviceExtras.subscriptions);
+// `live`: the page's live subscriptions (see design/subs/live.tsx useServiceExtras).
+export function extrasFor(id: string, t: T = makeT("en"), live?: LiveSubsExtras): ServiceExtras {
+  if (id.startsWith("subs:")) return subsExtras(id.slice(5), t, live) ?? t.tr(serviceExtras.subscriptions);
   return t.tr(serviceExtras[id as ServiceId]);
 }

@@ -12,6 +12,7 @@ import { card, field, H2, ring, ServiceIcon, TgFaq, TgOrderView, Trust, useTween
 import { HowItWorks, Rules } from "./ads";
 import { ChipInput as KitChipInput, MAX_MEDIA_MB, MIN_CPM, targets, useAdForm, type Ad, type Target } from "./adsKit";
 import { useT } from "@/i18n/client";
+import { SpotlightBand, spotTone, useSpotlight } from "@/design/service/spotlight";
 import { PageH1 } from "@/components/seo/PageHeading";
 
 // Ads G — "Telegram Ads Form", on the plain site page (light and dark theme). Telegram's ad fields, minus the
@@ -472,6 +473,7 @@ export default function AdsG() {
   const tx = useT();
   const ad = useAdForm({ status: "active" });
   const extras = useHasExtras();
+  const spot = useSpotlight();
   const sideRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
@@ -485,14 +487,28 @@ export default function AdsG() {
   if (ad.c.order) return <PageShell><div className="px-6 py-14"><TgOrderView o={ad.c.order} onAgain={ad.c.reset} /></div></PageShell>;
   const go = () => { const b = sideRef.current?.querySelector<HTMLButtonElement>("button[type=submit]"); b?.scrollIntoView({ behavior: "smooth", block: "center" }); b?.focus({ preventScroll: true }); };
 
+  const trust = [tx("No TON or Fragment needed"), tx("Refund if rejected"), tx("Stop any time")];
   return (
     <PageShell>
-      <div className="mx-auto max-w-6xl px-4 pb-28 pt-14 sm:px-6">
-        <h1 className="text-balance font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl dark:text-white"><PageH1 text={tx("Create a Telegram ad")} /></h1>
-        <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-700 sm:mt-4 sm:text-lg dark:text-slate-300">{tx.tr(tgHeadings).ads.sub}</p>
-        <div className="mt-6"><Trust items={[tx("No TON or Fragment needed"), tx("Refund if rejected"), tx("Stop any time")]} /></div>
+      {/* Spotlight × Grid (landing hero preview): the heading moves into the band and the form overlaps its lower part. */}
+      {spot && (
+        <section className={`relative -mt-16 overflow-hidden pb-28 pt-28 ${spotTone.title}`}>
+          <SpotlightBand under={false} beam="start" />
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
+            <h1 className="text-balance font-display text-3xl font-bold tracking-tight sm:text-5xl lg:max-w-[calc(100%-400px)]"><PageH1 text={tx("Create a Telegram ad")} /></h1>
+            <p className={`mt-3 max-w-3xl text-pretty text-base leading-relaxed sm:mt-4 sm:text-lg ${spotTone.sub}`}>{tx.tr(tgHeadings).ads.sub}</p>
+            <div className="mt-6"><Trust items={trust} /></div>
+          </div>
+        </section>
+      )}
+      <div className={`mx-auto max-w-7xl px-4 pb-28 sm:px-6 ${spot ? "" : "pt-14"}`}>
+        {!spot && <>
+          <h1 className="text-balance font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl dark:text-white"><PageH1 text={tx("Create a Telegram ad")} /></h1>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-700 sm:mt-4 sm:text-lg dark:text-slate-300">{tx.tr(tgHeadings).ads.sub}</p>
+          <div className="mt-6"><Trust items={trust} /></div>
+        </>}
 
-        <form noValidate onSubmit={(e) => { e.preventDefault(); ad.proceed(); }} className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <form noValidate onSubmit={(e) => { e.preventDefault(); ad.proceed(); }} className={`${spot ? "relative z-10 -mt-16" : "mt-10"} grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_360px]`}>
           <div className="min-w-0 space-y-6">
             {ad.submitted > 0 && ad.errList.length > 0 && (
               <div ref={ad.summaryRef} tabIndex={-1} role="alert" className="rounded-2xl border-2 border-red-700 bg-red-50 p-5 outline-none dark:border-red-400 dark:bg-red-500/10">

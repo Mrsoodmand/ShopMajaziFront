@@ -1,6 +1,6 @@
-// PLACEHOLDER articles for the blog post page. The live site will load posts from the Laravel blog and map their
-// HTML body onto these same blocks (or style it as-is). Only the WhatsApp guide has a full sample body; every other
-// post gets a short generated stand-in so its page renders.
+// PLACEHOLDER articles for the blog post page, shown on the /design pages. The live page loads the post from the
+// Laravel blog (lib/blog.ts) and shows its HTML body styled as these blocks (.article-html in globals.css).
+// Only the WhatsApp guide has a full sample body; every other post gets a short generated stand-in so its page renders.
 
 import { archive } from "./blog-list-en";
 import type { BlogCat, Post } from "./blog-en";
@@ -26,15 +26,19 @@ export type Article = {
   product: Product;
   takeaways: string[];
   body: Block[];
+  // A live post's body: cleaned HTML from the blog (backend App\Services\BlogHtml), shown instead of `body`.
+  html?: string;
   faq: { q: string; a: string }[];
 };
-// Article plus what the page needs around it.
-export type ArticlePage = Article & { toc: Extract<Block, { t: "h2" }>[]; related: Post[]; next: Post };
+// A contents entry: an h2 of the article, or an h3 under one (live posts).
+export type TocItem = { id: string; text: string; level?: 2 | 3 };
+// Article plus what the page needs around it. `lang`: the article's language when it differs from the page's.
+export type ArticlePage = Article & { toc: TocItem[]; related: Post[]; next: Post; lang?: "fa" };
 
-const team = { name: "ShopMajazi Team", role: "Guides & support", initials: "SM" };
+export const team = { name: "ShopMajazi Team", role: "Guides & support", initials: "SM" };
 
 // The service each topic leads to.
-const products: Record<BlogCat, Product> = {
+export const topicProducts: Record<BlogCat, Product> = {
   numbers: { name: "Virtual Number (OTP)", desc: "One-time numbers from 150+ countries. Refund if no SMS.", from: "$0.30", href: "/virtual-number" },
   apple: { name: "USA Apple ID", desc: "Ready-made or custom, with a setup guide.", from: "$6.50", href: "/apple-id/usa" },
   telegram: { name: "Telegram Premium", desc: "Gifted to your username, no login needed.", from: "$11.90", href: "/telegram/premium" },
@@ -49,7 +53,7 @@ const sample: Article = {
   author: team,
   lead: "WhatsApp asks for a phone number before it lets you in. If you'd rather not use your personal SIM, a virtual number gets you verified in about a minute. Here's exactly how to do it, and how to keep the account safe afterwards.",
   tags: ["WhatsApp", "Virtual numbers", "SMS verification", "Privacy"],
-  product: products.numbers,
+  product: topicProducts.numbers,
   takeaways: [
     "Pick a country with a high success rate for WhatsApp, not just the cheapest one.",
     "The code shows up in your dashboard within seconds; no code means an automatic refund.",
@@ -86,7 +90,7 @@ const sample: Article = {
 
 // Stand-in body for posts without a sample text yet.
 function stub(post: Post): Article {
-  const product = products[post.cat];
+  const product = topicProducts[post.cat];
   return {
     post, updated: post.date, author: team, lead: post.excerpt, tags: [], product,
     takeaways: [post.excerpt],

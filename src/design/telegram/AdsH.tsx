@@ -8,7 +8,7 @@ import { AdErrors, AdsNightPage, AudienceFields, bad, CpmBudgetFields, ErrLine, 
 // label fills in from the link. Where, budget and schedule follow. The sidebar skips the preview (the left side is
 // the preview) and keeps the estimate, summary and green Continue.
 
-const inBubble = "w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-white placeholder:text-slate-400 hover:border-white/15 focus:border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400";
+const inBubble = "w-full rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-white placeholder:text-slate-400 hover:border-white/15 focus:border-white/40 focus:outline-none";
 
 function ChannelComposer({ ad }: { ad: Ad }) {
   const { p, errors } = ad;

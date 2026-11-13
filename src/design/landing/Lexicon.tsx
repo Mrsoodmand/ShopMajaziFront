@@ -184,7 +184,7 @@ function SenseItem({ n, sense, locale }: { n: number; sense: Sense; locale: Loca
 // Usage: the three steps of buying, in order (the order matters, so they are numbered).
 export function Usage({ steps }: { steps: Step[] }) {
   return (
-    <ol className="grid gap-6 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[color:rgb(23_20_15/0.35)] rtl:sm:divide-x-reverse">
+    <ol className="grid gap-6 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-[color:rgb(23_20_15/0.35)]">
       {steps.map((s, i) => (
         <li key={s.title} className="sm:px-6 sm:first:ps-0 sm:last:pe-0">
           <span className="block text-[2.5rem] font-bold leading-none">{["i", "ii", "iii"][i]}.</span>

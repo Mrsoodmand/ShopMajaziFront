@@ -16,6 +16,14 @@ export default async function Icon() {
       size,
     );
   }
+  // Image marks (the original logo) go in as a plain <img>, which the renderer handles more reliably than an SVG <image>.
+  if (m.src) {
+    return new ImageResponse(
+      // eslint-disable-next-line @next/next/no-img-element
+      <div style={{ width: "100%", height: "100%", display: "flex", borderRadius: 14, overflow: "hidden" }}><img src={m.src} width={64} height={64} alt="" /></div>,
+      size,
+    );
+  }
   return new ImageResponse(
     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#0F172A", ...(m.ink ? { background: "#fff", borderRadius: 16 } : {}) }}>
       <m.Mark size={m.ink ? 52 : 64} />

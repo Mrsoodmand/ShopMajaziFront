@@ -3,7 +3,7 @@ import { getT } from "@/i18n/server";
 import { getSection } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
 import { ExtrasSlot } from "@/design/service/slot";
-import ServiceExtras from "@/design/service/ServiceExtras";
+import LiveServiceExtras from "@/design/service/LiveServiceExtras";
 import { PageHeadingProvider } from "@/components/seo/PageHeading";
 import { pageSeo, seoMetadata } from "@/lib/seo";
 
@@ -26,5 +26,6 @@ export default async function RentNumberPage() {
   const offer = section.offers.find((o) => o.id === decisions["page-rent"]?.offer) ?? section.offers.find((o) => o.id === "G")!;
   const { Component } = offer;
   // How to use, content, comments, FAQ and blog follow the design (see ServiceExtras).
-  return <PageHeadingProvider h1={seo.h1}><ExtrasSlot extras={<ServiceExtras service="rent-number" />} glow="amber"><Component /></ExtrasSlot></PageHeadingProvider>;
+  // Catalog K shows the country card chosen in /design/page-rent-card.
+  return <PageHeadingProvider h1={seo.h1}><ExtrasSlot extras={<LiveServiceExtras service="rent-number" />} glow="amber"><Component card={offer.id === "K" ? decisions["page-rent-card"]?.offer : undefined} /></ExtrasSlot></PageHeadingProvider>;
 }

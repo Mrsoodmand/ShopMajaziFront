@@ -26,7 +26,7 @@ export async function pageSeo(key: SeoKey): Promise<PageSeo> {
 }
 
 // Share images need a full address; build it from the host this page was asked for.
-async function absolute(path: string) {
+export async function absolute(path: string) {
   if (/^https?:\/\//.test(path)) return path;
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";

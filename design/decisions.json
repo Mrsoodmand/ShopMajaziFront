@@ -40,8 +40,8 @@
     "savedAt": "2026-10-19T21:51:06.873Z"
   },
   "why": {
-    "offer": "D",
-    "savedAt": "2026-10-20T11:33:06.248Z"
+    "offer": "F",
+    "savedAt": "2026-11-13T19:19:08.000Z"
   },
   "page-otp": {
     "offer": "P",
@@ -136,11 +136,31 @@
     "savedAt": "2026-10-28T10:31:03.695Z"
   },
   "logo": {
-    "offer": "I",
-    "savedAt": "2026-10-28T11:13:07.820Z"
+    "offer": "K",
+    "savedAt": "2026-11-13T20:18:19.391Z"
   },
   "page-google-voice-card": {
     "offer": "C",
     "savedAt": "2026-10-28T22:30:24.863Z"
+  },
+  "page-rent-card": {
+    "offer": "A",
+    "savedAt": "2026-10-29T12:00:00.000Z"
+  },
+  "blog-card": {
+    "offer": "A",
+    "savedAt": "2026-11-09T13:13:18.203Z"
+  },
+  "landing-hero": {
+    "offer": "B",
+    "savedAt": "2026-11-13T21:30:00.000Z"
+  },
+  "hero-motion": {
+    "offer": "A",
+    "savedAt": "2026-11-13T22:00:00.000Z"
+  },
+  "service-faq": {
+    "offer": "C",
+    "savedAt": "2026-11-13T22:30:00.000Z"
   }
 }

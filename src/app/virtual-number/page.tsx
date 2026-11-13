@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getSection } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
 import { ExtrasSlot } from "@/design/service/slot";
-import ServiceExtras from "@/design/service/ServiceExtras";
+import LiveServiceExtras from "@/design/service/LiveServiceExtras";
 import { LiveOtpProvider, type LiveOtp } from "@/design/otp/live";
 import { MoneyProvider } from "@/lib/money";
 import { storefront } from "@/lib/backend";
@@ -58,7 +58,7 @@ export default async function VirtualNumberPage({ searchParams }: { searchParams
     <PageHeadingProvider h1={seo.h1}>
       <MoneyProvider currency="toman">
         <LiveOtpProvider value={live}>
-          <ExtrasSlot extras={<ServiceExtras service="virtual-number" />} glow="violet">
+          <ExtrasSlot extras={<LiveServiceExtras service="virtual-number" />} glow="violet">
             <Component orderView={offer.id === "L" || offer.id === "P" ? decisions["page-otp-order"]?.offer : undefined} panel={offer.id === "P" ? decisions["page-otp-panel"]?.offer : undefined} card={offer.id === "P" ? decisions["page-otp-card"]?.offer : undefined} />
           </ExtrasSlot>
         </LiveOtpProvider>

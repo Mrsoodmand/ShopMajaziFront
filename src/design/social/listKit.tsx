@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState, type CSSProperties } from "react";
-import { Facebook, Instagram, Linkedin, Music2, Search, Send, Twitch, Twitter, X, Youtube, type LucideIcon } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Music2, Send, Twitch, Twitter, X, Youtube, type LucideIcon } from "lucide-react";
 import { listHeadings, listSteps, sortedCategories, type SocialCategory } from "@/content/social-categories-en";
-import { field, ring } from "../googleVoice/clean";
+import { ring } from "../googleVoice/clean";
+import { SearchInput } from "../search";
 import { H2 } from "../telegram/parts";
 import { useHasExtras } from "../service/slot";
 import HowToSteps from "../service/HowToSteps";
@@ -56,16 +57,10 @@ export function useCategorySearch() {
 }
 export type CategorySearch = ReturnType<typeof useCategorySearch>;
 
-export function SearchField({ s, big = false, onDark = false, id = "cat-search" }: { s: CategorySearch; big?: boolean; onDark?: boolean; id?: string }) {
+// The site's shared search box (../search.tsx); `onDark` is the look for a coloured hero band.
+export function SearchField({ s, onDark = false, id = "cat-search" }: { s: CategorySearch; onDark?: boolean; id?: string }) {
   const tx = useT();
-  return (
-    <div className="relative">
-      <label htmlFor={id} className="sr-only">{tx("Search platforms and services")}</label>
-      <Search aria-hidden className={`pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-slate-500 ${big ? "h-5 w-5" : "h-4 w-4"}`} />
-      <input id={id} type="search" value={s.q} onChange={(e) => s.setQ(e.target.value)} placeholder={tx("Search, e.g. instagram or followers")} autoComplete="off"
-        className={`${field} ${big ? "py-4 ps-12 text-lg" : "ps-10"} ${onDark ? "shadow-xl shadow-black/20" : ""}`} />
-    </div>
-  );
+  return <SearchInput tone={onDark ? "hero" : "page"} id={id} value={s.q} onChange={s.setQ} label={tx("Search platforms and services")} placeholder={tx("Search, e.g. instagram or followers")} />;
 }
 
 export function SearchStatus({ s }: { s: CategorySearch }) {
@@ -101,7 +96,7 @@ export function ListBelow() {
   return (
     <div className="mx-auto max-w-6xl space-y-20 px-4 pb-28 pt-20 sm:px-6">
       {/* The same steps, card design and motion as every service page's "How to use" (see HowToSteps). */}
-      <HowToSteps service="social" name={tx("Social media services")} steps={tx.tr(listSteps)} motion="e" detail="roll" flush />
+      <HowToSteps service="social" name={tx("Social media services")} steps={tx.tr(listSteps)} motion="e" detail="roll" repeat flush />
       {/* The live wording, as on the order pages: real services have no refill period or start time set. */}
       <SocialRules items={liveSocialRules} />
       {!extras && <section aria-labelledby="list-faq" className="max-w-3xl"><H2 id="list-faq">{tx("Common questions")}</H2><div className="mt-6"><SocialFaq items={tx.tr(liveSocialFaq)} /></div></section>}

@@ -3,16 +3,20 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { blogCats, catLabel, postHref, posts } from "@/content/blog-en";
+import { blogCats, catLabel, postHref, posts as placeholder } from "@/content/blog-en";
 import Cover from "./Cover";
 import { Meta, ViewAll } from "./parts";
+import { textLang, useBlogPosts } from "./live";
 
 // Offer E — "Topic List": category tabs (like FAQ F) over an editorial list. Each row: thumbnail, topic, title,
 // excerpt and date. Quiet and text-led, easy to scan.
 export default function BlogE() {
+  const posts = useBlogPosts(placeholder);
   const [cat, setCat] = useState<string>("all");
   const tabs = [{ id: "all", label: "Latest" }, ...blogCats];
   const shown = (cat === "all" ? posts : posts.filter((p) => p.cat === cat)).slice(0, 5);
+
+  if (!posts.length) return null;
 
   return (
     <section className="bg-white py-24 dark:bg-[#070B14]">
@@ -38,14 +42,14 @@ export default function BlogE() {
           {shown.map((p) => (
             <li key={p.slug}>
               <Link href={postHref(p)} className="group grid items-center gap-5 py-6 sm:grid-cols-[150px_1fr_auto]">
-                <Cover cat={p.cat} size="sm" className="hidden aspect-[4/3] rounded-2xl sm:block" />
+                <Cover cat={p.cat} src={p.image} size="sm" className="hidden aspect-video rounded-2xl sm:block" />
                 <div>
                   <div className="flex items-center gap-3 text-xs">
                     <span className="font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">{catLabel(p.cat)}</span>
                     <Meta p={p} />
                   </div>
-                  <h3 className="mt-2 font-display text-xl font-semibold leading-snug text-slate-900 group-hover:text-indigo-700 dark:text-white dark:group-hover:text-indigo-300">{p.title}</h3>
-                  <p className="mt-1.5 line-clamp-1 text-sm text-slate-600 dark:text-slate-400">{p.excerpt}</p>
+                  <h3 {...textLang(p)} className="mt-2 font-display text-xl font-semibold leading-snug text-slate-900 group-hover:text-indigo-700 dark:text-white dark:group-hover:text-indigo-300">{p.title}</h3>
+                  <p {...textLang(p)} className="mt-1.5 line-clamp-1 text-sm text-slate-600 dark:text-slate-400">{p.excerpt}</p>
                 </div>
                 <span className="hidden h-11 w-11 place-items-center rounded-full ring-1 ring-slate-200 transition group-hover:bg-slate-900 group-hover:text-white group-hover:ring-slate-900 sm:grid dark:ring-white/15 dark:text-slate-300 dark:group-hover:bg-white dark:group-hover:text-slate-900">
                   <ArrowRight className="h-4 w-4 rtl:rotate-180" />

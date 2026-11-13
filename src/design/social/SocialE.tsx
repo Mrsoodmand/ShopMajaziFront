@@ -5,6 +5,7 @@ import { useMoney } from "@/lib/money";
 import { PageShell } from "../otp/parts";
 import { Trust } from "../telegram/parts";
 import { card, durationLabel, field, LinkField, look, PlatformIcon, ring, SocialBelow, SocialCheckout, SocialForm, SocialOrderView, SocialSummary, TierRadios, useJump, useSocial, JumpBar, type Social } from "./kit";
+import { fieldFocus } from "../googleVoice/clean";
 import { useT } from "@/i18n/client";
 
 // Social E — "Delivery Timeline": starts with how many and how long. Platform and service are two plain dropdowns;
@@ -37,7 +38,7 @@ function Amount({ s }: { s: Social }) {
         <button type="button" aria-label={tx("Fewer")} disabled={s.qty <= s.service.min} onClick={() => s.setQty(Math.max(s.service.min, s.qty - step))} className={btn}><Minus aria-hidden className="h-5 w-5" /></button>
         <input id="social-qty" type="number" inputMode="numeric" value={s.qty || ""} onChange={(x) => s.setQty(+x.target.value)} onBlur={s.touchQty}
           aria-invalid={!!e} aria-describedby={["social-qty-hint", e && "social-qty-error"].filter(Boolean).join(" ")}
-          className={`min-w-0 flex-1 rounded-xl border bg-white px-4 py-2 text-center font-display text-4xl font-bold tabular-nums text-slate-900 sm:text-5xl dark:bg-white/5 dark:text-white ${e ? "border-red-700 dark:border-red-400" : "border-slate-300 dark:border-white/20"} ${ring}`} />
+          className={`min-w-0 flex-1 rounded-xl border bg-white px-4 py-2 text-center font-display text-4xl font-bold tabular-nums text-slate-900 sm:text-5xl dark:bg-white/5 dark:text-white ${e ? "border-red-700 dark:border-red-400" : "border-slate-300 dark:border-white/20"} ${fieldFocus}`} />
         <button type="button" aria-label={tx("More")} disabled={s.qty >= s.service.max} onClick={() => s.setQty(Math.min(s.service.max, s.qty + step))} className={btn}><Plus aria-hidden className="h-5 w-5" /></button>
       </div>
       <label htmlFor="social-qty-range" className="sr-only">{tx("Amount slider")}</label>

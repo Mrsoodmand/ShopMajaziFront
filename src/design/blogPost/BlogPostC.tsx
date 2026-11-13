@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { catLabel, postHref } from "@/content/blog-en";
 import Cover from "../blog/Cover";
+import { textLang } from "../blog/live";
 import { PageShell } from "../otp/parts";
 import { ArticleProvider, AuthorBox, Body, Byline, Crumbs, ProductCta, ProgressBar, Share, Tags, useArticle, useProgress } from "./parts";
 
@@ -22,13 +23,13 @@ function Page() {
     <PageShell>
       <ProgressBar pct={pct} />
       <header className="relative -mt-16 flex min-h-[88vh] items-end overflow-hidden">
-        <Cover cat={post.cat} size="lg" corner className="absolute inset-0 [&>svg]:top-28 [&>svg]:end-[8%]" />
+        <Cover cat={post.cat} src={post.image} priority size="lg" corner className="absolute inset-0 [&>svg]:top-28 [&>svg]:end-[8%]" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-slate-950/10" />
         <div className="relative mx-auto w-full max-w-4xl px-6 pb-16 pt-32">
           <Crumbs light />
           <span className="mt-6 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur">{catLabel(post.cat)}</span>
-          <h1 className="mt-4 font-display text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl">{post.title}</h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/80">{article.lead}</p>
+          <h1 className="mt-4 font-display text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl" {...textLang(post)}>{post.title}</h1>
+          <p {...textLang(post)} className="mt-6 max-w-2xl text-lg leading-relaxed text-white/80">{article.lead}</p>
           <div className="mt-8 flex flex-wrap items-center justify-between gap-6">
             <Byline light />
             <a href="#article" className="flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white">Start reading<ArrowDown className="h-4 w-4 animate-bounce" /></a>
@@ -50,7 +51,7 @@ function Page() {
       </div>
 
       <Link href={postHref(nextPost)} className="group relative mt-8 block overflow-hidden">
-        <Cover cat={nextPost.cat} size="lg" corner className="absolute inset-0 transition duration-700 group-hover:scale-105" />
+        <Cover cat={nextPost.cat} src={nextPost.image} size="lg" corner className="absolute inset-0 transition duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 bg-slate-950/60 transition group-hover:bg-slate-950/50" />
         <div className="relative mx-auto max-w-4xl px-6 py-24 text-white">
           <div className="text-xs font-semibold uppercase tracking-widest text-white/70">Next article</div>

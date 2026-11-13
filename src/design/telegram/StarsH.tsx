@@ -43,7 +43,7 @@ export default function StarsH() {
           <div className="mt-2 flex items-center justify-center gap-3 sm:gap-5">
             <button type="button" onClick={() => step(-1)} disabled={st.amount <= STAR_MIN} aria-label="Fewer Stars" className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/25 text-white transition hover:bg-white/10 active:scale-90 disabled:opacity-40 ${ring}`}><Minus aria-hidden className="h-5 w-5" /></button>
             <input id="stars-h" type="number" inputMode="numeric" min={STAR_MIN} max={STAR_MAX} value={st.amount || ""} onChange={(e) => st.setAmount(Number(e.target.value))} aria-describedby="stars-h-hint"
-              className={`w-full max-w-[15rem] rounded-2xl !bg-transparent text-center font-display text-5xl font-bold tabular-nums text-white [appearance:textfield] sm:text-6xl [&::-webkit-inner-spin-button]:appearance-none ${ring}`} />
+              className={`w-full max-w-[15rem] rounded-2xl !bg-transparent text-center font-display text-5xl font-bold tabular-nums text-white [appearance:textfield] sm:text-6xl [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-2 focus:ring-white/25`} />
             <button type="button" onClick={() => step(1)} disabled={st.amount >= STAR_MAX} aria-label="More Stars" className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/25 text-white transition hover:bg-white/10 active:scale-90 disabled:opacity-40 ${ring}`}><Plus aria-hidden className="h-5 w-5" /></button>
           </div>
           <p id="stars-h-hint" className={`mt-1 text-sm ${st.amountError ? "font-semibold text-amber-200" : "text-white/60"}`}>{st.amountError ?? `${STAR_MIN} to ${STAR_MAX.toLocaleString("en-US")}`}</p>

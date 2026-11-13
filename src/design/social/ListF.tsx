@@ -8,6 +8,7 @@ import { PageShell } from "../otp/parts";
 import { CategoryLogo, fmtFrom, ListBelow, NoMatch, ring, useCategorySearch, wash } from "./listKit";
 import { listHeroes } from "./listHero";
 import { isRich } from "./heroBackdrops";
+import { useSpotlight } from "@/design/service/spotlight";
 import { useLiveSocial } from "./live";
 import { useT } from "@/i18n/client";
 import { useMoney } from "@/lib/money";
@@ -59,11 +60,12 @@ export default function ListF({ hero = "plain", texture, icons, object, bg }: { 
   const s = useCategorySearch();
   const live = useLiveSocial();
   const H = listHeroes[hero] ?? listHeroes.plain;
+  const spot = useSpotlight();
   const featured = s.searching ? [] : s.list.filter((c) => c.featured);
   const overlap = H.overlap || (hero === "C" && isRich(bg));
   const rest = s.searching ? s.list : s.list.filter((c) => !c.featured);
   return (
-    <PageShell heroDark={H.dark || (hero === "C" && isRich(bg))}>
+    <PageShell heroDark={!spot && (H.dark || (hero === "C" && isRich(bg)))}>
       <H.Component s={s} texture={texture} icons={icons} object={object} bg={bg} />
       {live?.error && (
         <div className={`mx-auto max-w-6xl px-4 sm:px-6 ${overlap ? "relative z-10 -mt-32 mb-36" : "mt-10"}`}>

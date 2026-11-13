@@ -1,0 +1,40 @@
+/* The service pages' FAQ (ServiceExtras › ServiceFaq). Each question is a native <details>, so every answer is in the
+   HTML and works without JS. Where the browser can animate to an "auto" height (::details-content with
+   interpolate-size), an answer slides open and shut; elsewhere it simply opens. Its text fades in either way.
+   --t is the page's colour (set inline from its header glow), lighter in dark theme. */
+.faq { --t: var(--tone, #4f46e5); }
+:global(.dark) .faq { --t: var(--tone-d, #a5b4fc); }
+
+.item {
+  interpolate-size: allow-keywords;
+  transition: border-color 300ms ease, background-color 300ms ease, box-shadow 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.item::details-content {
+  block-size: 0; overflow-y: clip;
+  transition: block-size 420ms cubic-bezier(0.22, 1, 0.36, 1), content-visibility 420ms allow-discrete;
+}
+.item[open]::details-content { block-size: auto; }
+
+.item:not([open]):hover { border-color: color-mix(in srgb, var(--t) 30%, rgb(148 163 184 / 0.4)); }
+.item[open] {
+  border-color: color-mix(in srgb, var(--t) 45%, transparent);
+  background-color: color-mix(in srgb, var(--t) 4%, #fff);
+  box-shadow: 0 22px 44px -30px color-mix(in srgb, var(--t) 75%, transparent);
+}
+:global(.dark) .item[open] { background-color: color-mix(in srgb, var(--t) 6%, #0E1424); box-shadow: 0 22px 44px -30px rgb(0 0 0 / 0.9); }
+.item[open] .answer { animation: answer-in 460ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both; }
+
+/* The round + at the end of each question: tints on hover, fills with the page colour and turns into × when open. */
+.icon { transition: background-color 250ms ease, color 250ms ease, rotate 420ms cubic-bezier(0.22, 1, 0.36, 1); }
+.item:not([open]) summary:hover .icon { background-color: color-mix(in srgb, var(--t) 16%, transparent); color: var(--t); }
+.item[open] .icon { rotate: 45deg; background-color: var(--t); color: #fff; }
+:global(.dark) .item[open] .icon { color: #0B1020; }
+
+/* The support card's icon tile. */
+.tile { background-color: color-mix(in srgb, var(--t) 14%, transparent); color: var(--t); }
+
+@keyframes answer-in { from { opacity: 0; transform: translateY(-6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .item::details-content { transition: none; }
+}

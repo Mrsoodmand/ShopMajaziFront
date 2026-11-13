@@ -39,6 +39,7 @@ export const common: Record<string, string> = {
   "My account": "حساب من",
   "Sign in / Sign up": "ورود / ثبت‌نام",
   "Sign in": "ورود",
+  "Loading…": "در حال بارگیری…",
   "Search services": "جستجوی خدمات",
   "Search services…": "جستجوی خدمات…",
   "Close search": "بستن جستجو",
@@ -120,8 +121,8 @@ export const common: Record<string, string> = {
   "Not enough in your wallet. Top up or choose Card or Crypto.": "موجودی کیف پول کافی نیست. کیف پول را شارژ کنید یا کارت بانکی یا ارز دیجیتال را انتخاب کنید.",
 
   // Hero
-  "Shop digital services": "خدمات دیجیتال را",
-  "like a pro.": "حرفه‌ای بخرید.",
+  "Get your": "خدمات دیجیتال را",
+  "digital services.": "دریافت کنید.",
   "Real numbers, real accounts, real growth. Instant delivery and a refund if anything goes wrong.": "شماره واقعی، اکانت واقعی، رشد واقعی. تحویل آنی، و اگر مشکلی پیش بیاید پولتان برمی‌گردد.",
   "Search 2,000+ services": "جستجو در بیش از ۲٬۰۰۰ سرویس",
   "Refund guarantee": "تضمین بازگشت وجه",

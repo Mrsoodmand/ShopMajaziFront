@@ -5,12 +5,16 @@ import "./globals.css";
 import { LocaleProvider } from "@/i18n/client";
 import { AccountProvider } from "@/lib/account";
 import ScrollReveal from "@/components/ScrollReveal";
+import PersianDigits from "@/components/PersianDigits";
 import { Suspense } from "react";
 import { BrandProvider } from "@/components/brand/Brand";
 import RouteLoader from "@/components/brand/RouteLoader";
 import { readDecisions } from "@/components/design/decisions";
 import { dirOf } from "@/i18n/config";
 import { getLocale, getPrices, getT } from "@/i18n/server";
+import { cookies } from "next/headers";
+import { SpotlightProvider } from "@/design/service/spotlight";
+import { HERO_PREVIEW_COOKIE } from "@/design/service/heroPreview";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk" });
@@ -43,6 +47,9 @@ const themeScript = `try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [locale, prices, decisions] = await Promise.all([getLocale(), getPrices(), readDecisions()]);
+  // Landing-page hero: "Spotlight × Grid" once chosen (offer B), or while its preview cookie is on (/design/landing-hero).
+  const heroPreview = (await cookies()).get(HERO_PREVIEW_COOKIE)?.value === "spotlight";
+  const spotlight = decisions["landing-hero"]?.offer === "B" || heroPreview;
   return (
     <html lang={locale} dir={dirOf(locale)} suppressHydrationWarning>
       <head>
@@ -51,10 +58,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={`${inter.variable} ${grotesk.variable} ${serif.variable} ${mono.variable} ${iransans.variable} bg-white font-sans text-slate-900 dark:bg-[#070B14] dark:text-slate-100`}>
         <LocaleProvider locale={locale} prices={prices}>
           <BrandProvider mark={decisions.logo?.offer}>
-            <AccountProvider>{children}</AccountProvider>
+            <AccountProvider><SpotlightProvider on={spotlight} preview={heroPreview && decisions["landing-hero"]?.offer !== "B"}>{children}</SpotlightProvider></AccountProvider>
             <Suspense fallback={null}><RouteLoader /></Suspense>
           </BrandProvider>
           <ScrollReveal />
+          <PersianDigits />
         </LocaleProvider>
       </body>
     </html>

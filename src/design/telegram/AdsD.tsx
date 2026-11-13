@@ -30,7 +30,7 @@ export default function AdsD() {
             <div className="mt-2 flex items-center gap-3">
               <span aria-hidden className="font-display text-5xl font-bold text-white">$</span>
               <input id="ad-budget-hero" type="number" inputMode="numeric" min={AD_MIN_BUDGET} max={AD_MAX_BUDGET} value={a.f.budget || ""} onChange={(e) => a.set("budget", Number(e.target.value))} aria-describedby="ad-budget-hero-hint"
-                className={`w-full rounded-xl bg-transparent font-display text-5xl font-bold tabular-nums text-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none ${ring}`} />
+                className={`w-full rounded-xl bg-transparent font-display text-5xl font-bold tabular-nums text-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-2 focus:ring-white/25`} />
             </div>
             <p id="ad-budget-hero-hint" className={`text-sm ${a.allErrors.budget ? "font-semibold text-amber-200" : "text-white/70"}`}>{a.allErrors.budget ?? `${usd(AD_MIN_BUDGET)} to ${usd(AD_MAX_BUDGET)}`}</p>
             <input type="range" aria-label="Budget slider" min={AD_MIN_BUDGET} max={2000} step={10} value={Math.min(2000, Math.max(AD_MIN_BUDGET, a.f.budget || 0))} onChange={(e) => a.set("budget", Number(e.target.value))} className="mt-6 w-full accent-white" />

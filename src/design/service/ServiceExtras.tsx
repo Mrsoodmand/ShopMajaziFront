@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import Link from "@/i18n/Link";
-import { ArrowRight, BadgeCheck, ChevronDown, ChevronRight, MessageSquare, Send } from "lucide-react";
-import { blogCats } from "@/content/blog-en";
+import { ArrowRight, BadgeCheck, ChevronDown, Mail, MessageCircle, MessageSquare, Plus, Send } from "lucide-react";
+import { blogCats, type Post } from "@/content/blog-en";
+import { supportEmail } from "@/content/footer-en";
 import { archive } from "@/content/blog-list-en";
-import { extrasFor, type ServiceComment } from "@/content/service-extras-en";
+import type { ServiceComment } from "@/content/service-extras-en";
+import { useServiceExtras } from "../subs/live";
 import { field, primary, ring, secondary } from "../googleVoice/clean";
 import { PostCard } from "../blogList/parts";
 import { useT } from "@/i18n/client";
 import HowToSteps from "./HowToSteps";
+import { useGlow } from "./slot";
+import type { GlowTone } from "./HeaderGlow";
+import fq from "./faq.module.css";
+import { FaqC } from "./faqOffers";
 
-// The sections every service page ends with, in this order: how to use, content area, comments, FAQ, blog.
-// `service` is a key from service-extras (or "subs:{slug}" for a subscription's page).
+// The sections every service page ends with, in this order: how to use, content area, comments, FAQ (faqOffers › C), blog.
+// `service` is a key from service-extras (or "subs:{slug}" for a subscription's page). `posts`: the live posts for the
+// blog section (LiveServiceExtras); without them (the /design pages) it shows placeholder posts.
 // Rendered at the end of the page design through the extras slot (see slot.tsx). Accessible throughout: real
 // headings, ordered steps, a disclosure that keeps the full article in the HTML, labelled comment form with errors
 // tied to fields, native <details> for the FAQ, and FAQ structured data for search results.
@@ -22,16 +29,17 @@ const kicker = "text-sm font-semibold uppercase tracking-widest text-emerald-800
 const h2 = "mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white";
 const card = "rounded-3xl border border-slate-200 bg-white dark:border-white/15 dark:bg-[#0E1424]";
 
-export default function ServiceExtras({ service }: { service: string }) {
+export default function ServiceExtras({ service, posts }: { service: string; posts?: Post[] }) {
   const tx = useT();
-  const s = extrasFor(service, tx);
+  const s = useServiceExtras(service);
   return (
     <div className="space-y-24 border-t border-slate-200 pb-24 pt-20 dark:border-white/10">
       <HowToUse service={service} />
       <ContentArea service={service} />
       <Comments key={service} service={service} />
-      <ServiceFaq service={service} />
-      <RelatedPosts service={service} />
+      {/* FAQ: offer C "Index & Answer" (chosen at /design/service-faq); ServiceFaq below is the earlier design. */}
+      <FaqC service={service} />
+      <RelatedPosts service={service} live={posts} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org", "@type": "FAQPage",
         mainEntity: s.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
@@ -42,32 +50,40 @@ export default function ServiceExtras({ service }: { service: string }) {
 
 // ---------- 1 · How to use ----------
 // The steps come into focus one by one as they scroll into view (motion E, /design/steps-motion), their big numbers
-// roll up into place and the progress bars fill (card animation D, /design/steps-detail).
+// roll up into place and the progress bars fill (card animation D, /design/steps-detail), and the numbers and bars keep
+// replaying that on a loop while the steps are on screen (`repeat`). On virtual numbers the steps are walked through
+// instead: each lights up in turn while its bar fills, then is ticked off (card animation F, "journey"; it ignores
+// `repeat`).
+
+const journeySteps = new Set(["virtual-number"]);
 
 function HowToUse({ service }: { service: string }) {
-  return <HowToSteps service={service} motion="e" detail="roll" />;
+  return <HowToSteps service={service} motion="e" detail={journeySteps.has(service) ? "journey" : "roll"} repeat />;
 }
 
 // ---------- 2 · Content area ----------
 
 function ContentArea({ service }: { service: string }) {
   const tx = useT();
-  const s = extrasFor(service, tx);
+  const s = useServiceExtras(service);
   const [open, setOpen] = useState(false);
   // Only fold (and offer "Read the full guide") when the article is taller than the folded height.
   const FOLD = 420;
   const article = useRef<HTMLElement>(null);
   const [long, setLong] = useState(true);
+  // Opened, the box grows to the article's own height (long admin articles run far past a fixed cap).
+  const [full, setFull] = useState(4000);
   useEffect(() => {
     const el = article.current;
     if (!el) return;
-    const check = () => setLong(el.scrollHeight > FOLD + 40);
+    const check = () => { setLong(el.scrollHeight > FOLD + 40); setFull(el.scrollHeight); };
     check();
     const ro = new ResizeObserver(check);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
   const folded = long && !open;
+  const fade = "linear-gradient(to bottom, #000 calc(100% - 8rem), transparent)";
   const bodyId = useId();
   return (
     <section aria-labelledby="guide" className={wrap}>
@@ -85,8 +101,9 @@ function ContentArea({ service }: { service: string }) {
           </div>
         </nav>
         <div>
-          {/* The whole article stays in the HTML; when folded it is clipped, not removed, so search engines read all of it. */}
-          <div id={bodyId} className={`relative overflow-hidden transition-[max-height] duration-500 ${folded ? "max-h-[420px]" : "max-h-[4000px]"}`}>
+          {/* The whole article stays in the HTML; when folded it is clipped, not removed, so search engines read all of it.
+              Folded, its last lines fade out through a mask (not a page-coloured overlay, so the page backdrop shows). */}
+          <div id={bodyId} style={{ maxHeight: folded ? FOLD : full + 40, ...(folded ? { maskImage: fade, WebkitMaskImage: fade } : {}) }} className="relative overflow-hidden transition-[max-height] duration-500">
             <article ref={article} className="max-w-3xl space-y-10">
               {s.content.map((c) => (
                 <section key={c.id} id={`${service}-${c.id}`} className="scroll-mt-24">
@@ -95,7 +112,6 @@ function ContentArea({ service }: { service: string }) {
                 </section>
               ))}
             </article>
-            {folded && <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#F5F6FB] to-transparent dark:from-[#070B14]" />}
           </div>
           {long && (
             <button onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={bodyId} className={`${secondary} mt-6`}>
@@ -149,7 +165,7 @@ function CommentItem({ c }: { c: ServiceComment }) {
 
 function Comments({ service }: { service: string }) {
   const tx = useT();
-  const s = extrasFor(service, tx);
+  const s = useServiceExtras(service);
   const [shown, setShown] = useState(PAGE);
   const [name, setName] = useState("");
   const [text, setText] = useState("");
@@ -203,23 +219,52 @@ function Comments({ service }: { service: string }) {
 }
 
 // ---------- 4 · FAQ ----------
+// Wide screens: the heading, a short line and a support card on the start side, the questions beside them. Phones
+// stack heading, questions, then the support card. Each question is its own card (native <details>, see
+// faq.module.css), all in one group so opening one closes the one before; the first starts open, to show that the
+// answers are right here. Accents follow the page's colour (its header glow; brand indigo where there is none).
 
-function ServiceFaq({ service }: { service: string }) {
+const faqTone: Record<GlowTone, [string, string]> = {
+  violet: ["#7c3aed", "#c4b5fd"], emerald: ["#059669", "#6ee7b7"], amber: ["#d97706", "#fcd34d"], sky: ["#0284c7", "#7dd3fc"], rose: ["#db2777", "#f9a8d4"],
+};
+
+export function ServiceFaq({ service }: { service: string }) {
   const tx = useT();
-  const s = extrasFor(service, tx);
+  const s = useServiceExtras(service);
+  const glow = useGlow();
+  const [tone, toneDark] = glow ? faqTone[glow] : ["#4f46e5", "#a5b4fc"];
   return (
-    <section aria-labelledby="svc-faq" className={wrap}>
-      <p className={kicker}>{tx("FAQ")}</p>
-      <h2 id="svc-faq" className={h2}>{tx("{0} questions", { 0: s.name })}</h2>
-      <div className={`${tx.tr(card)} mt-8 max-w-3xl divide-y divide-slate-200 dark:divide-white/10`}>
-        {s.faq.map((f) => (
-          <details key={f.q} className="group p-5 [&_summary::-webkit-details-marker]:hidden">
-            <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 rounded-lg text-[17px] font-semibold text-slate-900 dark:text-white ${ring}`}>
-              {f.q}<ChevronRight aria-hidden className="h-5 w-5 shrink-0 text-slate-500 transition group-open:rotate-90 rtl:rotate-180 rtl:group-open:rotate-90" />
-            </summary>
-            <p className="mt-3 text-[15px] leading-7 text-slate-700 dark:text-slate-300">{f.a}</p>
-          </details>
-        ))}
+    <section aria-labelledby="svc-faq" className={`${wrap} ${fq.faq}`} style={{ "--tone": tone, "--tone-d": toneDark } as CSSProperties}>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:grid-rows-[auto_1fr] lg:gap-x-16">
+        <div className="lg:col-start-1 lg:row-start-1">
+          <p className={kicker}>{tx("FAQ")}</p>
+          <h2 id="svc-faq" className={h2}>{tx("{0} questions", { 0: s.name })}</h2>
+          <p className="mt-4 max-w-sm text-pretty text-[15px] leading-7 text-slate-600 dark:text-slate-400">{tx("Short answers to what buyers ask most about {0}.", { 0: s.name })}</p>
+        </div>
+
+        <div className="space-y-3 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          {s.faq.map((f, i) => (
+            <details key={f.q} name={`faq-${service}`} open={i === 0}
+              className={`${fq.item} rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-[#0E1424] [&_summary::-webkit-details-marker]:hidden`}>
+              <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 rounded-2xl px-5 py-4 text-base font-semibold leading-7 text-slate-900 sm:px-6 sm:py-5 sm:text-[17px] dark:text-white ${ring}`}>
+                <span>{f.q}</span>
+                <span aria-hidden className={`${fq.icon} grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300`}><Plus className="h-4 w-4" /></span>
+              </summary>
+              <div className={fq.answer}>
+                <p className="max-w-[65ch] px-5 pb-5 text-[15px] leading-7 text-slate-700 sm:px-6 sm:pb-6 dark:text-slate-300">{f.a}</p>
+              </div>
+            </details>
+          ))}
+        </div>
+
+        <div className={`${tx.tr(card)} p-6 lg:col-start-1 lg:row-start-2 lg:self-start`}>
+          <span aria-hidden className={`${fq.tile} grid h-11 w-11 place-items-center rounded-2xl`}><MessageCircle className="h-5 w-5" /></span>
+          <h3 className="mt-4 font-display text-lg font-semibold text-slate-900 dark:text-white">{tx("Still have a question?")}</h3>
+          <p className="mt-1 text-[15px] leading-7 text-slate-600 dark:text-slate-400">{tx("Write to our support team; we reply around the clock.")}</p>
+          <a href={`mailto:${supportEmail}`} className={`${secondary} mt-5 w-full px-4 py-3 text-[15px] sm:w-auto`}>
+            <Mail aria-hidden className="h-4 w-4 shrink-0" /><span dir="ltr" className="truncate">{supportEmail}</span>
+          </a>
+        </div>
       </div>
     </section>
   );
@@ -227,18 +272,19 @@ function ServiceFaq({ service }: { service: string }) {
 
 // ---------- 5 · Blog ----------
 
-function RelatedPosts({ service }: { service: string }) {
+function RelatedPosts({ service, live }: { service: string; live?: Post[] }) {
   const tx = useT();
-  const s = extrasFor(service, tx);
-  const posts = [...tx.tr(archive).filter((p) => p.cat === s.blogCat), ...tx.tr(archive).filter((p) => p.cat === "guides")].slice(0, 3);
+  const s = useServiceExtras(service);
+  const posts = live ?? [...tx.tr(archive).filter((p) => p.cat === s.blogCat), ...tx.tr(archive).filter((p) => p.cat === "guides")].slice(0, 3);
   const topic = tx.tr(blogCats).find((c) => c.id === s.blogCat)!.label;
+  if (!posts.length) return null;
   return (
     <section aria-labelledby="svc-blog" className={wrap}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div><p className={kicker}>{tx("Blog")}</p><h2 id="svc-blog" className={h2}>{tx("Read more about")}{" "}{s.name}</h2></div>
         <Link href={`/blog?topic=${s.blogCat}`} className={`${secondary} py-2.5`}>{tx("All {0} articles", { 0: topic })}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></Link>
       </div>
-      <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <PostCard key={p.slug} p={p} />)}</div>
+      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <PostCard key={p.slug} p={p} />)}</div>
     </section>
   );
 }

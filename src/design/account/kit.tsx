@@ -551,7 +551,7 @@ export function AmountPicker({ s, cols = "grid-cols-2 sm:grid-cols-4" }: { s: To
             onFocus={() => s.setAmount(null)}
             onChange={(e) => { const n = e.target.value.replace(/\D/g, "").slice(0, 9); s.setCustom(n ? Number(n).toLocaleString("en-US") : ""); }}
             placeholder="750,000" dir="ltr"
-            className={`${field} !py-2 pe-16 text-end tabular-nums caret-emerald-600 ${err && s.amount === null ? bad : ""}`} />
+            className={`${field} !py-2 pe-16 text-end tabular-nums ${err && s.amount === null ? bad : ""}`} />
           <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-sm text-slate-600 dark:text-slate-400">{t("Toman")}</span>
         </span>
       </label>
@@ -598,7 +598,7 @@ export function CardPicker({ s, demo }: { s: TopUpState; demo: Demo }) {
             <input id="topup-newcard" inputMode="numeric" autoComplete="cc-number" dir="ltr" placeholder="6037 9900 0000 0000" value={s.newCard}
               aria-invalid={!!err} aria-describedby={describe("topup-newcard", true, err)}
               onChange={(e) => s.setNewCard(e.target.value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 "))}
-              className={`${field} mt-2 text-start font-mono tracking-wider caret-emerald-600 ${err ? bad : ""}`} />
+              className={`${field} mt-2 text-start font-mono tracking-wider ${err ? bad : ""}`} />
           </div>
         )}
       </div>
@@ -731,7 +731,7 @@ export function ReplyBox({ ticket, demo }: { ticket: Ticket; demo: Demo }) {
       <FieldError id={`${id}-reply-error`}>{error}</FieldError>
       <textarea ref={area} id={`${id}-reply`} rows={4} value={text} onChange={(e) => { setText(e.target.value); if (error) setError(null); }}
         aria-invalid={!!error} aria-describedby={error ? `${id}-reply-error` : undefined}
-        className={`${field} mt-2 resize-y caret-emerald-600 ${error ? bad : ""}`} />
+        className={`${field} mt-2 resize-y ${error ? bad : ""}`} />
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <AttachButton id={`${id}-file`} att={att} />
         <div className="flex flex-wrap gap-2">
@@ -788,10 +788,10 @@ export function NewTicketForm({ demo, orderId, onDone, onCancel }: { demo: Demo;
         </Labeled>
       )}
       <Labeled id="nt-subject" label={t("Subject")} hint={t("One line, like \"Code didn't arrive\".")} error={err.subject}>
-        <input id="nt-subject" value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={160} aria-invalid={!!err.subject} aria-describedby={describe("nt-subject", true, err.subject)} className={`${field} caret-emerald-600 ${err.subject ? bad : ""}`} />
+        <input id="nt-subject" value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={160} aria-invalid={!!err.subject} aria-describedby={describe("nt-subject", true, err.subject)} className={`${field} ${err.subject ? bad : ""}`} />
       </Labeled>
       <Labeled id="nt-text" label={t("Message")} hint={t("What you did, what you expected, and what happened instead.")} error={err.text}>
-        <textarea id="nt-text" rows={5} value={text} onChange={(e) => setText(e.target.value)} aria-invalid={!!err.text} aria-describedby={describe("nt-text", true, err.text)} className={`${field} resize-y caret-emerald-600 ${err.text ? bad : ""}`} />
+        <textarea id="nt-text" rows={5} value={text} onChange={(e) => setText(e.target.value)} aria-invalid={!!err.text} aria-describedby={describe("nt-text", true, err.text)} className={`${field} resize-y ${err.text ? bad : ""}`} />
       </Labeled>
       <AttachButton id="nt-file" att={att} />
       <div className="flex flex-wrap gap-3">
@@ -819,7 +819,7 @@ export function ProfileForm({ demo, showCards = true }: { demo: Demo; showCards?
   return (
     <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="space-y-6">
       <Labeled id="pf-name" label={t("Full name")} hint={t("Shown to support and on your receipts.")} error={error}>
-        <input id="pf-name" autoComplete="name" value={name} onChange={(e) => { setName(e.target.value); setSaved(false); if (error) setError(null); }} aria-invalid={!!error} aria-describedby={describe("pf-name", true, error)} className={`${field} caret-emerald-600 ${error ? bad : ""}`} />
+        <input id="pf-name" autoComplete="name" value={name} onChange={(e) => { setName(e.target.value); setSaved(false); if (error) setError(null); }} aria-invalid={!!error} aria-describedby={describe("pf-name", true, error)} className={`${field} ${error ? bad : ""}`} />
       </Labeled>
       <ReadOnly label={t("Mobile number")} value={demo.user.mobile} hint={t("You sign in with this number. To change it, write to support.")} />
       <ReadOnly label={t("Email")} value={demo.user.email} hint={t("Receipts go here. To change it, write to support.")} />
@@ -857,7 +857,7 @@ function PasswordInput({ id, value, onChange, error, hint, autoComplete }: { id:
   return (
     <span className="relative block">
       <input id={id} type={shown ? "text" : "password"} dir="ltr" autoComplete={autoComplete} value={value} onChange={(e) => onChange(e.target.value)}
-        aria-invalid={!!error} aria-describedby={describe(id, hint, error)} className={`${field} pe-12 text-start caret-emerald-600 ${error ? bad : ""}`} />
+        aria-invalid={!!error} aria-describedby={describe(id, hint, error)} className={`${field} pe-12 text-start ${error ? bad : ""}`} />
       <button type="button" onClick={() => setShown((s) => !s)} aria-pressed={shown} aria-label={shown ? t("Hide password") : t("Show password")}
         className={`${smallBtn} absolute inset-y-1 end-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10`}>
         {shown ? <EyeOff aria-hidden className="h-4 w-4" /> : <Eye aria-hidden className="h-4 w-4" />}

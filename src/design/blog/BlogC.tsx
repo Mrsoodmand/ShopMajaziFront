@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "@/i18n/Link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { postHref, posts } from "@/content/blog-en";
-import Cover from "./Cover";
-import { Chip, Meta, ViewAll } from "./parts";
+import { posts as placeholder } from "@/content/blog-en";
+import { ViewAll } from "./parts";
+import { useBlogPosts } from "./live";
+import { PostCard } from "../blogList/parts";
 import { useT } from "@/i18n/client";
 
 // Offer C — "Carousel": a row of article cards with prev / next arrows. Drag it with the mouse on desktop;
-// on phones it's a native swipe. Shows more posts in little vertical space.
+// on phones it's a native swipe. Shows more posts in little vertical space. The cards are the site's PostCard
+// (blog card A, "Framed"); the row keeps room above and below for their hover lift and shadow.
 export default function BlogC() {
   const tx = useT();
+  const posts = useBlogPosts(placeholder);
   const track = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: true, end: false });
 
@@ -132,6 +134,8 @@ export default function BlogC() {
     el.scrollBy({ left: dir * step * (rtl ? -1 : 1), behavior: "smooth" });
   };
 
+  if (!posts.length) return null;
+
   const arrow = "grid h-11 w-11 place-items-center rounded-full ring-1 transition disabled:opacity-30 ring-slate-300 text-slate-700 hover:bg-slate-900 hover:text-white hover:ring-slate-900 dark:ring-white/15 dark:text-slate-200 dark:hover:bg-white dark:hover:text-slate-900 disabled:hover:bg-transparent disabled:hover:text-inherit";
 
   return (
@@ -152,16 +156,9 @@ export default function BlogC() {
         <div ref={track}
           onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onPointerLeave={endDrag}
           onClickCapture={onClickCapture} onDragStart={(e) => e.preventDefault()}
-          className={`-mx-6 mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-6 px-6 pb-2 select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${dragging ? "cursor-grabbing [&_a]:cursor-grabbing" : "cursor-grab"}`}>
-          {tx.tr(posts).map((p) => (
-            <Link key={p.slug} href={postHref(p)} className="group w-[82%] shrink-0 snap-start sm:w-[46%] lg:w-[31.5%]">
-              <Cover cat={p.cat} className="aspect-[4/3] rounded-3xl" />
-              <div className="mt-4 px-1">
-                <div className="flex items-center gap-3"><Chip p={p} /><Meta p={p} /></div>
-                <h3 className="mt-3 line-clamp-2 font-display text-lg font-semibold leading-snug text-slate-900 group-hover:text-indigo-700 dark:text-white dark:group-hover:text-indigo-300">{p.title}</h3>
-                <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{p.excerpt}</p>
-              </div>
-            </Link>
+          className={`-mx-6 -mb-8 mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-6 px-6 pb-10 pt-2 select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${dragging ? "cursor-grabbing [&_a]:cursor-grabbing" : "cursor-grab"}`}>
+          {posts.map((p) => (
+            <div key={p.slug} className="w-[82%] shrink-0 snap-start sm:w-[46%] lg:w-[31.5%]"><PostCard p={p} /></div>
           ))}
         </div>
       </div>

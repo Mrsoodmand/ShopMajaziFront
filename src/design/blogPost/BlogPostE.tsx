@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ListOrdered, PartyPopper, Type } from "lucide-react";
 import { catLabel, postHref } from "@/content/blog-en";
 import { PageShell } from "../otp/parts";
+import { textLang } from "../blog/live";
 import { ArticleProvider, Body, Byline, ProductCta, RelatedPosts, Share, Tags, useActiveSection, useArticle, useProgress } from "./parts";
 
 const SIZE_KEY = "post-text-size";
@@ -37,10 +38,10 @@ function Page() {
       <article id="article" className="mx-auto max-w-2xl px-6 pb-16 pt-16">
         <div className="text-center">
           <span className="text-sm font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">{catLabel(post.cat)}</span>
-          <h1 className="mt-4 font-display text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl dark:text-white">{post.title}</h1>
+          <h1 className="mt-4 font-display text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl dark:text-white" {...textLang(post)}>{post.title}</h1>
           <div className="mt-8 flex justify-center"><Byline updated={false} /></div>
         </div>
-        <p className="mt-12 border-s-4 border-indigo-500 ps-5 text-xl leading-relaxed text-slate-700 dark:text-slate-300">{article.lead}</p>
+        <p className="mt-12 border-s-4 border-indigo-500 ps-5 text-xl leading-relaxed text-slate-700 dark:text-slate-300" {...textLang(post)}>{article.lead}</p>
         <Body size={size} cta={<ProductCta compact />} />
         <div className="mt-12"><Tags /></div>
 

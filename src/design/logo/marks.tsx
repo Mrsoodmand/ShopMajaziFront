@@ -3,11 +3,12 @@
 // ink parts, so they follow the theme. `word` sets how the name is set beside the mark.
 
 import type { ReactNode } from "react";
+import { ORIGINAL_CART_SRC } from "./originalCart";
 
 export type WordStyle = "bold" | "split" | "light";
 // `size` sets pixel width and height (needed where CSS classes do not apply, such as the generated favicon).
 export type MarkProps = { className?: string; size?: number };
-export type LogoMark = { id: string; name: string; summary: string; word: WordStyle; ink?: boolean; Mark: (p: MarkProps) => ReactNode };
+export type LogoMark = { id: string; name: string; summary: string; word: WordStyle; ink?: boolean; src?: string; Mark: (p: MarkProps) => ReactNode };
 
 const Svg = ({ className = "", size, children, title }: MarkProps & { children: ReactNode; title?: string }) => (
   <svg viewBox="0 0 32 32" fill="none" width={size} height={size} className={className} aria-hidden={title ? undefined : true} role={title ? "img" : undefined}>{title && <title>{title}</title>}{children}</svg>
@@ -278,6 +279,17 @@ function CartSpark({ className, size }: MarkProps) {
   );
 }
 
+// Z · Original — the ShopMajazi logo as it is on the live site (the image itself, not a redraw). Clipped to a
+// rounded tile so the file's white corners never show on dark backgrounds.
+function CartOriginal({ className, size }: MarkProps) {
+  return (
+    <Svg className={className} size={size}>
+      <defs><clipPath id="sm-original-tile"><rect x=".6" y=".6" width="30.8" height="30.8" rx="6.4" /></clipPath></defs>
+      <image href={ORIGINAL_CART_SRC} x="0" y="0" width="32" height="32" clipPath="url(#sm-original-tile)" preserveAspectRatio="xMidYMid slice" />
+    </Svg>
+  );
+}
+
 // The logo the site had before this round: an indigo-to-fuchsia tile with an S. Used until an offer is chosen.
 export function CurrentMark({ className = "" }: { className?: string }) {
   return (
@@ -311,10 +323,11 @@ export const marks: LogoMark[] = [
   { id: "Q", name: "Cart · Click", word: "split", summary: "The handle becomes a white mouse cursor: one click and it's in your cart. The online shop in one picture.", Mark: CartClick },
   { id: "R", name: "Cart · Sand", word: "bold", summary: "The colours swapped: a warm sand tile with the cart in deep teal. Friendlier and stands out among dark app icons.", Mark: CartSand },
   { id: "S", name: "Cart · Emerald", word: "bold", summary: "The redrawn cart, white with mint wheels, on the site's emerald, so the logo and the green Continue button belong together.", Mark: CartEmerald },
+  { id: "Z", name: "Original", word: "bold", src: ORIGINAL_CART_SRC, summary: "The ShopMajazi logo as it is on the live site today: the sand cart on a deep teal tile, used as-is from the original file.", Mark: CartOriginal },
   { id: "T", name: "Cart · Spark", word: "light", summary: "A round teal badge with the cart and a small sparkle above it: majazi, the virtual shop. Softer, app-icon style.", Mark: CartSpark },
 ];
 
-// Marks set aside (still under "Show archived"); I · Frame QR is the chosen logo and stays on the shortlist.
+// Marks set aside (still under "Show archived"); K · Cart Refined is the chosen logo.
 export const archivedMarks = new Set(["A", "B", "C", "D", "E", "F", "G", "H", "I1", "J"]);
 
 export const markById = (id?: string) => marks.find((m) => m.id === id);

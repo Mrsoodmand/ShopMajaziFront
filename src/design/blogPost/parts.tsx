@@ -1,33 +1,58 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "@/i18n/Link";
 import { ArrowRight, Check, ChevronRight, Clock, Info, Link2, Quote, Send, TriangleAlert, Zap } from "lucide-react";
-import { catLabel, postHref, type Post } from "@/content/blog-en";
+import { catLabel, type Post } from "@/content/blog-en";
 import { getArticle, sampleArticle, type ArticlePage, type Block } from "@/content/blog-post-en";
 import Cover from "../blog/Cover";
-import { Chip, Meta } from "../blog/parts";
+import { textLang } from "../blog/live";
+import { PostCard } from "../blogList/parts";
 import { useT } from "@/i18n/client";
 
 // Pieces shared by the blog post page offers.
 
-// The article being shown. Each post design wraps itself in <ArticleProvider slug=…>; without a slug (the design
-// comparison pages) it shows the sample article.
+// The article being shown. The live post page passes the post from the backend through <LiveArticleProvider>
+// (lib/blog.ts). Otherwise each post design wraps itself in <ArticleProvider slug=…> and shows a placeholder: that
+// slug's, or the sample article (the design comparison pages).
 const ArticleCtx = createContext<ArticlePage>(sampleArticle);
+const LiveCtx = createContext<ArticlePage | null>(null);
 export const useArticle = () => useContext(ArticleCtx);
 export function ArticleProvider({ slug, children }: { slug?: string; children: ReactNode }) {
   const tx = useT();
-  // Translated like the sample; getArticle builds a new object per call, so keep one per slug.
-  const article = useMemo(() => tx.tr((slug && getArticle(slug)) || sampleArticle), [slug, tx]);
+  const live = useContext(LiveCtx);
+  // Placeholders are translated like the sample; getArticle builds a new object per call, so keep one per slug.
+  // A live post is shown as written (its text is already in its own language).
+  const article = useMemo(() => live ?? tx.tr((slug && getArticle(slug)) || sampleArticle), [live, slug, tx]);
   return <ArticleCtx.Provider value={article}>{children}</ArticleCtx.Provider>;
+}
+
+// Also counts the visit, once per browser session: the page itself is cached, so the backend can't count it.
+export function LiveArticleProvider({ value, children }: { value: ArticlePage; children: ReactNode }) {
+  const slug = value.post.slug;
+  useEffect(() => {
+    const key = `blog-viewed:${slug}`;
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, "1"); } catch {}
+    fetch(`/api/v1/storefront/blog/${encodeURIComponent(slug)}/view`, { method: "POST", headers: { Accept: "application/json" }, keepalive: true }).catch(() => {});
+  }, [slug]);
+  return <LiveCtx.Provider value={value}>{children}</LiveCtx.Provider>;
 }
 
 // ---------- Article body ----------
 
 // `size` sets the reading size; `cta` decides what the inline product slot shows (nothing, by default).
 export function Body({ size = "md", cta, blocks }: { size?: "md" | "lg"; cta?: ReactNode; blocks?: Block[] }) {
-  const { post, body } = useArticle();
+  const article = useArticle();
+  const { post, body } = article;
   const p = size === "lg" ? "text-[19px] leading-9" : "text-[17px] leading-8";
+  // A live post: its cleaned HTML, styled like the blocks below (.article-html in globals.css), with the product
+  // card after it.
+  if (article.html !== undefined && !blocks) return (
+    <>
+      <div {...textLang(article)} className={`article-html ${size === "lg" ? "article-html-lg" : ""} text-slate-700 dark:text-slate-300`} dangerouslySetInnerHTML={{ __html: article.html }} />
+      {cta && <div className="mt-10">{cta}</div>}
+    </>
+  );
   return (
     <div className="text-slate-700 dark:text-slate-300">
       {(blocks ?? body).map((b, i) => {
@@ -145,15 +170,32 @@ export function useActiveSection() {
   const { toc } = useArticle();
   const [active, setActive] = useState(toc[0]?.id ?? "");
   useEffect(() => {
-    const els = toc.map((h) => document.getElementById(h.id)).filter(Boolean) as HTMLElement[];
+    // Headings are looked up on every pass, not once: the article HTML can be re-rendered after mount, and a
+    // detached heading reports top 0, which used to light up the last item.
+    let frame = 0;
     const on = () => {
+      frame = 0;
+      const line = Math.min(160, window.innerHeight * 0.3);
       let cur = toc[0]?.id ?? "";
-      for (const el of els) if (el.getBoundingClientRect().top < 140) cur = el.id;
+      for (const h of toc) {
+        const el = document.getElementById(h.id);
+        if (!el || !el.isConnected) continue;
+        if (el.getBoundingClientRect().top <= line) cur = h.id;
+        else break;
+      }
       setActive(cur);
     };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(on); };
     on();
-    window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    window.addEventListener("hashchange", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("hashchange", schedule);
+    };
   }, [toc]);
   return active;
 }
@@ -161,16 +203,28 @@ export function useActiveSection() {
 export function Toc({ active, title = "On this page" }: { active: string; title?: string }) {
   const tx = useT();
   title = tx(title);
-  const { toc } = useArticle();
+  const article = useArticle();
+  const { toc } = article;
+  const list = useRef<HTMLOListElement>(null);
+  // Keep the highlighted item in view when the list is taller than its scroll box.
+  useEffect(() => {
+    const box = list.current;
+    const item = box?.querySelector<HTMLElement>('[aria-current="location"]');
+    if (!box || !item || box.scrollHeight <= box.clientHeight) return;
+    const top = item.offsetTop; // the list is relative, so this is measured from its top
+    if (top < box.scrollTop || top + item.offsetHeight > box.scrollTop + box.clientHeight)
+      box.scrollTo({ top: top - box.clientHeight / 3, behavior: "smooth" });
+  }, [active]);
+  if (!toc.length) return null;
   return (
     <nav aria-label={tx("Contents")}>
-      <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">{title}</div>
-      <ol className="mt-4 space-y-1 border-s border-slate-200 dark:border-white/10">
+      {title && <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">{title}</div>}
+      <ol ref={list} {...textLang(article)} className={`${title ? "mt-4" : ""} relative max-h-[calc(100vh-12rem)] space-y-1 overflow-y-auto overscroll-contain border-s border-slate-200 dark:border-white/10`}>
         {toc.map((h) => {
           const on = h.id === active;
           return (
             <li key={h.id}>
-              <a href={`#${h.id}`} className={`-ms-px block border-s-2 py-1.5 ps-4 text-sm transition-colors duration-300 ${on ? "border-indigo-600 font-semibold text-slate-900 dark:border-indigo-400 dark:text-white" : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}>{h.text}</a>
+              <a href={`#${h.id}`} aria-current={on ? "location" : undefined} className={`-ms-px block border-s-2 py-1.5 transition-colors duration-300 ${h.level === 3 ? "ps-7 text-[13px]" : "ps-4 text-sm"} ${on ? "border-indigo-600 font-semibold text-slate-900 dark:border-indigo-400 dark:text-white" : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}>{h.text}</a>
             </li>
           );
         })}
@@ -251,18 +305,12 @@ export function RelatedPosts({ title = "Keep reading", posts }: { title?: string
   title = tx(title);
   const { related } = useArticle();
   posts ??= related;
+  if (!posts.length) return null;
   return (
     <section>
       <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-white">{title}</h2>
-      <div className="mt-6 grid gap-6 sm:grid-cols-3">
-        {posts.map((p) => (
-          <Link key={p.slug} href={postHref(p)} className="group">
-            <Cover cat={p.cat} className="aspect-[4/3] rounded-2xl" />
-            <div className="mt-3"><Chip p={p} /></div>
-            <h3 className="mt-2 line-clamp-2 font-display font-semibold leading-snug text-slate-900 transition-colors group-hover:text-indigo-700 dark:text-white dark:group-hover:text-indigo-300">{p.title}</h3>
-            <div className="mt-1.5"><Meta p={p} /></div>
-          </Link>
-        ))}
+      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {posts.map((p) => <PostCard key={p.slug} p={p} />)}
       </div>
     </section>
   );
@@ -275,7 +323,7 @@ export function FaqList({ title }: { title: string }) {
   return (
     <>
     <h2 className="mt-14 font-display text-2xl font-bold text-slate-900 dark:text-white">{title}</h2>
-    <div className="mt-6 divide-y divide-slate-200 rounded-3xl bg-white ring-1 ring-slate-200 dark:divide-white/10 dark:bg-[#0E1424] dark:ring-white/10">
+    <div {...textLang(article)} className="mt-6 divide-y divide-slate-200 rounded-3xl bg-white ring-1 ring-slate-200 dark:divide-white/10 dark:bg-[#0E1424] dark:ring-white/10">
       {article.faq.map((f) => (
         <details key={f.q} className="group p-5 [&_summary::-webkit-details-marker]:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900 dark:text-white">

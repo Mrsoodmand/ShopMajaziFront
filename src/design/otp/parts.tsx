@@ -9,27 +9,33 @@ import { useMoney } from "@/lib/money";
 import { useCountdown, type Order } from "./order";
 import { useExtras, useGlow } from "../service/slot";
 import HeaderGlow from "../service/HeaderGlow";
+import PageBackdrop from "../service/PageBackdrop";
+import { useSpotlight } from "../service/spotlight";
 import { useT } from "@/i18n/client";
 
 // Full-page frame for the page designs: the chosen header (F) and footer (F) around the content. On live service
 // pages, the shared sections (how to use, content, comments, FAQ, blog) come in through the extras slot.
 // `heroDark`: the page opens on a dark hero behind the header, so the header starts with light text.
+// The ground under it all is PageBackdrop: soft pools of the page's colours, an edge dot grid and grain.
 export function PageShell({ children, heroDark = false }: { children: ReactNode; heroDark?: boolean }) {
   const extras = useExtras();
   const glow = useGlow();
+  // The Spotlight landing hero brings its own light; the page-coloured glow would show through its fade.
+  const spot = useSpotlight();
   return (
     <>
       <HeaderG overDark={heroDark} />
-      <main className="relative isolate min-h-screen bg-[#F5F6FB] pt-16 dark:bg-[#070B14]">{glow && <HeaderGlow tone={glow} />}{children}{extras}</main>
+      <main className="relative isolate min-h-screen bg-[#F5F6FB] pt-16 dark:bg-[#070B14]"><PageBackdrop tone={glow} />{glow && !spot && <HeaderGlow tone={glow} />}{children}{extras}</main>
       <FooterF />
     </>
   );
 }
 
 // App icon: the backend's logo when there is one, else a colored letter tile.
-export function AppTile({ app, size = "md" }: { app: OtpApp; size?: "sm" | "md" | "lg" }) {
-  const s = size === "lg" ? "h-14 w-14 rounded-2xl text-2xl" : size === "sm" ? "h-8 w-8 rounded-lg text-sm" : "h-11 w-11 rounded-xl text-lg";
-  const pad = size === "lg" ? "p-2.5" : size === "sm" ? "p-1.5" : "p-2";
+// `xs` is a round 20px icon for pill badges.
+export function AppTile({ app, size = "md" }: { app: OtpApp; size?: "xs" | "sm" | "md" | "lg" }) {
+  const s = size === "lg" ? "h-14 w-14 rounded-2xl text-2xl" : size === "sm" ? "h-8 w-8 rounded-lg text-sm" : size === "xs" ? "h-5 w-5 rounded-full text-[10px]" : "h-11 w-11 rounded-xl text-lg";
+  const pad = size === "lg" ? "p-2.5" : size === "sm" ? "p-1.5" : size === "xs" ? "p-[3px]" : "p-2";
   if (app.image) {
     // eslint-disable-next-line @next/next/no-img-element
     return <span aria-hidden className={`grid shrink-0 place-items-center bg-white ring-1 ring-slate-200 dark:bg-white/90 dark:ring-white/10 ${s} ${pad}`}><img src={app.image} alt="" loading="lazy" className="h-full w-full object-contain" /></span>;
@@ -37,11 +43,23 @@ export function AppTile({ app, size = "md" }: { app: OtpApp; size?: "sm" | "md" 
   return <span aria-hidden className={`grid shrink-0 place-items-center font-display font-bold text-white ${app.color} ${s}`}>{app.letter}</span>;
 }
 
-// Country badge: the flag when there is one, else the ISO code.
-export function CC({ cc, flag }: { cc: string; flag?: string }) {
+// Country badge: the flag when there is one, else the ISO code. `round` is a 20px circle for pill badges.
+export function CC({ cc, flag, round = false }: { cc: string; flag?: string; round?: boolean }) {
   // eslint-disable-next-line @next/next/no-img-element
-  if (flag) return <img src={flag} alt="" aria-hidden loading="lazy" className="h-5 w-7 shrink-0 rounded-[4px] object-cover ring-1 ring-black/10 dark:ring-white/15" />;
-  return <span className="inline-grid h-6 min-w-8 place-items-center rounded-md bg-slate-900 px-1 font-mono text-[11px] font-bold text-white dark:bg-white/15">{cc}</span>;
+  if (flag) return <img src={flag} alt="" aria-hidden loading="lazy" className={`shrink-0 object-cover ring-1 ring-black/10 dark:ring-white/15 ${round ? "h-5 w-5 rounded-full" : "h-5 w-7 rounded-[4px]"}`} />;
+  return <span className={`inline-grid shrink-0 place-items-center bg-slate-900 font-mono font-bold text-white dark:bg-white/15 ${round ? "h-5 min-w-5 rounded-full px-1 text-[9px]" : "h-6 min-w-8 rounded-md px-1 text-[11px]"}`}>{cc}</span>;
+}
+
+// A mm:ss countdown whose width never changes: each digit sits in its own fixed-width box. Persian pages draw digits
+// in IRANSans, which has no tabular figures, so plain text would grow and shrink every second and push its neighbours.
+export function Countdown({ text, className = "" }: { text: string; className?: string }) {
+  return (
+    <span dir="ltr" className={`inline-flex shrink-0 whitespace-nowrap ${className}`} role="timer" aria-label={text}>
+      {[...text].map((ch, i) => (
+        <span key={i} aria-hidden className={ch === ":" ? "w-[0.4em] text-center" : "w-[0.62em] text-center"}>{ch}</span>
+      ))}
+    </span>
+  );
 }
 
 export function SuccessBar({ pct }: { pct?: number }) {

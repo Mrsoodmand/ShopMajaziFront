@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, MessageSquare, RefreshCw, Repeat } from "lucide-react";
 import type { OtpFlow } from "./flow";
 import type { Order } from "./order";
-import { AppTile, CC, CopyButton } from "./parts";
+import { AppTile, CC, Countdown, CopyButton } from "./parts";
 import { CancelButton, useOrderState } from "./order-screen/shared";
 import { useT } from "@/i18n/client";
 
@@ -72,7 +72,7 @@ function OrderCard({ order, flow }: { order: Order; flow: OtpFlow }) {
           </div>
           <span className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${pill.cls}`}>
             {s.waiting && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500 motion-reduce:animate-none" aria-hidden />}
-            {pill.text}{s.waiting && <span dir="ltr" className="tabular-nums">{s.text}</span>}
+            {pill.text}{s.waiting && <Countdown text={s.text} />}
           </span>
         </header>
 

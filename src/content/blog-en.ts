@@ -1,8 +1,10 @@
-// Placeholder posts for the home page blog section. The live site will load the latest posts from the Laravel blog
-// (HomeController already fetches the 12 newest), with their real cover images.
+// Placeholder posts for the home page blog section, shown on the /design pages. The live pages get real posts from
+// the Laravel blog instead (lib/blog.ts, design/blog/live.tsx).
 
 export type BlogCat = "guides" | "numbers" | "apple" | "telegram" | "social" | "news";
-export type Post = { slug: string; cat: BlogCat; title: string; excerpt: string; date: string; read: string };
+// Live posts also carry their cover image, view count and publish date (`iso`), and `lang` when their text
+// (Persian) is not in the page's language (the English site).
+export type Post = { slug: string; cat: BlogCat; title: string; excerpt: string; date: string; read: string; image?: string; views?: number; iso?: string; lang?: "fa" };
 
 export const blogCats: { id: BlogCat; label: string }[] = [
   { id: "guides", label: "Guides" },

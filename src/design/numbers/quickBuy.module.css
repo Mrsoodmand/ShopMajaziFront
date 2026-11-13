@@ -1,0 +1,26 @@
+/* Motion for the virtual number panel "Quick Buy" (otpPanels.tsx › QuickBuy): a country (or app) row opens like a
+   drawer to show its operators. Everything rests visible; reduced motion stills it all (globals.css). */
+
+/* The drawer. Its height follows the measured content (Collapse); it opens with a long ease-out and closes quicker. */
+.drawer { transition: height 440ms cubic-bezier(0.22, 1, 0.36, 1); }
+.drawer:not([data-open]) { transition-duration: 240ms; transition-timing-function: cubic-bezier(0.4, 0, 1, 1); }
+.drawer > div { transition: opacity 280ms ease 60ms, translate 420ms cubic-bezier(0.22, 1, 0.36, 1); }
+.drawer:not([data-open]) > div { opacity: 0; translate: 0 -6px; transition-delay: 0ms; transition-duration: 160ms; }
+
+/* The operators arrive one after another as the drawer opens (and when they finish loading). */
+.op { animation: op-in 460ms cubic-bezier(0.22, 1, 0.36, 1) calc(90ms + var(--i, 0) * 60ms) backwards; }
+@keyframes op-in { from { opacity: 0; transform: translateY(-10px) scale(0.98); } }
+
+/* The chevron chip at the end of each row: it fills in on hover and turns over when the row is open. */
+.chip { transition: background-color 200ms ease, color 200ms ease, box-shadow 300ms ease; }
+.chev { transition: rotate 380ms cubic-bezier(0.22, 1, 0.36, 1), translate 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+.row:hover .chev:not([data-on]) { translate: 0 2px; }
+
+/* Nothing open yet (a new app was just picked): the first rows' chevrons dip one after another every few seconds,
+   and the hint's pointer taps, to say "these open". Stops as soon as a row is opened. */
+.idle > li:nth-child(-n + 4) .chev { animation: dip 3s cubic-bezier(0.22, 1, 0.36, 1) calc(600ms + var(--i, 0) * 130ms) infinite; }
+.idle > li:nth-child(-n + 4) .chip { animation: chip-glow 3s ease calc(600ms + var(--i, 0) * 130ms) infinite; }
+@keyframes dip { 0%, 22%, 100% { translate: 0 0; } 9% { translate: 0 4px; } }
+@keyframes chip-glow { 0%, 30%, 100% { box-shadow: 0 0 0 0 rgb(99 102 241 / 0); } 10% { box-shadow: 0 0 0 4px rgb(99 102 241 / 0.22); } }
+.hint[data-idle] .tap { animation: tap 1.6s ease-in-out infinite; }
+@keyframes tap { 0%, 60%, 100% { transform: none; } 30% { transform: translate(-1px, 2px) scale(0.9); } }

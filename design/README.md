@@ -12,6 +12,8 @@ English copy lives in `src/content/en.ts`. Layouts use logical `start`/`end` spa
 | Section | Offers | Chosen |
 |---|---|---|
 | Hero | A Command Center · B Bento Store · C Live Demo · D Marquee Pop · E Editorial Trust · F A×B Merge · G Catalog Tabs · H Card Deck · I Globe · J Mega Bento · K Dashboard Preview | **G** Catalog Tabs |
+| Hero system (all pages) | A Grid Console · B Split Terminal · C Spotlight · D Spec Bento · E Signal Lines (each shown on home, virtual number and Telegram Stars) | — |
+| Landing hero (all landing pages, not home) | Current bands · B Spotlight × Grid (hero-system C on A's grid; preview hub /design/landing-hero, cookie `hero-preview=spotlight`) | **B** Spotlight × Grid (grid crosses at the icon tile; background motion **A** Grid Comets, offers A–J at /design/hero-motion) |
 | How to buy | A Step Row · B Interactive Stepper · C Stopwatch Timeline · D Bento Steps · E Per-service Guide | **E** Per-service Guide |
 | How to buy · Arrow | A Chevron Chip · B Gradient Orb · C Flow Line · D Chevron Trail · E Progress Rail | **D** Chevron Trail (used inside How to buy E) |
 | Content area (SEO) | A Read More Article · B Guide with Contents · C Topic Accordion · D Magazine · E Knowledge Tabs | **B** Guide with Contents |

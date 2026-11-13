@@ -1,9 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { archive } from "@/content/blog-list-en";
 import { PageShell, PageTitle } from "../otp/parts";
-import { Pagination, PostCard, PostRow, TopicTabs, useArchive, type CatId } from "./parts";
+import { Pagination, PostCard, PostRow, TopicTabs, useArchive, useBlogArchive, type CatId } from "./parts";
 
 const PER_PAGE = 6;
 
@@ -11,14 +10,15 @@ const PER_PAGE = 6;
 // three-column grid with numbered pages. The front block only shows on the first page of "All".
 export default function BlogListA() {
   const { cat, setCat, list } = useArchive();
+  const { all } = useBlogArchive();
   const [page, setPage] = useState(1);
   const gridTop = useRef<HTMLDivElement>(null);
 
-  const front = cat === "all" && page === 1;
+  const front = cat === "all" && page === 1 && all.length > 0;
   const rest = cat === "all" ? list.slice(4) : list;
   const pages = Math.max(1, Math.ceil(rest.length / PER_PAGE));
   const shown = rest.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-  const [lead, ...side] = archive.slice(0, 4);
+  const [lead, ...side] = all.slice(0, 4);
 
   const pick = (c: CatId) => { setCat(c); setPage(1); };
   const go = (n: number) => { setPage(n); gridTop.current?.scrollIntoView({ behavior: "smooth", block: "start" }); };

@@ -2,7 +2,7 @@
 // (each with its own page at /accounts/{slug}), plans per product (name, price, optional discount) and per-product
 // form fields (text or select) the buyer fills in. Prices are made up; the live ones come from the Plan table.
 
-export type SubCat = "ai" | "video" | "music" | "design" | "work" | "trading";
+export type SubCat = "ai" | "video" | "music" | "design" | "work" | "trading" | "social" | "other";
 export const subCats: { id: SubCat; label: string }[] = [
   { id: "ai", label: "AI tools" },
   { id: "video", label: "Video" },
@@ -10,15 +10,24 @@ export const subCats: { id: SubCat; label: string }[] = [
   { id: "design", label: "Design" },
   { id: "work", label: "Productivity" },
   { id: "trading", label: "Trading" },
+  { id: "social", label: "Social apps" },
+  { id: "other", label: "More" },
 ];
 
+// months 0 = unknown (a live plan the admin didn't give a length): no price per month is shown for it.
 export type SubPlan = { id: string; name: string; months: number; price: number; was?: number };
 // A field the buyer fills in. `options` makes it a select.
-export type SubField = { id: string; label: string; hint?: string; type: "email" | "text" | "select"; options?: string[]; optional?: boolean };
-// "own": activated on the buyer's own account (we need its email). "ready": we deliver a ready account login.
+export type SubField = { id: string; label: string; hint?: string; type: "email" | "text" | "password" | "select"; options?: string[]; optional?: boolean };
+// "own": activated on the buyer's own account (we need its email). "login": activated on the buyer's account, which
+// needs their login (email and password). "ready": we deliver a ready account login.
+// `color` is a Tailwind background class here, or a plain hex colour for live products (see brand() in subs/parts).
+// Live products (lib/subs.ts) also carry the backend `id` and the admin's `image` (a square logo); their prices are toman.
 export type SubProduct = {
   slug: string; name: string; cat: SubCat; letter: string; color: string; tagline: string;
-  activation: "own" | "ready"; delivery: string; plans: SubPlan[]; fields: SubField[]; notes: string[]; popular?: boolean;
+  activation: "own" | "login" | "ready"; delivery: string; plans: SubPlan[]; fields: SubField[]; notes: string[]; popular?: boolean;
+  id?: number; image?: string;
+  // Live, Persian site, the product's own page only: the admin's article (lib/article.ts), shown in its guide.
+  guide?: { title: string; paragraphs: string[] }[];
 };
 
 const yourEmail = (app: string): SubField => ({ id: "email", label: `Email of your ${app} account`, hint: `We activate the plan on this ${app} account.`, type: "email" });
@@ -63,13 +72,16 @@ export const subs: SubProduct[] = [
 ];
 
 export const subBySlug = (slug: string) => subs.find((s) => s.slug === slug);
-export const fromPrice = (p: SubProduct) => Math.min(...p.plans.map((x) => x.price / x.months));
+// Lowest price per month (plans with a known length), or the lowest price when none has one (see monthly()).
+export const monthly = (p: SubProduct) => p.plans.some((x) => x.months > 0);
+export const fromPrice = (p: SubProduct) => (monthly(p) ? Math.min(...p.plans.filter((x) => x.months > 0).map((x) => x.price / x.months)) : Math.min(...p.plans.map((x) => x.price)));
+export const perMonth = (pl: SubPlan) => (pl.months > 0 ? pl.price / pl.months : pl.price);
 export const cheapestPlan = (p: SubProduct) => p.plans.reduce((a, b) => (b.price < a.price ? b : a));
 export const savePct = (pl: SubPlan) => (pl.was ? Math.round((1 - pl.price / pl.was) * 100) : 0);
 
 export const subsFaq = [
-  { q: "Is the subscription activated on my own account?", a: "For most services, yes: you give us your account email and we activate the plan on it. A few, like Netflix and Adobe, come as a ready account instead. Each product says which." },
-  { q: "Do you need my password?", a: "No. For services activated on your account we only need the email or username. Never share your password with anyone." },
-  { q: "How long does activation take?", a: "Ready accounts are instant. Activations on your own account usually take 15 to 60 minutes; the time is shown on each product." },
+  { q: "Is the subscription activated on my own account?", a: "For most services, yes: you give us your account email and we activate the plan on it. Some come as a ready account instead. Each product says which." },
+  { q: "Do you need my password?", a: "For most services, no: we only need the email or username. A few can only be activated by signing in; their page says so before you pay, and you can change your password once the plan is active." },
+  { q: "How long does activation take?", a: "It depends on the service; each one shows its time before you pay." },
   { q: "What if it stops working before the end?", a: "Tell support from your order page. We fix it, replace it or refund the unused time." },
 ];

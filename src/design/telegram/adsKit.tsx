@@ -7,7 +7,7 @@ import { useMoney } from "@/lib/money";
 import { AD_MAX_BUDGET, AD_MIN_BUDGET, AD_TEXT_MAX, adCountries, adLanguages, estClicks, estViews, fmt, tgHeadings } from "@/content/telegram-en";
 import { PageShell } from "../otp/parts";
 import { useHasExtras } from "../service/slot";
-import { primary, ring } from "../googleVoice/clean";
+import { fieldFocusDark, primary, ring } from "../googleVoice/clean";
 import { H2, ServiceIcon, TgFaq, TgOrderView, Trust, useCheckout, useTween } from "./parts";
 import { HowItWorks, Rules } from "./ads";
 import { useT } from "@/i18n/client";
@@ -23,7 +23,8 @@ export const adsNightBg = "bg-[radial-gradient(ellipse_at_top,#1b6aa8_0%,#0a2747
 export const panel = "rounded-3xl border border-white/12 bg-[#0a1930] shadow-[0_16px_40px_-20px_rgba(0,0,0,.8)]";
 export const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a1930]";
 export const hasFocusRing = "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-400 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-[#0a1930]";
-export const nField = `w-full rounded-xl border border-white/20 bg-black/30 px-4 py-3 text-base text-white placeholder:text-sky-100/60 ${focusRing}`;
+// Text fields don't turn green when clicked (site-wide rule, see fieldFocus in googleVoice/clean).
+export const nField = `w-full rounded-xl border border-white/20 bg-black/30 px-4 py-3 text-base text-white placeholder:text-sky-100/60 ${fieldFocusDark}`;
 export const muted = "text-sky-100/75";
 export const optOn = "border-sky-400 bg-white/[.07]";
 export const optOff = "border-white/20 hover:border-white/45";
@@ -178,18 +179,18 @@ export function ChipInput({ id, values, onChange, placeholder, check, error, des
   };
   const msg = own ?? error;
   const s = site
-    ? { box: tx("bg-white focus-within:ring-emerald-600 focus-within:ring-offset-white dark:bg-white/5 dark:focus-within:ring-emerald-400 dark:focus-within:ring-offset-[#0E1424]"), border: msg ? "border-red-700 dark:border-red-400" : "border-slate-300 dark:border-white/20",
+    ? { box: "bg-white dark:bg-white/5", border: msg ? "border-red-700 dark:border-red-400" : "border-slate-300 focus-within:border-slate-500 dark:border-white/20 dark:focus-within:border-white/40",
         chip: "bg-sky-100 text-sky-900 dark:bg-sky-400/15 dark:text-sky-100",
         x: `hover:bg-sky-200 dark:hover:bg-white/10 ${ring}`,
         // On the white input box itself.
         input: "text-slate-900 placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400",
         err: "text-red-700 dark:text-red-400" }
-    : { box: "bg-black/30 focus-within:ring-emerald-400 focus-within:ring-offset-[#0a1930]", border: msg ? "border-red-300" : "border-white/20", chip: "bg-sky-400/15 text-sky-100", x: `hover:bg-white/10 ${focusRing}`,
+    : { box: "bg-black/30", border: msg ? "border-red-300" : "border-white/20 focus-within:border-white/45", chip: "bg-sky-400/15 text-sky-100", x: `hover:bg-white/10 ${focusRing}`,
         input: "text-white placeholder:text-sky-100/60", err: "text-red-300" };
   return (
     <>
       {msg && <p id={`${id}-chip-error`} className={`mb-2 flex items-start gap-1.5 text-sm font-semibold ${s.err}`}><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" /><span><span className="sr-only">{tx("Error:")}{" "}</span>{msg}</span></p>}
-      <div className={`flex min-h-[52px] flex-wrap items-center gap-2 rounded-xl border px-2.5 py-2 focus-within:ring-2 focus-within:ring-offset-2 ${s.box} ${s.border}`}>
+      <div className={`flex min-h-[52px] flex-wrap items-center gap-2 rounded-xl border px-2.5 py-2 transition-colors duration-200 ${s.box} ${s.border}`}>
         <ul className="contents">
           {values.map((v) => (
             <li key={v} className={`flex animate-pop items-center gap-1 rounded-full py-1 pe-1 ps-3 text-sm font-semibold ${s.chip}`}>

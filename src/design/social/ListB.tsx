@@ -33,7 +33,7 @@ export default function ListB() {
         <Band />
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
           <ListTitle light />
-          <div className="mt-6 max-w-xl"><SearchField s={s} big onDark /></div>
+          <div className="mt-6 max-w-xl"><SearchField s={s} onDark /></div>
           <SearchStatus s={s} />
         </div>
       </section>

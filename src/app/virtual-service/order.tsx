@@ -6,6 +6,8 @@ import { readDecisions } from "@/components/design/decisions";
 import { LiveSocialOrderProvider, type LiveSocialOrder } from "@/design/social/live";
 import { MoneyProvider } from "@/lib/money";
 import { isNotFound, storefront } from "@/lib/backend";
+// The admin's HTML article as plain headings and paragraphs (no markup from the database reaches the page).
+import { articleBlocks } from "@/lib/article";
 import { display, toLiveServices, toSocialCategories, type ApiServiceDetail, type ApiServicePlatform, type ApiVirtualServices } from "@/lib/social";
 import type { SocialCategory } from "@/content/social-categories-en";
 
@@ -38,19 +40,6 @@ async function load(platform: string, service: string | undefined, locale: Local
   const current = listed ?? own ?? { slug: platform, name: platform, short: "", color: "#475569", order: 0, services: [] };
   const t = await getT();
   return { platform: current, platforms, page, detail, error: page && (!service || detail) ? undefined : t("Services are unavailable right now. Please try again in a minute.") };
-}
-
-// Admin HTML (the old site's article) as plain headings and paragraphs: no markup from the database reaches the page.
-function articleBlocks(html: string | null | undefined): { kind: "h" | "p"; text: string }[] {
-  if (!html) return [];
-  const decode = (s: string) => s
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&zwnj;/g, "‌").replace(/&nbsp;/g, " ").replace(/&quot;/g, "\"").replace(/&#0?39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ").trim();
-  return [...html.matchAll(/<(h[1-6]|p|li)\b[^>]*>([\s\S]*?)<\/\1>/gi)]
-    .map((m) => ({ kind: (m[1][0].toLowerCase() === "h" ? "h" : "p") as "h" | "p", text: decode(m[2]) }))
-    .filter((b) => b.text);
 }
 
 export async function socialOrderMetadata(platform: string, service?: string): Promise<Metadata> {

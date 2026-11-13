@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Check, Lightbulb, ShieldCheck, Zap, RotateCcw } from "lucide-react";
 import Cover from "../blog/Cover";
+import { textLang } from "../blog/live";
 import { Chip } from "../blog/parts";
 import { PageShell } from "../otp/parts";
 import { ArticleProvider, Body, Byline, Crumbs, FaqList, ProductCta, ProgressBar, RelatedPosts, Share, useArticle, useProgress } from "./parts";
@@ -29,21 +30,23 @@ function Page() {
         <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
           <div>
             <Chip p={post} />
-            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl dark:text-white">{post.title}</h1>
-            <p className="mt-5 text-lg leading-relaxed text-slate-600 dark:text-slate-400">{article.lead}</p>
+            <h1 className="mt-4 font-display text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl dark:text-white" {...textLang(post)}>{post.title}</h1>
+            <p {...textLang(post)} className="mt-5 text-lg leading-relaxed text-slate-600 dark:text-slate-400">{article.lead}</p>
             <div className="mt-8"><Byline /></div>
           </div>
-          <div className="rounded-3xl bg-amber-50 p-6 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-400/25">
-            <div className="flex items-center gap-2 font-display font-semibold text-slate-900 dark:text-white"><Lightbulb className="h-5 w-5 text-amber-500" />Key takeaways</div>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700 dark:text-slate-300">
-              {article.takeaways.map((t) => <li key={t} className="flex gap-2.5"><Check className="mt-1 h-4 w-4 shrink-0 text-emerald-500" />{t}</li>)}
-            </ul>
-          </div>
+          {article.takeaways.length > 0 && (
+            <div className="rounded-3xl bg-amber-50 p-6 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:ring-amber-400/25">
+              <div className="flex items-center gap-2 font-display font-semibold text-slate-900 dark:text-white"><Lightbulb className="h-5 w-5 text-amber-500" />Key takeaways</div>
+              <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700 dark:text-slate-300">
+                {article.takeaways.map((t) => <li key={t} className="flex gap-2.5"><Check className="mt-1 h-4 w-4 shrink-0 text-emerald-500" />{t}</li>)}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 lg:grid-cols-[minmax(0,1fr)_340px]">
           <article id="article" className="max-w-3xl">
-            <Cover cat={post.cat} size="lg" className="aspect-[16/9] rounded-3xl" />
+            <Cover cat={post.cat} src={post.image} priority size="lg" className="aspect-[16/9] rounded-3xl" />
             <Body cta={<ProductCta />} />
             <FaqList title="Frequently asked" />
             <div className="mt-10"><Share /></div>

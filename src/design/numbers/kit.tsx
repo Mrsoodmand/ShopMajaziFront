@@ -1,11 +1,14 @@
 "use client";
 
-import { forwardRef, type CSSProperties, type ReactNode } from "react";
-import { Search } from "lucide-react";
+import { forwardRef, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { BrandMesh } from "../social/heroBackdrops";
-import { field, ring } from "../googleVoice/clean";
+import { ring } from "../googleVoice/clean";
+import { SearchInput } from "../search";
+import { QuickPicks } from "../quickPicks";
 import { useT } from "@/i18n/client";
 import { PageH1 } from "@/components/seo/PageHeading";
+import type { LucideIcon } from "lucide-react";
+import { SpotlightBand, SpotlightMark, spotTone, useSpotlight } from "@/design/service/spotlight";
 
 // Shared parts for the number pages' "Catalog + Panel" designs (virtual number, rent, Google Voice). They follow
 // /accounts and /virtual-service: a brand-colour band with a centred title, one big search and popular quick
@@ -41,58 +44,31 @@ const accentOn: Record<Accent, string> = {
   emerald: "border-emerald-700 ring-2 ring-emerald-700 dark:border-emerald-400 dark:ring-emerald-400",
 };
 
-// Search box focus: a clear indigo border with a soft glow and the icon turning indigo, so the box reads as
-// active the moment it is clicked (mouse or keyboard).
-export const searchFocus = "transition-[border-color,box-shadow,background-color] duration-300 focus:outline-none focus:border-indigo-500 focus:bg-white focus:shadow-[0_0_0_4px_rgba(99,102,241,.18),0_12px_30px_-14px_rgba(79,70,229,.55)] dark:focus:border-indigo-400 dark:focus:bg-[#0E1424] dark:focus:shadow-[0_0_0_4px_rgba(129,140,248,.25)]";
-export const searchIcon = "transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-300";
-
-// A search box for the catalog toolbar.
+// A search box for the catalog toolbar (the site's shared search, see ../search.tsx).
 export function CatalogSearch({ q, setQ, label, placeholder, className = "" }: { q: string; setQ: (v: string) => void; label: string; placeholder: string; className?: string }) {
-  return (
-    <label className={`group relative block ${className}`}>
-      <span className="sr-only">{label}</span>
-      <Search aria-hidden className={`pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500 ${searchIcon}`} />
-      <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} autoComplete="off"
-        className={`h-12 w-full rounded-2xl border border-slate-300 bg-white pe-4 ps-12 text-base text-slate-900 placeholder:text-slate-500 dark:border-white/15 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-400 ${searchFocus}`} />
-    </label>
-  );
+  return <SearchInput value={q} onChange={setQ} label={label} placeholder={placeholder} className={className} />;
 }
 
-export type Popular = { key: string; name: string; icon: ReactNode; on?: boolean; onPick: () => void };
+export type Popular = { key: string; name: string; icon?: ReactNode; on?: boolean; onPick: () => void };
 
 // The band at the top. `colors` tint it (up to four hex colours); `children` sits under the quick picks.
 // The big search shows only when `setQ` is given (a page can put its search in the catalog toolbar instead).
 // `backdrop` replaces the brand-colour mesh with a background of its own (e.g. GreenMesh on Google Voice).
-export function CatalogHero({ id, title, sub, colors, backdrop, q, setQ, label, placeholder, popular, stats, children }: {
-  id: string; title: string; sub: string; colors?: string[]; backdrop?: ReactNode; q?: string; setQ?: (v: string) => void; label?: string; placeholder?: string;
+export function CatalogHero({ id, title, sub, colors, backdrop, icon, q, setQ, label, placeholder, popular, stats, children }: {
+  icon?: LucideIcon; id: string; title: string; sub: string; colors?: string[]; backdrop?: ReactNode; q?: string; setQ?: (v: string) => void; label?: string; placeholder?: string;
   popular: Popular[]; stats?: ReactNode; children?: ReactNode;
 }) {
-  const t = useT();
+  const spot = useSpotlight();
   return (
     <section aria-labelledby={id} className="relative isolate -mt-16 overflow-hidden pb-20 pt-16">
-      {backdrop ?? <BrandMesh colors={colors ?? []} />}
+      {spot ? <SpotlightBand /> : backdrop ?? <BrandMesh colors={colors ?? []} />}
       <div className="mx-auto max-w-7xl px-4 pt-12 text-center sm:px-6 sm:pt-20">
-        <h1 id={id} className="mx-auto max-w-3xl text-balance font-display text-4xl font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.25)] sm:text-6xl"><PageH1 text={title} /></h1>
-        <p className="mx-auto mt-4 max-w-2xl text-pretty text-base leading-relaxed text-white/90 sm:text-lg">{sub}</p>
-        {setQ && (
-          <label className="group relative mx-auto mt-8 block max-w-2xl text-start">
-            <span className="sr-only">{label}</span>
-            <Search aria-hidden className={`pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500 ${searchIcon}`} />
-            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} autoComplete="off" className={`${field} py-4 ps-12 text-lg shadow-xl shadow-black/20 ${searchFocus}`} />
-          </label>
-        )}
-        {popular.length > 0 && (
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-            <span className="me-1 text-sm font-semibold text-white/90">{t("Popular:")}</span>
-            {popular.map((p) => (
-              <button key={p.key} type="button" onClick={p.onPick} aria-pressed={!!p.on}
-                className={`inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pe-3.5 ps-1 text-sm font-semibold text-slate-900 transition-[border-color,translate] duration-500 ${ease} hover:-translate-y-0.5 hover:border-slate-400 dark:border-white/15 dark:bg-[#0E1424] dark:text-white dark:hover:border-white/40 ${ring}`}>
-                {p.icon}{p.name}
-              </button>
-            ))}
-          </div>
-        )}
-        {stats && <p className="mt-6 text-sm font-medium text-white/85">{stats}</p>}
+        {spot && <SpotlightMark icon={icon} />}
+        <h1 id={id} className={`mx-auto max-w-5xl text-balance font-display text-4xl font-bold tracking-tight sm:text-6xl ${spot ? spotTone.title : "text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.25)]"}`}><PageH1 text={title} /></h1>
+        <p className={`mx-auto mt-4 max-w-3xl text-pretty text-base leading-relaxed sm:text-lg ${spot ? spotTone.sub : "text-white/90"}`}>{sub}</p>
+        {setQ && <SearchInput tone="hero" id={`${id}-q`} value={q ?? ""} onChange={setQ} label={label ?? ""} placeholder={placeholder} className="mx-auto mt-7 max-w-xl text-start" />}
+        <QuickPicks items={popular} tone={spot ? "page" : "band"} />
+        {stats && <p className={`mt-6 text-sm font-medium ${spot ? spotTone.muted : "text-white/85"}`}>{stats}</p>}
         {children}
       </div>
     </section>
@@ -170,19 +146,54 @@ export function showPanel(el: HTMLElement | null) {
 }
 
 // Two-way switch (By app / By country, All apps / One app), as pressed buttons.
-export function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: { id: T; label: string; icon?: ReactNode }[]; onChange: (v: T) => void }) {
+// `compact`: on phones only the icons show (the label stays as the button's name), so it fits beside a search box.
+export function Segmented<T extends string>({ label, value, options, onChange, compact = false }: { label: string; value: T; options: { id: T; label: string; icon?: ReactNode }[]; onChange: (v: T) => void; compact?: boolean }) {
   return (
     <div role="group" aria-label={label} className="inline-flex rounded-2xl border border-slate-200 bg-white p-1 dark:border-white/15 dark:bg-white/5">
       {options.map((o) => {
         const on = o.id === value;
         return (
-          <button key={o.id} type="button" onClick={() => onChange(o.id)} aria-pressed={on}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-[15px] font-semibold transition-colors duration-300 ${on ? "bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900" : "text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"} ${ring}`}>
-            {o.icon}{o.label}
+          <button key={o.id} type="button" onClick={() => onChange(o.id)} aria-pressed={on} title={compact ? o.label : undefined}
+            className={`flex items-center gap-2 rounded-xl py-2 text-[15px] font-semibold transition-colors duration-300 ${compact ? "px-3 sm:px-4" : "px-4"} ${on ? "bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900" : "text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"} ${ring}`}>
+            {o.icon}<span className={compact ? "sr-only sm:not-sr-only" : undefined}>{o.label}</span>
           </button>
         );
       })}
     </div>
+  );
+}
+
+// The catalog toolbar (search + switch), kept in reach while the grid scrolls: it sticks under the site header and,
+// once stuck, sits on a tray of the header's own colour with rounded bottom corners, so the cards slide under it.
+// `resetKey`: when it changes (a new search, the other switch option) while stuck, the page scrolls back so the
+// top of the results sits under the bar; otherwise a short result list could leave the visitor looking at nothing.
+const HEADER = 64; // the site header's height (h-16)
+export function StickyBar({ children, resetKey }: { children: ReactNode; resetKey?: string }) {
+  const mark = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const el = mark.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([e]) => setStuck(!e.isIntersecting && e.boundingClientRect.top < HEADER + 1), { rootMargin: `-${HEADER + 1}px 0px 0px 0px` });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const seen = useRef(resetKey);
+  useEffect(() => {
+    if (seen.current === resetKey) return;
+    seen.current = resetKey;
+    const top = mark.current?.getBoundingClientRect().top;
+    if (top == null || top >= HEADER) return;
+    window.scrollTo({ top: window.scrollY + top - HEADER, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }, [resetKey]);
+  return (
+    <>
+      <div ref={mark} aria-hidden />
+      <div data-stuck={stuck ? "" : undefined}
+        className={`sticky top-16 z-20 -mx-3 -mt-3 rounded-b-2xl border-x border-b px-3 py-3 transition-[background-color,border-color,box-shadow] duration-300 ${stuck ? "border-slate-200/80 bg-white/85 shadow-[0_16px_28px_-20px_rgba(15,23,42,.45)] backdrop-blur-xl dark:border-white/[.07] dark:bg-[#070B14]/85 dark:shadow-[0_18px_32px_-18px_rgba(0,0,0,.9)]" : "border-transparent"}`}>
+        {children}
+      </div>
+    </>
   );
 }
 

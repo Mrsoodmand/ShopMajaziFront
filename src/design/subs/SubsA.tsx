@@ -8,9 +8,11 @@ import { useHasExtras } from "../service/slot";
 import { panels } from "./panels";
 import { CatTabs, ProductButton, SearchBox, SubsCheckout, SubsFaq, SubsOrderView, SubsTitle, useCatalog, useSubs } from "./parts";
 import { useT } from "@/i18n/client";
-import { subs } from "@/content/subs-en";
-import { ring } from "../googleVoice/clean";
+import type { SubProduct } from "@/content/subs-en";
+import { useLiveSubs, useSubsList } from "./live";
+import { QuickPicks } from "../quickPicks";
 import { BrandMesh } from "../social/heroBackdrops";
+import { SpotlightBand, SpotlightMark, spotTone, useSpotlight } from "@/design/service/spotlight";
 import { useLocalePath } from "@/i18n/Link";
 import { stripLocale } from "@/i18n/config";
 import { PageH1 } from "@/components/seo/PageHeading";
@@ -18,16 +20,28 @@ import { PageH1 } from "@/components/seo/PageHeading";
 // Page A — "Catalog + Panel": the catalog as a grid with category chips and search; picking a subscription shows
 // its plans, the fields it needs and Buy in a panel that stays beside the grid on desktop. On phones the panel sits
 // below and the page scrolls to it (focus moves to its heading).
-// Opens on ChatGPT Plus, or on `slug` on a product's own page (/accounts/{slug}), where the heading is the product.
+// Opens on ChatGPT Plus (live: the first popular subscription), or on `slug` on a product's own page
+// (/accounts/{slug}), where the heading is the product.
 // There, picking another subscription goes to its page so the content below matches the address.
 const PANEL_FLAG = "subs-open-panel";
 const isPhone = () => window.matchMedia("(max-width: 1023px)").matches;
+const FALLBACK_COLOR = "#475569"; // lib/subs.ts: a live product the admin gave no colour
+
+// A quick pick's small round mark: the admin's logo, or the letter on the brand colour.
+function Mark({ p }: { p: SubProduct }) {
+  // eslint-disable-next-line @next/next/no-img-element -- admin uploads, served by the backend through the proxy
+  if (p.image) return <img src={p.image} alt="" aria-hidden className="h-7 w-7 rounded-full bg-white object-cover" />;
+  const hex = p.color.startsWith("#");
+  return <span aria-hidden style={hex ? { backgroundColor: p.color } : undefined} className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-white ${hex ? "" : p.color}`}>{p.letter}</span>;
+}
 
 // `panel` picks the product panel version (see panels.tsx; chosen in /design/page-subs-panel).
 export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?: string }) {
   const t = useT();
+  const live = useLiveSubs();
+  const list = useSubsList();
   const Panel = panels[panelId ?? "original"] ?? panels.original;
-  const s = useSubs(slug ?? "chatgpt-plus");
+  const s = useSubs(slug ?? (live ? (list.find((p) => p.popular) ?? list[0])?.slug : "chatgpt-plus"));
   const c = useCatalog();
   const panel = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -58,27 +72,29 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
   const product = slug ? s.product : null;
   // The catalog (/accounts) opens on the same hero as /virtual-service: a Brand Mesh band in the popular
   // subscriptions' own colours, with a centred title, a big search and the popular ones as quick picks.
-  const popular = t.tr(subs).filter((p) => p.popular);
+  // Live: when the admin marked none as popular, every subscription is a quick pick.
+  const marked = list.filter((p) => p.popular);
+  const popular = marked.length ? marked : list.slice(0, 6);
   const hexOf = (cls: string) => cls.match(/#[0-9a-f]{6}/i)?.[0];
+  const spot = useSpotlight();
 
   return (
-    <PageShell heroDark={!product}>
+    <PageShell heroDark={!product && !spot}>
       {!product && (
         <section aria-labelledby="subs-h1" className="relative isolate -mt-16 overflow-hidden pb-20 pt-16">
-          <BrandMesh colors={popular.map((p) => hexOf(p.color)).filter((x): x is string => !!x)} />
+          {spot ? <SpotlightBand /> : <BrandMesh colors={popular.map((p) => hexOf(p.color)).filter((x): x is string => !!x && x !== FALLBACK_COLOR)} />}
           <div className="mx-auto max-w-7xl px-4 pt-12 text-center sm:px-6 sm:pt-20">
-            <h1 id="subs-h1" className="mx-auto max-w-3xl text-balance font-display text-4xl font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.25)] sm:text-6xl"><PageH1 text={t("Premium subscriptions")} /></h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg">{t("ChatGPT, Netflix, Spotify, Canva and more. Most are activated on your own account; you never share a password.")}</p>
-            <SearchBox c={c} big className="mx-auto mt-8 max-w-2xl text-start" />
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              <span className="me-1 text-sm font-semibold text-white/90">{t("Popular:")}</span>
-              {popular.map((p) => (
-                <button key={p.slug} type="button" onClick={() => pick(p)} aria-pressed={s.product?.slug === p.slug}
-                  className={`inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pe-3.5 ps-1 text-sm font-semibold text-slate-900 transition-[border-color,translate] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-slate-400 dark:border-white/15 dark:bg-[#0E1424] dark:text-white dark:hover:border-white/40 ${ring}`}>
-                  <span aria-hidden className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-white ${p.color}`}>{p.letter}</span>{p.name}
-                </button>
-              ))}
-            </div>
+            {spot && <SpotlightMark icon={Sparkles} />}
+            <h1 id="subs-h1" className={`mx-auto max-w-5xl text-balance font-display text-4xl font-bold tracking-tight sm:text-6xl ${spot ? spotTone.title : "text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.25)]"}`}><PageH1 text={t("Premium subscriptions")} /></h1>
+            <p className={`mx-auto mt-4 max-w-3xl text-base leading-relaxed sm:text-lg ${spot ? spotTone.sub : "text-white/90"}`}>{live
+              ? t("Premium apps without a foreign card. Each one shows how it's activated and how long it takes.")
+              : t("ChatGPT, Netflix, Spotify, Canva and more. Most are activated on your own account; you never share a password.")}</p>
+            <SearchBox c={c} hero className="mx-auto mt-7 max-w-xl text-start" />
+            <QuickPicks tone={spot ? "page" : "band"} items={popular.map((p) => ({
+              key: p.slug, name: p.name, on: s.product?.slug === p.slug, onPick: () => pick(p),
+              icon: <Mark p={p} />,
+            }))} />
+            {live?.error && <p role="alert" className="mx-auto mt-6 max-w-xl rounded-2xl bg-white/95 px-4 py-3 text-sm font-semibold text-slate-900">{live.error}</p>}
           </div>
         </section>
       )}

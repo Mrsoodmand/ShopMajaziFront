@@ -7,10 +7,11 @@ import { catLabel, postHref, type Post } from "@/content/blog-en";
 import Cover from "../blog/Cover";
 import { PageShell } from "../otp/parts";
 import { FollowCard, topics, useArchive } from "./parts";
+import { textLang } from "../blog/live";
 
-// "Oct 12, 2026" → "October 2026"
-const monthOf = (p: Post) => new Date(p.date).toLocaleDateString("en-US", { month: "long", year: "numeric" });
-const dayOf = (p: Post) => new Date(p.date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+// "Oct 12, 2026" → "October 2026" (live posts carry their ISO date)
+const monthOf = (p: Post) => new Date(p.iso ?? p.date).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+const dayOf = (p: Post) => new Date(p.iso ?? p.date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 // Page E — "Editorial Index": text first and calm. Topics are a line of underlined words; articles are listed by
 // month as big title rows, and hovering a row slides in its cover. Fast to scan, and it scales to hundreds of posts.
@@ -54,11 +55,11 @@ export default function BlogListE() {
                     <Link href={postHref(p)} className="group grid grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-4 py-5 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-6">
                       <time className="text-sm tabular-nums text-slate-400">{dayOf(p)}</time>
                       <div className="min-w-0">
-                        <h3 className="font-display text-lg font-semibold leading-snug text-slate-900 transition duration-300 group-hover:translate-x-1 group-hover:text-indigo-700 sm:text-2xl rtl:group-hover:-translate-x-1 dark:text-white dark:group-hover:text-indigo-300">{p.title}</h3>
+                        <h3 {...textLang(p)} className="font-display text-lg font-semibold leading-snug text-slate-900 transition duration-300 group-hover:translate-x-1 group-hover:text-indigo-700 sm:text-2xl rtl:group-hover:-translate-x-1 dark:text-white dark:group-hover:text-indigo-300">{p.title}</h3>
                         <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">{catLabel(p.cat)} · {p.read} read</div>
                       </div>
-                      <span className="relative hidden h-16 w-24 sm:block">
-                        <Cover cat={p.cat} size="sm" className="absolute inset-0 scale-90 rounded-xl opacity-0 transition duration-300 group-hover:scale-100 group-hover:opacity-100" />
+                      <span className="relative hidden aspect-video w-24 sm:block">
+                        <Cover cat={p.cat} src={p.image} size="sm" className="absolute inset-0 scale-90 rounded-xl opacity-0 transition duration-300 group-hover:scale-100 group-hover:opacity-100" />
                         <ArrowUpRight className="absolute inset-0 m-auto h-5 w-5 text-slate-300 transition duration-300 group-hover:opacity-0 dark:text-slate-600 rtl:-scale-x-100" />
                       </span>
                     </Link>

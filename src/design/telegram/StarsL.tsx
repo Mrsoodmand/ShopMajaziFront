@@ -10,6 +10,7 @@ import { H2, ring, StarsCheckout, TgFaq, TgOrderView, Trust, UsernameField, useS
 import { StarsBlocker, starsLabel, StarsSummary, UsesList } from "./stars";
 import { AmountPicker, Coin, panel } from "./StarsF";
 import { useT } from "@/i18n/client";
+import { SpotlightBand, spotTone, useSpotlight } from "@/design/service/spotlight";
 import { PageH1 } from "@/components/seo/PageHeading";
 
 // Stars L — "Pack Grid on a Gold Band": Premium S's layout in Stars gold. A deep amber band holds the title and the
@@ -33,6 +34,7 @@ function GoldBand() {
 export default function StarsL() {
   const usd = useMoney().format;
   const t = useT();
+  const spot = useSpotlight();
   const st = useStars();
   const extras = useHasExtras();
   const summary = useRef<HTMLDivElement>(null);
@@ -52,23 +54,23 @@ export default function StarsL() {
   const toSummary = () => { summary.current?.scrollIntoView({ behavior: "smooth", block: "center" }); summary.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true }); };
 
   return (
-    <PageShell heroDark>
+    <PageShell heroDark={!spot}>
       <div className={selection}>
-        <section aria-labelledby="stars-h1" className="relative -mt-16 overflow-hidden pb-28 pt-28 text-white">
-          <GoldBand />
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+        <section aria-labelledby="stars-h1" className={`relative -mt-16 overflow-hidden pb-28 pt-28 ${spot ? spotTone.title : "text-white"}`}>
+          {spot ? <SpotlightBand under={false} beam="start" /> : <GoldBand />}
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
             <div className="flex items-center justify-between gap-5 lg:max-w-[calc(100%-380px)]">
               <div className="min-w-0">
                 <h1 id="stars-h1" className="text-balance font-display text-3xl font-bold tracking-tight sm:text-5xl"><PageH1 text={t.tr(tgHeadings).stars.h1} /></h1>
-                <p className="mt-2 max-w-2xl text-base leading-relaxed text-amber-50 sm:mt-3 sm:text-lg">{t.tr(tgHeadings).stars.sub}</p>
+                <p className={`mt-2 max-w-3xl text-pretty text-base leading-relaxed sm:mt-3 sm:text-lg ${spot ? spotTone.sub : "text-amber-50"}`}>{t.tr(tgHeadings).stars.sub}</p>
               </div>
               <Coin amount={st.amount} valid={st.valid} />
             </div>
-            <div className="mt-5 sm:mt-6"><Trust light items={[t("No login needed"), t("Delivered in minutes"), t("Refund if not delivered")]} /></div>
+            <div className="mt-5 sm:mt-6"><Trust light={!spot} items={[t("No login needed"), t("Delivered in minutes"), t("Refund if not delivered")]} /></div>
           </div>
         </section>
 
-        <div id="buy" className="mx-auto max-w-6xl scroll-mt-24 px-4 sm:px-6">
+        <div id="buy" className="mx-auto max-w-7xl scroll-mt-24 px-4 sm:px-6">
           {/* A form, so Enter in any field works like Continue. */}
           <form noValidate onSubmit={(e) => { e.preventDefault(); st.proceed(); }} className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_340px]">
             <section aria-label={t("Choose")} className={`${panel} relative z-10 -mt-16 min-w-0 space-y-6 p-6 shadow-2xl shadow-amber-950/15 sm:p-8 lg:col-start-1 lg:row-start-1`}>
@@ -87,7 +89,7 @@ export default function StarsL() {
           </form>
         </div>
 
-        <div className="mx-auto max-w-6xl px-4 pb-28 pt-16 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 pb-28 pt-16 sm:px-6">
           <section aria-labelledby="uses"><H2 id="uses">{t("What can you do with Stars?")}</H2><div className="mt-6"><UsesList /></div></section>
           {!extras && <section aria-labelledby="faq" className="mt-16 max-w-3xl"><H2 id="faq">{t("Common questions")}</H2><div className="mt-6"><TgFaq s="stars" /></div></section>}
           <a href="#buy" className={`mt-12 inline-flex items-center gap-2 rounded-lg font-semibold text-amber-800 underline-offset-4 hover:underline dark:text-amber-300 ${ring}`}><ArrowUp aria-hidden className="h-4 w-4" />{t("Choose your Stars")}</a>

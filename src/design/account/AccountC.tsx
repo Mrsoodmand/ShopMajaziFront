@@ -285,7 +285,7 @@ function Orders({ demo, go }: { demo: Demo; go: Go }) {
           <label className="relative block w-full sm:w-72">
             <span className="sr-only">{t("Search orders")}</span>
             <Search aria-hidden className="pointer-events-none absolute start-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Order, phone or username")} className={`${field} !py-2.5 ps-10 caret-emerald-600`} />
+            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Order, phone or username")} className={`${field} !py-2.5 ps-10`} />
           </label>
         } />
       <div className="space-y-10">

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "@/i18n/Link";
-import { ChevronDown, Search, Menu, LayoutGrid, AlignLeft, BookOpen, Info } from "lucide-react";
+import { ChevronDown, Search, Menu, House, AlignLeft, BookOpen, Info } from "lucide-react";
 import { aboutLinks, navGroups } from "@/content/nav-en";
 import { LangSwitch, Logo, MobileMenu, SearchPalette, ThemeToggle, useScrolled, useSearchHotkey } from "./shared";
 import { useT } from "@/i18n/client";
@@ -39,8 +39,8 @@ export default function HeaderG({ overDark = false }: { overDark?: boolean; bare
 
   // Which tray link matches the current page.
   const under = (href: string) => path === href || path.startsWith(href + "/");
-  const onNumbers = under("/virtual-number");
-  const onServices = !onNumbers && navGroups.some((g) => g.items.some((it) => under(it.href)) || (g.viewAll && under(g.viewAll.href)));
+  const onHome = path === "/";
+  const onServices = navGroups.some((g) => g.items.some((it) => under(it.href)) || (g.viewAll && under(g.viewAll.href)));
   const onBlog = under("/blog");
   const onAbout = aboutLinks.some((l) => under(l.href));
 
@@ -57,16 +57,15 @@ export default function HeaderG({ overDark = false }: { overDark?: boolean; bare
       <div aria-hidden onClick={() => setMenu(null)}
         className={`fixed inset-0 z-30 hidden bg-slate-900/20 backdrop-blur-md transition-opacity duration-300 dark:bg-black/40 lg:block ${menu ? "opacity-100" : "pointer-events-none opacity-0"}`} />
 
+      {/* Stays pinned to the top with a solid bar at every scroll position, including the very top of the page. */}
       <header onMouseLeave={hide}
-        className={`sticky top-0 z-40 -mb-16 border-b transition-all duration-300 ${overDark && !scrolled && !menu ? "dark" : ""} ${scrolled || menu
-          ? "border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-white/[.06] dark:bg-[#070B14]/90"
-          : "border-transparent bg-transparent"}`}>
+        className={`sticky top-0 z-40 -mb-16 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl transition-colors duration-300 dark:border-white/[.06] dark:bg-[#070B14]/90 ${overDark && !scrolled && !menu ? "dark" : ""}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-6 xl:gap-6">
           <Logo />
 
-          <nav aria-label={t("Main")} className="mx-auto hidden items-center gap-0.5 rounded-2xl border border-slate-200 bg-slate-100/70 p-1 dark:border-white/[.08] dark:bg-white/[.04] lg:flex">
-            <Link href="/virtual-number" onMouseEnter={hide} aria-current={onNumbers ? "page" : undefined} className={item(onNumbers)}>
-              <LayoutGrid className={icon(onNumbers)} />{t("Virtual numbers")}
+          <nav aria-label={t("Main")} className="mx-auto hidden items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100/70 p-1 dark:border-white/[.08] dark:bg-white/[.04] lg:flex">
+            <Link href="/" onMouseEnter={hide} aria-current={onHome ? "page" : undefined} className={item(onHome)}>
+              <House className={icon(onHome)} />{t("ShopMajazi")}
             </Link>
             <button onMouseEnter={() => show("services")} onMouseLeave={hide} onClick={() => show("services")} onKeyDown={escape} aria-expanded={menu === "services"} className={item(onServices || menu === "services")}>
               <AlignLeft className={icon(onServices || menu === "services")} />{t("Services")}<ChevronDown className={`h-3.5 w-3.5 opacity-60 transition ${menu === "services" ? "rotate-180" : ""}`} />

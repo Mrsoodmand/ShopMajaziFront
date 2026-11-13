@@ -8,7 +8,9 @@ import { CategoryLogo, iconFor, ListTitle, ring, SearchField, SearchStatus, type
 import { HeroTexture } from "./heroTextures";
 import { HeroIcons } from "./heroIcons";
 import { HeroBackdrop, isRich } from "./heroBackdrops";
+import { SpotlightBand, SpotlightMark, useSpotlight } from "@/design/service/spotlight";
 import { HeroObject } from "./heroObjects";
+import { QuickPicks } from "../quickPicks";
 import { useT } from "@/i18n/client";
 import { PageH1 } from "@/components/seo/PageHeading";
 
@@ -52,7 +54,7 @@ function LogoCloud({ s }: { s: CategorySearch }) {
       <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div>
           <ListTitle />
-          <div className="mt-6 max-w-lg"><SearchField s={s} big /></div>
+          <div className="mt-6 max-w-lg"><SearchField s={s} /></div>
           <div className="mt-4"><Counts s={s} /></div>
           <SearchStatus s={s} />
         </div>
@@ -98,7 +100,7 @@ function BrandMesh({ s, texture }: { s: CategorySearch; texture?: string }) {
       </div>
       <div className={`${wrap} relative`}>
         <ListTitle light />
-        <div className="mt-6 max-w-xl"><SearchField s={s} big onDark /></div>
+        <div className="mt-6 max-w-xl"><SearchField s={s} onDark /></div>
         <div className="mt-4"><Counts s={s} light /></div>
         <SearchStatus s={s} />
       </div>
@@ -112,25 +114,23 @@ function BrandMesh({ s, texture }: { s: CategorySearch; texture?: string }) {
 function Spotlight({ s, icons, object, bg }: { s: CategorySearch; icons?: string; object?: string; bg?: string }) {
   const tx = useT();
   // With a rich-colour background the hero becomes a band under the header with white text that fades into the page.
-  const rich = isRich(bg);
+  // The Spotlight band follows the theme, so with it the text keeps the plain-page colours.
+  const spot = useSpotlight();
+  const rich = isRich(bg) && !spot;
   return (
-    <div className={`relative isolate overflow-hidden ${rich ? "-mt-16 pb-28 pt-16" : ""}`}>
-      {rich ? <HeroBackdrop id={bg} cats={s.all} /> : <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(60%_70%_at_50%_0%,rgba(99,102,241,.16),transparent)] dark:bg-[radial-gradient(60%_70%_at_50%_0%,rgba(99,102,241,.25),transparent)]" />}
-      {!rich && <HeroObject id={object} cats={s.all} />}
+    <div className={`relative isolate overflow-hidden ${rich || spot ? "-mt-16 pb-28 pt-16" : ""}`}>
+      {spot ? <SpotlightBand /> : rich ? <HeroBackdrop id={bg} cats={s.all} /> : <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(60%_70%_at_50%_0%,rgba(99,102,241,.16),transparent)] dark:bg-[radial-gradient(60%_70%_at_50%_0%,rgba(99,102,241,.25),transparent)]" />}
+      {!rich && !spot && <HeroObject id={object} cats={s.all} />}
       <div className={`${wrap} relative pt-12 text-center sm:pt-20 lg:pb-6`}>
-        <HeroIcons cats={s.all} look={icons} />
+        {spot ? <SpotlightMark icon={Users} /> : <HeroIcons cats={s.all} look={icons} />}
         <h1 className={`relative z-10 mx-auto max-w-3xl text-balance font-display text-4xl font-bold tracking-tight sm:text-6xl ${rich ? "text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.25)]" : "text-slate-900 dark:text-white"}`}><PageH1 text={tx(listHeadings.h1)} /></h1>
         <p className={`relative z-10 mx-auto mt-4 max-w-2xl text-base leading-relaxed sm:text-lg ${rich ? "text-white/90" : "text-slate-700 dark:text-slate-300"}`}>{tx(listHeadings.sub)}</p>
-        <div className="relative z-10 mx-auto mt-8 max-w-2xl text-start"><SearchField s={s} big onDark={rich} /></div>
+        <div className="relative z-10 mx-auto mt-7 max-w-xl text-start"><SearchField s={s} onDark={rich} /></div>
         <SearchStatus s={s} />
-        <div className="relative z-10 mt-5 flex flex-wrap items-center justify-center gap-2">
-          <span className={`me-1 text-sm font-semibold ${rich ? "text-white/90" : "text-slate-700 dark:text-slate-300"}`}>{tx("Popular:")}</span>
-          {s.all.filter((c) => c.featured).map((c) => (
-            <Link key={c.slug} href={categoryHref(c)} className={`inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pe-3.5 ps-1 text-sm font-semibold text-slate-900 transition-[border-color,translate,scale,rotate] duration-500 ${ease} hover:-translate-y-0.5 hover:border-slate-400 dark:border-white/15 dark:bg-[#0E1424] dark:text-white dark:hover:border-white/40 ${ring}`}>
-              <CategoryLogo c={c} size="sm" className="!h-7 !w-7 !rounded-full" />{tx(c.name)}
-            </Link>
-          ))}
-        </div>
+        {/* Left out entirely while no platform is marked featured, so the label never shows alone. */}
+        <QuickPicks tone={rich ? "band" : "page"} className="relative z-10 mt-4" items={s.all.filter((c) => c.featured).map((c) => ({
+          key: c.slug, name: tx(c.name), href: categoryHref(c), icon: <CategoryLogo c={c} size="sm" className="!h-7 !w-7 !rounded-full" />,
+        }))} />
         <div className="relative z-10 mt-6 flex justify-center"><Counts s={s} light={rich} /></div>
       </div>
     </div>
@@ -167,7 +167,7 @@ function Marquee({ s }: { s: CategorySearch }) {
       <div className={`${wrap} text-center`}>
         <h1 className="relative z-10 mx-auto max-w-3xl text-balance font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl dark:text-white"><PageH1 text={tx(listHeadings.h1)} /></h1>
         <p className="relative z-10 mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg dark:text-slate-300">{tx(listHeadings.sub)}</p>
-        <div className="relative z-10 mx-auto mt-8 max-w-2xl text-start"><SearchField s={s} big /></div>
+        <div className="relative z-10 mx-auto mt-7 max-w-xl text-start"><SearchField s={s} /></div>
         <SearchStatus s={s} />
       </div>
       <nav aria-label={tx("All platforms")} className="mt-10 space-y-1">

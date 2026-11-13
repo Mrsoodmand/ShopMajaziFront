@@ -12,6 +12,7 @@ import { icons } from "./listKit";
 import { useLiveSocialOrder, type LiveSocialOrder } from "./live";
 import { useHasExtras } from "../service/slot";
 import { useT } from "@/i18n/client";
+import { SpotlightBand, spotTone, useSpotlight } from "@/design/service/spotlight";
 
 // Social A — "Platform Band": Stars L / Premium S's layout. A band in the chosen platform's colours holds the title,
 // the platform switch and its icon; the order summary rises into the band on desktop and the form overlaps its lower
@@ -33,9 +34,14 @@ function Band({ bands, active }: { bands: { id: string; bg: string }[]; active: 
 const pill = "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors";
 const pillOn = "border-white bg-white text-slate-900";
 const pillOff = "border-white/40 text-white hover:bg-white/10";
+// On the Spotlight band, which follows the theme.
+const spotOn = "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900";
+const spotOff = "border-slate-300 bg-white/60 text-slate-800 hover:bg-white dark:border-white/30 dark:bg-transparent dark:text-white dark:hover:bg-white/10";
+const usePills = () => (useSpotlight() ? [spotOn, spotOff] : [pillOn, pillOff]);
 
 // Platform switch on the band: white pills, the chosen one solid.
 function PlatformPills({ s }: { s: Social }) {
+  const pills = usePills();
   const tx = useT();
   return (
     <fieldset>
@@ -45,7 +51,7 @@ function PlatformPills({ s }: { s: Social }) {
           const on = s.platform === p.id;
           const { Icon } = look[p.id];
           return (
-            <label key={p.id} className={`${pill} cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-400 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-slate-900 ${on ? pillOn : pillOff}`}>
+            <label key={p.id} className={`${pill} cursor-pointer has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-400 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-slate-900 ${on ? pills[0] : pills[1]}`}>
               <input type="radio" name="social-platform-band" checked={on} onChange={() => s.setPlatform(p.id)} className="sr-only" />
               <Icon aria-hidden className="h-4 w-4" />{tx(p.name)}
             </label>
@@ -58,6 +64,7 @@ function PlatformPills({ s }: { s: Social }) {
 
 // Live: every platform is its own page, so the switch is a row of links.
 function PlatformLinks({ d, opening, onOpen }: { d: LiveSocialOrder; opening: string | null; onOpen: (slug: string) => void }) {
+  const pills = usePills();
   const tx = useT();
   const current = opening ?? d.platform.slug;
   return (
@@ -69,7 +76,7 @@ function PlatformLinks({ d, opening, onOpen }: { d: LiveSocialOrder; opening: st
           return (
             <li key={p.slug}>
               <Link href={categoryHref(p)} scroll={false} aria-current={p.slug === d.platform.slug ? "page" : undefined} onClick={() => p.slug !== d.platform.slug && onOpen(p.slug)}
-                className={`${pill} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${on ? pillOn : pillOff}`}>
+                className={`${pill} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${on ? pills[0] : pills[1]}`}>
                 {p.logo ? <img src={p.logo} alt="" className="h-5 w-5 rounded-md object-cover" /> : Icon ? <Icon aria-hidden className="h-4 w-4" /> : null}{p.name}
               </Link>
             </li>
@@ -86,18 +93,19 @@ function Frame({ bands, active, heading, mark, pills, trust, notice, choose, sum
   choose: ReactNode; summary: ReactNode; jumpRef: Ref<HTMLDivElement>; below: ReactNode; after: ReactNode; onSubmit: () => void; style?: CSSProperties;
 }) {
   const tx = useT();
+  const spot = useSpotlight();
   return (
-    <PageShell heroDark>
+    <PageShell heroDark={!spot}>
       <div style={style}>
-        <section aria-labelledby="social-h1" className="relative -mt-16 overflow-hidden pb-28 pt-28 text-white">
-          <Band bands={bands} active={active} />
+        <section aria-labelledby="social-h1" className={`relative -mt-16 overflow-hidden pb-28 pt-28 ${spot ? spotTone.title : "text-white"}`}>
+          {spot ? <SpotlightBand under={false} beam="start" /> : <Band bands={bands} active={active} />}
           <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
             <div className="flex items-center justify-between gap-5 lg:max-w-[calc(100%-400px)]">
               <div className="min-w-0">{heading}</div>
               {mark}
             </div>
             <div className="mt-6">{pills}</div>
-            <div className="mt-5"><Trust light items={trust} /></div>
+            <div className="mt-5"><Trust light={!spot} items={trust} /></div>
             {notice}
           </div>
         </section>
@@ -123,7 +131,7 @@ function Heading({ title, sub }: { title: string; sub: string }) {
   return (
     <>
       <h1 id="social-h1" className="text-balance font-display text-3xl font-bold tracking-tight sm:text-5xl">{title}</h1>
-      {sub && <p className="mt-2 max-w-2xl text-base leading-relaxed text-white/90 sm:mt-3 sm:text-lg">{sub}</p>}
+      {sub && <p className={`mt-2 max-w-2xl text-base leading-relaxed sm:mt-3 sm:text-lg ${useSpotlight() ? spotTone.sub : "text-white/90"}`}>{sub}</p>}
     </>
   );
 }

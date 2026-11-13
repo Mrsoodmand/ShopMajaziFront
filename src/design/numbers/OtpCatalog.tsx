@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Globe2, Info, Smartphone } from "lucide-react";
+import { Check, Globe2, Info, MessageSquareCode, Smartphone } from "lucide-react";
 import { cheapest } from "@/content/otp-en";
 import { mockOtpSource, useOtpFlow, type OtpSource } from "../otp/flow";
 import { useLiveOtp, type LiveOtp } from "../otp/live";
@@ -16,8 +16,10 @@ import ActiveOrders from "../otp/ActiveOrders";
 import { orderViews, type OrderViewId } from "../otp/order-screen/views";
 import { AppTile, Assurances, CC, PageShell, PageTitle } from "../otp/parts";
 import { usePaymentResult } from "../otp/OtpL";
-import { appTint, CatalogCard, CatalogSearch, CatalogHero, CatalogLayout, CatalogPanel, NoMatch, PopularBadge, Segmented, showPanel } from "./kit";
+import { appTint, CatalogCard, CatalogSearch, CatalogHero, CatalogLayout, CatalogPanel, NoMatch, PopularBadge, Segmented, showPanel, StickyBar } from "./kit";
+import { useSpotlight } from "@/design/service/spotlight";
 import { itemsOf, otpPanels, type PanelProps } from "./otpPanels";
+import { useSteadyPanel } from "./steadyPanel";
 import { appCards, cardGrid, FlagTile, RingCard } from "./otpCards";
 import { useMoney } from "@/lib/money";
 import { useT } from "@/i18n/client";
@@ -51,6 +53,7 @@ function Live({ live, ...props }: Props & { live: LiveOtp }) {
 
 function View({ orderView, panel: panelId, card: cardId, previewOrder = false, source, store, appId, cc }: Props & { source: OtpSource; store?: OrderStore & { loaded: boolean }; appId?: string; cc?: string }) {
   const t = useT();
+  const spot = useSpotlight();
   const usd = useMoney().format;
   const f = useOtpFlow("app", { appId, cc, codeAfterMs: previewOrder ? 30_000 : undefined }, source, store);
   const bought = useRef(false);
@@ -64,6 +67,8 @@ function View({ orderView, panel: panelId, card: cardId, previewOrder = false, s
   const [payOpen, setPayOpen] = useState(false);
   const payResult = usePaymentResult(!!store);
   const panel = useRef<HTMLDivElement>(null);
+  // The panel grows when an app's countries and operators load or the operator list opens; keep it from jumping.
+  useSteadyPanel(panel, !(f.step === "order" && f.order));
 
   // Live: a number still waiting for its code (bought earlier, page reloaded) opens straight on its order screen.
   const resumed = useRef(false);
@@ -113,8 +118,8 @@ function View({ orderView, panel: panelId, card: cardId, previewOrder = false, s
   const popular = source.apps.filter((a) => a.popular).slice(0, 5);
 
   return (
-    <PageShell heroDark>
-      <CatalogHero id="otp-h1" title={t("Virtual numbers")} colors={BAND}
+    <PageShell heroDark={!spot}>
+      <CatalogHero id="otp-h1" icon={MessageSquareCode} title={t("Virtual numbers")} colors={BAND}
         sub={t("A number for one SMS code: WhatsApp, Telegram, Google, ChatGPT and thousands more. No code, no charge.")}
         popular={popular.map((a) => ({ key: a.id, name: a.name, on: byApp && f.app?.id === a.id, onPick: () => pickApp(a.id), icon: <span className="[&>span]:!h-7 [&>span]:!w-7 [&>span]:!rounded-full [&>span]:!text-xs"><AppTile app={a} size="sm" /></span> }))}
         stats={source.apps.length > 0 && t("{0} apps · {1} countries", { 0: source.apps.length.toLocaleString("en-US"), 1: source.countries.length })} />
@@ -130,15 +135,19 @@ function View({ orderView, panel: panelId, card: cardId, previewOrder = false, s
 
         <CatalogLayout label={t("Catalog")}
           toolbar={
-            // The search sits at the start of the switch (its right in Persian) and filters the cards below.
-            <div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <CatalogSearch q={q} setQ={setQ} label={byApp ? t("Search apps") : t("Search countries")} placeholder={byApp ? t("Search an app, e.g. WhatsApp") : t("Search a country, e.g. Germany")} className="min-w-0 flex-1" />
-                <div className="shrink-0"><Segmented label={t("Start with")} value={f.first} onChange={(v) => v !== f.first && f.setFirst(v)}
-                  options={[{ id: "app", label: t("By app"), icon: <Smartphone aria-hidden className="h-4 w-4" /> }, { id: "country", label: t("By country"), icon: <Globe2 aria-hidden className="h-4 w-4" /> }]} /></div>
-              </div>
-              <p aria-live="polite" className="mt-3 text-sm text-slate-600 dark:text-slate-400">{byApp ? t("{0} apps", { 0: total.toLocaleString("en-US") }) : t("{0} countries", { 0: total })}</p>
-            </div>
+            // The search sits at the start of the switch (its right in Persian) and filters the cards below. Both stay
+            // stuck under the header while the cards scroll (one row on phones too: the switch shows only its icons).
+            // A fragment, not a wrapper: the bar can only stick while its parent (the catalog section) is in view.
+            <>
+              <StickyBar resetKey={`${needle}|${f.first}`}>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <CatalogSearch q={q} setQ={setQ} label={byApp ? t("Search apps") : t("Search countries")} placeholder={byApp ? t("Search an app, e.g. WhatsApp") : t("Search a country, e.g. Germany")} className="min-w-0 flex-1" />
+                  <div className="shrink-0"><Segmented compact label={t("Start with")} value={f.first} onChange={(v) => v !== f.first && f.setFirst(v)}
+                    options={[{ id: "app", label: t("By app"), icon: <Smartphone aria-hidden className="h-4 w-4" /> }, { id: "country", label: t("By country"), icon: <Globe2 aria-hidden className="h-4 w-4" /> }]} /></div>
+                </div>
+              </StickyBar>
+              <p aria-live="polite" className="text-sm text-slate-600 dark:text-slate-400">{byApp ? t("{0} apps", { 0: total.toLocaleString("en-US") }) : t("{0} countries", { 0: total })}</p>
+            </>
           }
           panel={
             <CatalogPanel ref={panel}>

@@ -192,4 +192,8 @@ export const extras: Record<string, string> = {
   "The {0} guide": "راهنمای {0}",
   "{0} questions": "سؤالات {0}",
   "All {0} articles": "همه مقاله‌های {0}",
+  // FAQ section (ServiceExtras › ServiceFaq).
+  "Short answers to what buyers ask most about {0}.": "پاسخ کوتاه به سؤال‌هایی که خریداران درباره {0} زیاد می‌پرسند.",
+  "Still have a question?": "هنوز سؤالی دارید؟",
+  "Write to our support team; we reply around the clock.": "به تیم پشتیبانی پیام بدهید؛ شبانه‌روز پاسخ می‌دهیم.",
 };

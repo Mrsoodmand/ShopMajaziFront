@@ -3,7 +3,7 @@ import { getT } from "@/i18n/server";
 import { getSection } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
 import { ExtrasSlot } from "@/design/service/slot";
-import ServiceExtras from "@/design/service/ServiceExtras";
+import LiveServiceExtras from "@/design/service/LiveServiceExtras";
 import { LiveGvProvider, type LiveGv } from "@/design/googleVoice/live";
 import { MoneyProvider } from "@/lib/money";
 import { storefront } from "@/lib/backend";
@@ -50,7 +50,7 @@ export default async function GoogleVoicePage({ searchParams }: { searchParams: 
     <PageHeadingProvider h1={seo.h1}>
       <MoneyProvider currency="toman">
         <LiveGvProvider value={live}>
-          <ExtrasSlot extras={<ServiceExtras service="google-voice" />} glow="emerald"><Component card={offer.id === "K" ? decisions["page-google-voice-card"]?.offer : undefined} /></ExtrasSlot>
+          <ExtrasSlot extras={<LiveServiceExtras service="google-voice" />} glow="emerald"><Component card={offer.id === "K" ? decisions["page-google-voice-card"]?.offer : undefined} /></ExtrasSlot>
         </LiveGvProvider>
       </MoneyProvider>
     </PageHeadingProvider>

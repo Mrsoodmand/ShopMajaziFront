@@ -4,7 +4,7 @@ import { getSection } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
 import { tgPaths } from "@/content/telegram-en";
 import { ExtrasSlot } from "@/design/service/slot";
-import ServiceExtras from "@/design/service/ServiceExtras";
+import LiveServiceExtras from "@/design/service/LiveServiceExtras";
 import { PageHeadingProvider } from "@/components/seo/PageHeading";
 import { pageSeo, seoMetadata } from "@/lib/seo";
 
@@ -27,5 +27,5 @@ export default async function TelegramStarsPage() {
   const section = getSection("page-tg-stars")!;
   const offer = section.offers.find((o) => o.id === decisions["page-tg-stars"]?.offer) ?? section.offers.find((o) => o.id === "L")!;
   const { Component } = offer;
-  return <PageHeadingProvider h1={seo.h1}><ExtrasSlot extras={<ServiceExtras service="telegram-stars" />}><Component /></ExtrasSlot></PageHeadingProvider>;
+  return <PageHeadingProvider h1={seo.h1}><ExtrasSlot extras={<LiveServiceExtras service="telegram-stars" />}><Component /></ExtrasSlot></PageHeadingProvider>;
 }

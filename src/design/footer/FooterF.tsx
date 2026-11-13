@@ -2,7 +2,6 @@
 
 import Link from "@/i18n/Link";
 import { MessageCircle, Send, Mail, ArrowUpRight } from "lucide-react";
-import { brand } from "@/content/en";
 import { copyright, footerBlurb, legalLinks, supportEmail } from "@/content/footer-en";
 import { Logo } from "../header/shared";
 import { Columns, Socials } from "./parts";
@@ -16,8 +15,8 @@ const channels = [
 ];
 
 // Offer F — "Support + Wordmark" (B + E): E's three support cards on top, then B's footer without its call-to-action
-// card: logo, blurb, socials, link columns, legal line and the giant faded wordmark. Links and socials animate on hover;
-// `linkStyle` picks the link hover style (see links.tsx).
+// card: logo, blurb, socials, link columns and the legal line (the giant faded wordmark under it was removed on
+// 2026-11-09). Links and socials animate on hover; `linkStyle` picks the link hover style (see links.tsx).
 export default function FooterF({ linkStyle = "arrow" }: { linkStyle?: LinkStyle }) {
   const t = useT();
   return (
@@ -51,16 +50,12 @@ export default function FooterF({ linkStyle = "arrow" }: { linkStyle?: LinkStyle
           <Columns linkStyle={linkStyle} />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 py-6 text-xs text-slate-500 dark:border-white/10 dark:text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pb-8 pt-6 text-xs text-slate-500 dark:border-white/10 dark:text-slate-400">
           <span>{t.tr(copyright)}</span>
           <div className="flex gap-5">
             {t.tr(legalLinks).map((l) => <FooterLink key={l.href} href={l.href} label={l.label} style={linkStyle} />)}
           </div>
         </div>
-      </div>
-
-      <div aria-hidden className="pointer-events-none select-none text-center font-display text-[18vw] font-bold leading-[0.8] tracking-tighter text-slate-900/[.06] dark:text-white/[.05]">
-        {t.tr(brand).name}
       </div>
     </footer>
   );

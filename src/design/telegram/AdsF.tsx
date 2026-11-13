@@ -72,7 +72,7 @@ function ChipInput({ id, values, onChange, placeholder, check, error, describedB
   return (
     <>
       {msg && <p id={`${id}-chip-error`} className="mb-2 flex items-start gap-1.5 text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" /><span><span className="sr-only">Error: </span>{msg}</span></p>}
-      <div className={`flex min-h-[52px] flex-wrap items-center gap-2 rounded-xl border bg-white px-2.5 py-2 focus-within:ring-2 focus-within:ring-emerald-600 dark:bg-white/5 dark:focus-within:ring-emerald-400 ${msg ? "border-red-700 dark:border-red-400" : "border-slate-300 dark:border-white/20"}`}>
+      <div className={`flex min-h-[52px] flex-wrap items-center gap-2 rounded-xl border bg-white px-2.5 py-2 transition-colors duration-200 dark:bg-white/5 ${msg ? "border-red-700 dark:border-red-400" : "border-slate-300 focus-within:border-slate-500 dark:border-white/20 dark:focus-within:border-white/40"}`}>
         <ul className="contents">
           {values.map((v) => (
             <li key={v} className="flex animate-pop items-center gap-1 rounded-full bg-sky-100 py-1 pe-1 ps-3 text-sm font-semibold text-sky-900 dark:bg-sky-400/15 dark:text-sky-200">

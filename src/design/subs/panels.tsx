@@ -13,8 +13,9 @@ import { useT } from "@/i18n/client";
 
 export type PanelProps = { s: Subs; focusable?: boolean };
 
-const perMonth = (pl: SubPlan, usd: (n: number) => string) => usd(pl.price / pl.months);
-const best = (plans: SubPlan[]) => plans.reduce((a, b) => (b.price / b.months < a.price / a.months ? b : a));
+// Plans with no known length (months 0, live data) count as one month here.
+const perMonth = (pl: SubPlan, usd: (n: number) => string) => usd(pl.price / (pl.months || 1));
+const best = (plans: SubPlan[]) => plans.reduce((a, b) => (b.price / (b.months || 1) < a.price / (a.months || 1) ? b : a));
 
 function Heading({ s, focusable, size = "md" }: PanelProps & { size?: "sm" | "md" }) {
   const p = s.product!;
@@ -102,7 +103,7 @@ function PanelCompact({ s, focusable }: PanelProps) {
         </div>
         <BuyButton s={s} className="flex-1" label={t("Continue")} />
       </div>
-      <p className="text-center text-sm text-slate-600 dark:text-slate-400">{p.notes[0]}</p>
+      {p.notes[0] && <p className="text-center text-sm text-slate-600 dark:text-slate-400">{p.notes[0]}</p>}
     </div>
   );
 }
@@ -241,7 +242,7 @@ function PanelDetails({ s, focusable }: PanelProps) {
         <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
           <li className="flex items-center gap-1"><Lock aria-hidden className="h-3.5 w-3.5" />{t("Secure payment")}</li>
           <li className="flex items-center gap-1"><RotateCcw aria-hidden className="h-3.5 w-3.5" />{t("Refund if it fails")}</li>
-          <li className="flex items-center gap-1"><Zap aria-hidden className="h-3.5 w-3.5" />{p.delivery}</li>
+          {p.delivery && <li className="flex items-center gap-1"><Zap aria-hidden className="h-3.5 w-3.5" />{p.delivery}</li>}
         </ul>
       </div>
     </div>

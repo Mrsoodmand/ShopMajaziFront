@@ -3,27 +3,29 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { blogCats, postHref } from "@/content/blog-en";
-import { archive, countOf } from "@/content/blog-list-en";
 import Cover from "../blog/Cover";
 import { Meta } from "../blog/parts";
 import { PageShell } from "../otp/parts";
-import { catIcons } from "./parts";
+import { catIcons, useBlogArchive } from "./parts";
+import { textLang } from "../blog/live";
 
 // Page D — "Topic Shelves": a big cover banner for the newest article, a row of topic chips that jump down the page,
 // then one swipeable shelf per topic with a "See all" link (to that topic's own page).
 export default function BlogListD() {
+  const { all: archive, countOf } = useBlogArchive();
   const [lead] = archive;
+  if (!lead) return null;
 
   return (
     <PageShell>
       <div className="mx-auto max-w-6xl px-6 py-10">
         <Link href={postHref(lead)} className="group relative block overflow-hidden rounded-[2rem]">
-          <Cover cat={lead.cat} size="lg" corner className="absolute inset-0" />
+          <Cover cat={lead.cat} src={lead.image} size="lg" corner priority className="absolute inset-0" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent" />
           <div className="relative flex min-h-[420px] flex-col justify-end p-8 sm:p-12">
             <span className="w-fit rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur">Newest · {blogCats.find((c) => c.id === lead.cat)!.label}</span>
-            <h1 className="mt-4 max-w-3xl font-display text-3xl font-bold leading-tight text-white sm:text-5xl">{lead.title}</h1>
-            <p className="mt-3 max-w-2xl text-white/80">{lead.excerpt}</p>
+            <h1 {...textLang(lead)} className="mt-4 max-w-3xl font-display text-3xl font-bold leading-tight text-white sm:text-5xl">{lead.title}</h1>
+            <p {...textLang(lead)} className="mt-3 max-w-2xl text-white/80">{lead.excerpt}</p>
             <div className="mt-6 flex items-center gap-4">
               <Meta p={lead} light />
               <span className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition group-hover:gap-2.5">Read article<ArrowRight className="h-4 w-4 rtl:rotate-180" /></span>
@@ -57,10 +59,10 @@ export default function BlogListD() {
                 <div className="-mx-6 mt-5 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-6 px-6 pb-2 [scrollbar-width:none]">
                   {items.map((p) => (
                     <Link key={p.slug} href={postHref(p)} className="group w-[78%] shrink-0 snap-start sm:w-[44%] lg:w-[31.5%]">
-                      <Cover cat={p.cat} className="aspect-[16/10] rounded-3xl" />
+                      <Cover cat={p.cat} src={p.image} className="aspect-video rounded-3xl" />
                       <div className="mt-4 px-1">
                         <Meta p={p} />
-                        <h3 className="mt-2 line-clamp-2 font-display text-lg font-semibold leading-snug text-slate-900 transition-colors group-hover:text-indigo-700 dark:text-white dark:group-hover:text-indigo-300">{p.title}</h3>
+                        <h3 {...textLang(p)} className="mt-2 line-clamp-2 font-display text-lg font-semibold leading-snug text-slate-900 transition-colors group-hover:text-indigo-700 dark:text-white dark:group-hover:text-indigo-300">{p.title}</h3>
                       </div>
                     </Link>
                   ))}

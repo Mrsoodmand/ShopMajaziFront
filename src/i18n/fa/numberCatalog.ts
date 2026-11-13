@@ -64,6 +64,8 @@ export const numberCatalog: Record<string, string> = {
   "{0}, from {1} a week": "{0}، از {1} در هفته",
   "/week": " در هفته",
   "{0} numbers free": "{0} شماره آزاد",
+  // Rent country cards (rentCards.tsx)
+  "a week": "در هفته",
   // Google Voice
   "Search numbers": "جستجوی شماره",
   "{0} numbers in {1} cities": "{0} شماره در {1} شهر",
@@ -77,4 +79,7 @@ export const numberCatalog: Record<string, string> = {
   // Google Voice city cards (gvCityCards.tsx)
   "also {0}": "همچنین {0}",
   "+{0} more": "+{0} شماره دیگر",
+  // Virtual number panel "Quick Buy" (otpPanels.tsx): the hint that rows open to show their operators.
+  "Choose a country to see its operators and prices.": "روی یک کشور بزنید تا اپراتورها و قیمت‌هایش باز شود.",
+  "Choose an app to see its operators and prices.": "روی یک اپ بزنید تا اپراتورها و قیمت‌هایش باز شود.",
 };

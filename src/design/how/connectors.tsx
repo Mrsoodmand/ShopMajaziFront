@@ -63,9 +63,10 @@ function Flow({ state }: { state: LinkState }) {
 }
 
 // D — three chevrons lighting up in sequence, like a "go this way" sign.
+// No rtl:space-x-reverse: Tailwind 4 spaces with start/end margins, which already flip for right-to-left.
 function Chevrons({ state }: { state: LinkState }) {
   return (
-    <span className="flex -space-x-2.5 rtl:space-x-reverse">
+    <span className="flex -space-x-2.5">
       {[0, 1, 2].map((n) => (
         <ChevronRight
           key={n}

@@ -212,6 +212,85 @@
 
 .root[data-paused] :is(.chev, .fill) { animation-play-state: paused; }
 
+/* Repeat (HowToSteps `repeat`, set on data-loop once the list has been seen): the entrance keeps replaying as a wave
+   in reading order. Each bar fills, holds, then drains out of its far end while its number rolls up and away; then
+   the number rolls back in and the bar refills. Paused while the list is off screen; reduced motion never sets it. */
+.root { --loop: 5200ms; }
+.root:is([data-d="fill"], [data-d="roll"], [data-d="sheen"])[data-loop] .fill {
+  animation: fill-loop var(--loop) var(--ease) calc(280ms + var(--i) * 200ms) infinite backwards;
+}
+.root[data-d="roll"][data-loop] .num { animation: roll-loop var(--loop) var(--ease) calc(160ms + var(--i) * 200ms) infinite backwards; }
+.root[data-loop][data-paused] :is(.fill, .num) { animation-play-state: paused; }
+
+/* Drains towards the reading end: the far edge stays put while the bar shrinks into it. */
+@keyframes fill-loop {
+  0% { transform: translateX(0) scaleX(0); }
+  11% { transform: translateX(0) scaleX(1); }
+  78% { transform: translateX(0) scaleX(1); animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  90%, 100% { transform: translateX(calc(var(--dir) * 100%)) scaleX(0); }
+}
+@keyframes roll-loop {
+  0% { transform: translateY(115%); }
+  11% { transform: translateY(0); }
+  80% { transform: translateY(0); animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  90%, 100% { transform: translateY(-115%); }
+}
+
+/* ---------- Journey: the process walked through once, step 1 → last ----------
+   The cards rise in out of a soft blur and their numbers roll up. Then (data-j, set by HowToSteps while it runs) each
+   step in turn lights up in the page colour (outline, lift, a glow spreading from its number) while its bar fills;
+   when the next one lights it is ticked off (data-done: tinted number, full bar, a check that draws itself). At the
+   end every step is ticked and a light passes over them once (data-complete). It rewinds off screen and plays again
+   when the steps come back into view. Without data-j (no JS, reduced motion) the cards keep their resting look. */
+.glow, .check { display: none; }
+
+.root[data-v="e"][data-d="journey"][data-state="play"] .card { animation: journey-in 760ms var(--ease) calc(var(--i) * 110ms) backwards; }
+.root[data-d="journey"][data-state="armed"] .num { transform: translateY(115%); }
+.root[data-d="journey"][data-state="play"] .num { animation: roll-up 640ms var(--ease) calc(220ms + var(--i) * 110ms) backwards; }
+
+.root[data-d="journey"] .card { transition: translate 300ms var(--ease), transform 560ms var(--ease), box-shadow 560ms var(--ease); }
+.root[data-d="journey"][data-j] .card[data-on] {
+  transform: translateY(-6px);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--t) 65%, transparent), 0 26px 44px -24px color-mix(in srgb, var(--t) 65%, transparent);
+}
+
+.root[data-d="journey"] .glow {
+  display: block; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: radial-gradient(26rem 13rem at var(--gx, 0%) 0%, color-mix(in srgb, var(--t) 15%, transparent), transparent 70%);
+  transition: opacity 600ms var(--ease);
+}
+:global([dir="rtl"]) .root[data-d="journey"] .glow { --gx: 100%; }
+:global(.dark) .root[data-d="journey"] .glow { background: radial-gradient(26rem 13rem at var(--gx, 0%) 0%, color-mix(in srgb, var(--t) 12%, transparent), transparent 70%); }
+.root[data-d="journey"][data-j] .card[data-on] .glow { opacity: 1; }
+.root[data-d="journey"][data-complete] .glow { animation: journey-done 1200ms var(--ease) calc(var(--i) * 100ms) both; }
+
+.root[data-d="journey"][data-j] .card[data-on] .num { color: var(--t); }
+.root[data-d="journey"][data-j] .card[data-done] .num { color: color-mix(in srgb, var(--t) 55%, transparent); }
+
+/* Bars start empty; the lit step's bar fills over its turn and stays full once the step is ticked. */
+.root[data-d="journey"][data-state="armed"] .fill,
+.root[data-d="journey"][data-j] .fill { transform: scaleX(0); transition: transform 400ms var(--ease); }
+.root[data-d="journey"][data-j] :is(.card[data-done], .card[data-on]) .fill:not([data-run]) { transform: none; }
+.root[data-d="journey"][data-j] .card[data-on] .fill[data-run] { animation: grow calc(var(--cycle) - 250ms) cubic-bezier(0.45, 0, 0.25, 1) both; }
+
+.root[data-d="journey"] .check {
+  display: grid; place-items: center; position: absolute; top: 1.75rem; inset-inline-end: 1.75rem;
+  width: 1.75rem; height: 1.75rem; border-radius: 9999px; pointer-events: none;
+  color: var(--t); background: color-mix(in srgb, var(--t) 14%, transparent);
+  opacity: 0; scale: 0.4; transition: opacity 240ms ease, scale 460ms var(--ease);
+}
+.root[data-d="journey"] .check path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 420ms var(--ease) 140ms; }
+.root[data-d="journey"][data-j] .card[data-done] .check { opacity: 1; scale: 1; }
+.root[data-d="journey"][data-j] .card[data-done] .check path { stroke-dashoffset: 0; }
+
+/* The arrows after the lit step point on towards the next one; behind a ticked step they stay tinted. */
+.root[data-d="journey"] .chev { transition: color 400ms ease; }
+.root[data-d="journey"][data-j] .card[data-on] .chev { color: var(--t); animation: relay 1100ms ease-in-out calc(450ms + var(--k) * 150ms) infinite; }
+.root[data-d="journey"][data-j] .card[data-done] .chev { color: color-mix(in srgb, var(--t) 60%, transparent); }
+
+@keyframes journey-in { from { opacity: 0; transform: translateY(26px); filter: blur(6px); } }
+@keyframes journey-done { 0%, 100% { opacity: 0; } 35% { opacity: 0.9; } }
+
 @keyframes tint { 35%, 55% { color: var(--t); } }
 @keyframes roll-up { from { transform: translateY(115%); } }
 @keyframes sheen { from { opacity: 1; transform: none; } to { opacity: 1; transform: translateX(calc(var(--dir) * 260%)); } }
