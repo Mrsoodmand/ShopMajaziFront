@@ -12,3 +12,6 @@ next-env.d.ts
 # design tool caches
 .impeccable/hook.cache.json
 .impeccable/live/
+
+# written on the server by deploy/remote.sh
+.env.production
