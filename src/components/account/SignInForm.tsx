@@ -5,6 +5,7 @@ import { ArrowRight, Loader2, KeyRound, MessageSquareText, Pencil } from "lucide
 import { accountApi, useAccount, type AccountUser } from "@/lib/account";
 import { useT } from "@/i18n/client";
 import { errorText } from "./errors";
+import WordReveal from "@/components/ui/WordReveal";
 
 type Me = { authenticated: boolean; user: AccountUser | null; wallet: number };
 type Started = { mobile: string; exists: boolean; resend_in?: number; dev_code?: string };
@@ -41,14 +42,14 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
   const finish = (me: Me) => { account.signedIn(me); onDone?.(); };
 
   const submitMobile = (e: FormEvent) => { e.preventDefault(); run(async () => {
-    const r = await accountApi<Started>("start", { mobile });
+    const r = await accountApi<Started>("start", { mobile: latin(mobile) });
     setMobile(r.mobile);
     if (r.exists) setStep("password"); else { codeSent(r); setStep("register"); }
   }); };
   const sendCode = () => run(async () => { codeSent(await accountApi<Started>("code", { mobile })); if (step === "password") setStep("code"); });
   const submitPassword = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, password }))); };
-  const submitCode = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, code }))); };
-  const submitRegister = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("register", { mobile, code, name, password, email }))); };
+  const submitCode = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, code: latin(code) }))); };
+  const submitRegister = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("register", { mobile, code: latin(code), name, password, email }))); };
   const changeNumber = () => { setStep("mobile"); setError(null); setPassword(""); setCode(""); setDevCode(null); };
 
   const titles: Record<Step, [string, string]> = {
@@ -59,11 +60,11 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
   };
 
   return (
-    <div>
+    <div key={step} className="animate-step-in">
       {heading && (
         <div className="mb-5">
-          <h2 className="font-display text-xl font-semibold text-slate-900 dark:text-white">{titles[step][0]}</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{titles[step][1]}</p>
+          <h2 className="font-display text-xl font-semibold text-slate-900 dark:text-white"><WordReveal text={titles[step][0]} step={60} /></h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400"><WordReveal text={titles[step][1]} delay={200} step={25} /></p>
         </div>
       )}
 
@@ -77,7 +78,7 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
       {step === "mobile" && (
         <form onSubmit={submitMobile} className="space-y-3">
           <Label text={t("Mobile number")}>
-            <input ref={focusRef} type="tel" inputMode="tel" autoComplete="tel" dir="ltr" required value={mobile} onChange={(e) => setMobile(e.target.value)} placeholder="0912 345 6789" className={`${field} text-start font-mono`} />
+            <input ref={focusRef} type="tel" inputMode="numeric" autoComplete="tel" dir="ltr" required maxLength={14} value={mobile} onChange={(e) => setMobile(digitsOnly(e.target.value))} placeholder="09123456789" className={`${field} text-start font-mono`} />
           </Label>
           <Submit busy={busy} label={t("Continue")} />
         </form>
@@ -136,11 +137,17 @@ function Submit({ busy, label, icon: Icon = ArrowRight }: { busy: boolean; label
   );
 }
 
+// Only digits: English 0-9, Persian ۰-۹ and Arabic ٠-٩ (some Persian keyboards type these). Anything else typed or
+// pasted (spaces, dashes, "+", letters) is dropped as it comes in; the backend turns the digits into 09xxxxxxxxx.
+const digitsOnly = (v: string) => v.replace(/[^0-9۰-۹٠-٩]/g, "");
+// What is sent to the server: the same digits in English.
+const latin = (v: string) => v.replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0)).replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+
 function CodeInput({ value, onChange, label, inputRef }: { value: string; onChange: (v: string) => void; label: string; inputRef: React.RefObject<HTMLInputElement | null> }) {
   return (
     <Label text={label}>
       <input ref={inputRef} type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" required maxLength={8} value={value}
-        onChange={(e) => onChange(e.target.value.replace(/[^\d۰-۹]/g, ""))} className={`${field} text-center font-mono text-xl tracking-[0.4em]`} />
+        onChange={(e) => onChange(digitsOnly(e.target.value))} className={`${field} text-center font-mono text-xl tracking-[0.4em]`} />
     </Label>
   );
 }

@@ -98,7 +98,9 @@ export function PopularLinks({ center = false }: { center?: boolean }) {
 // Frame used by every offer: the switcher (previews only) above the page body.
 export function ErrorFrame({ switcher, children }: { switcher: ReactNode; children: ReactNode }) {
   return (
-    <section className="relative px-4 pb-24 pt-8 sm:px-6">
+    // Fills the first screen under the header and centres the message in it, so a short error (500) doesn't sit at
+    // the top with an empty block between it and the footer.
+    <section className="relative flex min-h-[calc(100svh-4rem)] flex-col justify-center px-4 py-12 sm:px-6">
       {switcher && <div className="mb-8">{switcher}</div>}
       {children}
     </section>

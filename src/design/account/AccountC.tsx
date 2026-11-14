@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { ArrowLeft, ChevronRight, KeyRound, LifeBuoy, LogOut, MessageCircle, Package, Plus, ReceiptText, RotateCcw, Search, UserRound, Wallet } from "lucide-react";
 import Link from "@/i18n/Link";
 import { PageShell } from "../otp/parts";
 import { useT } from "@/i18n/client";
 import type { AccountOrder } from "@/content/account-en";
+import { PrintInvoice } from "./invoice";
 import {
   AmountPicker, Badge, CardPicker, Delivery, Empty, NewTicketForm, OrderSteps, PasswordForm, ProfileForm, ReplyBox,
   ServiceTile, Thread, TopUpSummary, buyAgainHref, card, cardShort, deptLabel, field, laneOf, secondary,
-  ticketBadge, useAccountDemo, useFmt, useOrderLine, useTopUp, type Demo, type Line,
+  ticketBadge, useAccountDemo, useFmt, useOrderLine, useTopUp, type Line, type Store,
 } from "./kit";
 
 // Account C — "Passbook". The account is read like a bank passbook: the home page is the wallet statement, every
@@ -17,12 +18,14 @@ import {
 // the head of that column. A purchase opens as a receipt whose money lines add up; a refund is a line of its own and
 // never erases the purchase. Navigation is a deep indigo rail on the start side, a tab bar on phones.
 
-type Page = "statement" | "orders" | "order" | "funds" | "support" | "profile" | "password";
-type View = { page: Page; id?: number };
-type Go = (v: View) => void;
+export type Page = "statement" | "orders" | "order" | "funds" | "support" | "profile" | "password";
+// `id`: the order to show, or for support a ticket id (0 = a new ticket, a negative order id = a new ticket about it).
+export type View = { page: Page; id?: number };
+export type Go = (v: View) => void;
+type Demo = Store;
 
 const railRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1e1b4b] dark:focus-visible:ring-offset-[#15123a]";
-const pageRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 dark:focus-visible:ring-emerald-400 dark:focus-visible:ring-offset-[#070B14]";
+export const pageRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 dark:focus-visible:ring-emerald-400 dark:focus-visible:ring-offset-[#070B14]";
 
 const NAV: { page: Page; label: string; Icon: typeof Wallet }[] = [
   { page: "statement", label: "Statement", Icon: ReceiptText },
@@ -34,14 +37,22 @@ const NAV: { page: Page; label: string; Icon: typeof Wallet }[] = [
 ];
 const navOf = (p: Page): Page => (p === "order" ? "orders" : p);
 
+// The design page: the sample account, navigated in place.
 export default function AccountC() {
-  const t = useT();
-  const f = useFmt();
   const demo = useAccountDemo();
   const [view, setView] = useState<View>({ page: "statement" });
+  return <PageShell><Passbook store={demo} view={view} go={setView} /></PageShell>;
+}
+
+// The account itself, for any store: the sample above, or the live account on /account (components/account/AccountApp).
+// `notice`: a message shown above the page (e.g. how a top-up at the bank went).
+// `OrdersList`: another design for the orders page (design/account/orders.tsx offers); the current one by default.
+export type OrdersListProps = { demo: Store; go: Go };
+export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps> }) {
+  const t = useT();
+  const f = useFmt();
   const top = useRef<HTMLDivElement>(null);
   const first = useRef(true);
-  const go: Go = (v) => setView(v);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
     const box = top.current?.getBoundingClientRect();
@@ -52,7 +63,7 @@ export default function AccountC() {
   const order = view.page === "order" ? demo.orders.find((o) => o.id === view.id) : undefined;
 
   return (
-    <PageShell>
+    <>
       <div ref={top} className="scroll-mt-16 selection:bg-indigo-200 selection:text-indigo-950 dark:selection:bg-indigo-400/40 dark:selection:text-white">
         <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 sm:pt-10 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10">
           <aside className="hidden lg:block">
@@ -82,15 +93,17 @@ export default function AccountC() {
                   })}
                 </ul>
               </nav>
-              <button type="button" className={`mt-6 flex items-center gap-3 rounded-xl px-3 py-2.5 text-start text-[15px] text-indigo-200 transition-colors hover:bg-white/10 hover:text-white ${railRing}`}>
+              <button type="button" onClick={onSignOut} className={`mt-6 flex items-center gap-3 rounded-xl px-3 py-2.5 text-start text-[15px] text-indigo-200 transition-colors hover:bg-white/10 hover:text-white ${railRing}`}>
                 <LogOut aria-hidden className="h-5 w-5 rtl:rotate-180" />{t("Sign out")}
               </button>
             </div>
           </aside>
 
           <div className="min-w-0">
+            {notice}
+            {view.page === "order" && !order && <Empty title={t("Order not found")} text={t("It may be older than the orders shown here. Write to support with its number.")} action={<button type="button" onClick={() => go({ page: "orders" })} className={secondary}>{t("All orders")}</button>} />}
             {view.page === "statement" && <Statement demo={demo} go={go} />}
-            {view.page === "orders" && <Orders demo={demo} go={go} />}
+            {view.page === "orders" && <OrdersList demo={demo} go={go} />}
             {view.page === "order" && order && <Receipt order={order} demo={demo} go={go} />}
             {view.page === "funds" && <Funds demo={demo} />}
             {view.page === "support" && <Support key={view.id ?? "list"} demo={demo} go={go} initial={view.id} />}
@@ -118,11 +131,11 @@ export default function AccountC() {
           </ul>
         </nav>
       </div>
-    </PageShell>
+    </>
   );
 }
 
-function Head({ title, sub, action, back }: { title: string; sub?: ReactNode; action?: ReactNode; back?: { label: string; onClick: () => void } }) {
+export function Head({ title, sub, action, back }: { title: string; sub?: ReactNode; action?: ReactNode; back?: { label: string; onClick: () => void } }) {
   return (
     <div className="mb-8">
       {back && (
@@ -141,7 +154,7 @@ function Head({ title, sub, action, back }: { title: string; sub?: ReactNode; ac
   );
 }
 
-const indigoBtn = `inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 ${pageRing}`;
+export const indigoBtn = `inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 ${pageRing}`;
 
 // ---------- Statement ----------
 
@@ -159,7 +172,7 @@ function Statement({ demo, go }: { demo: Demo; go: Go }) {
     ...demo.orders.filter((o) => demo.arrived.includes(o.id)).map((o) => ({ key: `c${o.id}`, text: t("{0} code is here", { 0: o.service }), go: () => go({ page: "order", id: o.id }), dot: "bg-emerald-600" })),
     ...demo.orders.filter((o) => o.state === "needs-you").map((o) => ({ key: `n${o.id}`, text: t("{0} needs you", { 0: t(o.title) }), go: () => go({ page: "order", id: o.id }), dot: "bg-indigo-600" })),
     ...demo.tickets.filter((x) => x.state === "replied").map((x) => ({ key: `t${x.id}`, text: t("Support replied on #{0}", { 0: x.id }), go: () => go({ page: "support", id: x.id }), dot: "bg-indigo-600" })),
-    ...demo.orders.filter((o) => laneOf(o) === "way").map((o) => ({ key: `w${o.id}`, text: o.state === "waiting" ? t("{0} · {1} left", { 0: t(o.title), 1: demo.clock.text }) : t("{0} · delivering", { 0: t(o.title) }), go: () => go({ page: "order", id: o.id }), dot: "bg-amber-500" })),
+    ...demo.orders.filter((o) => laneOf(o) === "way").map((o) => ({ key: `w${o.id}`, text: o.state === "waiting" ? t("{0} · {1} left", { 0: t(o.title), 1: demo.clockOf(o).text }) : t("{0} · delivering", { 0: t(o.title) }), go: () => go({ page: "order", id: o.id }), dot: "bg-amber-500" })),
   ];
   const filters: { id: Filter; label: string }[] = [{ id: "all", label: t("All") }, { id: "top-up", label: t("Top-ups") }, { id: "purchase", label: t("Purchases") }, { id: "refund", label: t("Refunds") }];
 
@@ -199,7 +212,7 @@ function Statement({ demo, go }: { demo: Demo; go: Go }) {
           <thead>
             <tr className="text-sm text-slate-600 dark:text-slate-400">
               <th scope="col" className="px-5 pb-2 pt-4 text-start font-medium sm:ps-6">{t("Description")}</th>
-              <th scope="col" className="px-3 pb-2 pt-4 text-end font-medium">{t("Amount")}</th>
+              <th scope="col" className="px-3 pb-2 pt-4 text-end font-medium">{t.locale === "en" ? "Amount" : t("Sum of money")}</th>
               <th scope="col" className="hidden pb-2 pe-6 ps-3 pt-4 text-end font-medium sm:table-cell">{t("Balance")}</th>
             </tr>
             <tr className="border-b border-slate-900 dark:border-white/60">
@@ -226,11 +239,12 @@ function StatementRow({ l, demo, go }: { l: Line; demo: Demo; go: Go }) {
   const o = l.orderId ? demo.orders.find((x) => x.id === l.orderId) : undefined;
   const c = l.kind === "top-up" ? demo.cardOf(l.sub) : o && o.paidWith !== "wallet" ? demo.cardOf(o.paidWith) : undefined;
   const credit = l.amount > 0;
-  const title = l.kind === "top-up" ? t("Top-up") : l.kind === "refund" ? t("Refund · order #{0}", { 0: l.orderId! }) : t(l.title);
-  const sub = l.kind === "top-up" ? (c ? cardShort(c) : "") : l.kind === "refund" ? t(l.sub) : l.kind === "card" ? t("Paid by card {0}, not from the wallet", { 0: c ? `•••• ${c.last4}` : "" }) : t(l.sub);
+  const c2 = l.kind === "card" && !c ? demo.cardOf(l.sub) : undefined;
+  const title = l.kind === "top-up" ? t("Top-up") : l.kind === "refund" ? t("Refund · order #{0}", { 0: l.orderId! }) : l.kind === "commission" ? t("Referral commission") : t(l.title);
+  const sub = l.kind === "top-up" ? (c ? cardShort(c) : "") : l.kind === "refund" || l.kind === "commission" ? t(l.sub) : l.kind === "card" ? t("Paid by card {0}, not from the wallet", { 0: (c ?? c2) ? `•••• ${(c ?? c2)!.last4}` : "" }) : t(l.sub);
   const live = o && l.kind !== "refund" && (o.state === "waiting" || o.state === "delivering" || o.state === "needs-you");
   const icon = l.kind === "top-up" ? <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200"><Plus className="h-4 w-4" /></span>
-    : l.kind === "refund" ? <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200"><RotateCcw className="h-4 w-4" /></span>
+    : l.kind === "refund" || l.kind === "commission" ? <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200"><RotateCcw className="h-4 w-4" /></span>
     : <ServiceTile service={o?.service ?? ""} size="sm" />;
   const body = (
     <span className="flex min-w-0 items-start gap-3">
@@ -239,7 +253,7 @@ function StatementRow({ l, demo, go }: { l: Line; demo: Demo; go: Go }) {
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="font-semibold text-slate-900 dark:text-white">{title}</span>
           {l.held && <Badge kind="on-hold" />}
-          {live && <Badge kind={o!.state} label={o!.state === "waiting" ? t("{0} left", { 0: demo.clock.text }) : undefined} />}
+          {live && <Badge kind={o!.state} label={o!.state === "waiting" ? t("{0} left", { 0: demo.clockOf(o!).text }) : undefined} />}
         </span>
         <span className="block truncate text-sm text-slate-600 dark:text-slate-400">{f.time(l.at)} · {sub}</span>
         {l.held && <span className="mt-1 block text-sm text-slate-600 dark:text-slate-400">{t("Not in your balance yet: this card isn't on your account, so we're checking it.")}</span>}
@@ -261,15 +275,15 @@ function StatementRow({ l, demo, go }: { l: Line; demo: Demo; go: Go }) {
 
 // ---------- Orders, grouped by service ----------
 
-const families = [
+export const families = [
   { id: "number", label: "Virtual numbers" },
   { id: "telegram", label: "Telegram" },
   { id: "social", label: "Social growth" },
   { id: "accounts", label: "Accounts & subscriptions" },
 ] as const;
-const familyOf = (o: AccountOrder) => (o.kind === "number" || o.kind === "telegram" || o.kind === "social" ? o.kind : "accounts");
+export const familyOf = (o: AccountOrder) => (o.kind === "number" || o.kind === "telegram" || o.kind === "social" ? o.kind : "accounts");
 
-function Orders({ demo, go }: { demo: Demo; go: Go }) {
+export function Orders({ demo, go }: OrdersListProps) {
   const t = useT();
   const f = useFmt();
   const line = useOrderLine();
@@ -316,7 +330,8 @@ function Orders({ demo, go }: { demo: Demo; go: Go }) {
             </section>
           );
         })}
-        {!list.length && <div className={card}><Empty title={t("No orders match \"{0}\"", { 0: q })} text={t("Try an order number like 10487, a phone number or a username.")} action={<button type="button" onClick={() => setQ("")} className={secondary}>{t("Clear search")}</button>} /></div>}
+        {!demo.orders.length && <div className={card}><Empty title={t("No orders yet")} text={t("Everything you buy shows up here, with its codes and logins.")} action={<Link href="/" className={secondary}>{t("Start shopping")}</Link>} /></div>}
+        {!!demo.orders.length && !list.length && <div className={card}><Empty title={t("No orders match \"{0}\"", { 0: q })} text={t("Try an order number like 10487, a phone number or a username.")} action={<button type="button" onClick={() => setQ("")} className={secondary}>{t("Clear search")}</button>} /></div>}
       </div>
     </div>
   );
@@ -333,7 +348,9 @@ function Receipt({ order, demo, go }: { order: AccountOrder; demo: Demo; go: Go 
   ];
   if (order.refund) money.push({ label: t("Refund to wallet"), sub: `${f.when(order.refund.at)} · ${t(order.refund.reason)}`, amount: order.refund.amount });
   const net = money.reduce((s, m) => s + m.amount, 0);
-  const gotTitle = { number: "Your number", progress: "Delivery", gift: "Gift", login: "Login details", activation: "Subscription" }[order.delivery.type];
+  const gotTitle = { number: "Your number", progress: "Delivery", gift: "Gift", login: "Login details", activation: "Subscription", details: "Order details" }[order.delivery.type];
+  const load = demo.loadOrder;
+  useEffect(() => { load?.(order.id); }, [load, order.id]);
 
   return (
     <div>
@@ -375,6 +392,7 @@ function Receipt({ order, demo, go }: { order: AccountOrder; demo: Demo; go: Go 
           <p className="mt-1 text-[15px] text-slate-700 dark:text-slate-300">{t("Write to support about this order; the ticket links to it, so there's nothing to explain twice.")}</p>
           <div className="mt-4 grid gap-2">
             <button type="button" onClick={() => go({ page: "support", id: -order.id })} className={`${secondary} !py-3`}><MessageCircle aria-hidden className="h-4 w-4" />{t("Get help with this order")}</button>
+            <PrintInvoice order={order} store={demo} className={`${secondary} !py-3`} />
             <Link href={buyAgainHref(order)} className={`${secondary} !py-3`}>{t("Buy again")}</Link>
           </div>
         </aside>
@@ -430,6 +448,8 @@ function Support({ demo, go, initial }: { demo: Demo; go: Go; initial?: number }
   const writing = sel != null && sel <= 0;
   const ticket = sel && sel > 0 ? demo.tickets.find((x) => x.id === sel) : undefined;
   const pick = (id: number) => { setSel(id); setMobileOpen(true); };
+  const load = demo.loadTicket;
+  useEffect(() => { if (sel && sel > 0) load?.(sel); }, [load, sel]);
 
   return (
     <div>
@@ -439,16 +459,16 @@ function Support({ demo, go, initial }: { demo: Demo; go: Go; initial?: number }
         <ul aria-label={t("Tickets")} className={`divide-y divide-slate-200 border-slate-200 lg:block lg:border-e dark:divide-white/10 dark:border-white/10 ${mobileOpen ? "hidden" : ""}`}>
           {demo.tickets.map((x) => {
             const on = sel === x.id;
-            const last = x.messages[x.messages.length - 1];
+            const last = x.messages.at(-1);
             return (
               <li key={x.id}>
                 <button type="button" onClick={() => pick(x.id)} aria-current={on ? "true" : undefined}
                   className={`block w-full px-5 py-4 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 dark:focus-visible:ring-emerald-400 ${on ? "bg-indigo-50 dark:bg-indigo-400/10" : "hover:bg-slate-50 dark:hover:bg-white/[.03]"}`}>
                   <span className="flex items-start justify-between gap-3">
                     <span className={`min-w-0 font-semibold ${on ? "text-indigo-950 dark:text-white" : "text-slate-900 dark:text-white"}`}>{t(x.subject)}</span>
-                    <span className="shrink-0 text-xs text-slate-600 dark:text-slate-400">{f.when(last.at)}</span>
+                    {last && <span className="shrink-0 text-xs text-slate-600 dark:text-slate-400">{f.when(last.at)}</span>}
                   </span>
-                  <span className="mt-1 block truncate text-sm text-slate-600 dark:text-slate-400">{last.from === "you" ? t("You") : last.name}: {t(last.text)}</span>
+                  {last && <span className="mt-1 block truncate text-sm text-slate-600 dark:text-slate-400">{last.from === "you" ? t("You") : last.name || t("Support")}: {t(last.text)}</span>}
                   <Badge kind={ticketBadge(x.state)} className="mt-2" />
                 </button>
               </li>
@@ -478,7 +498,9 @@ function Support({ demo, go, initial }: { demo: Demo; go: Go; initial?: number }
               <div className="mt-7 border-t border-slate-200 pt-6 dark:border-white/10"><ReplyBox ticket={ticket} demo={demo} /></div>
             </div>
           )}
-          {!writing && !ticket && <Empty title={t("Pick a ticket")} text={t("Choose a conversation on the list, or start a new one.")} />}
+          {!writing && !ticket && (demo.tickets.length
+            ? <Empty title={t("Pick a ticket")} text={t("Choose a conversation on the list, or start a new one.")} />
+            : <Empty title={t("No tickets yet")} text={t("Questions about an order, a top-up or anything else: start a ticket and we'll answer here.")} action={<button type="button" onClick={() => pick(0)} className={secondary}>{t("New ticket")}</button>} />)}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { LocaleProvider } from "@/i18n/client";
 import { AccountProvider } from "@/lib/account";
+import { SignInPopupProvider } from "@/components/account/SignIn";
 import ScrollReveal from "@/components/ScrollReveal";
 import PersianDigits from "@/components/PersianDigits";
 import { Suspense } from "react";
@@ -58,7 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={`${inter.variable} ${grotesk.variable} ${serif.variable} ${mono.variable} ${iransans.variable} bg-white font-sans text-slate-900 dark:bg-[#070B14] dark:text-slate-100`}>
         <LocaleProvider locale={locale} prices={prices}>
           <BrandProvider mark={decisions.logo?.offer}>
-            <AccountProvider><SpotlightProvider on={spotlight} preview={heroPreview && decisions["landing-hero"]?.offer !== "B"}>{children}</SpotlightProvider></AccountProvider>
+            <AccountProvider><SignInPopupProvider><SpotlightProvider on={spotlight} preview={heroPreview && decisions["landing-hero"]?.offer !== "B"}>{children}</SpotlightProvider></SignInPopupProvider></AccountProvider>
             <Suspense fallback={null}><RouteLoader /></Suspense>
           </BrandProvider>
           <ScrollReveal />

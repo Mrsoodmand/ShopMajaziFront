@@ -123,7 +123,16 @@ export const common: Record<string, string> = {
   // Hero
   "Get your": "خدمات دیجیتال را",
   "digital services.": "دریافت کنید.",
-  "Real numbers, real accounts, real growth. Instant delivery and a refund if anything goes wrong.": "شماره واقعی، اکانت واقعی، رشد واقعی. تحویل آنی، و اگر مشکلی پیش بیاید پولتان برمی‌گردد.",
+  // Rotating headline word (hero-word offers): «خدمات دیجیتال را آنی دریافت کنید.»
+  "instantly": "آنی",
+  "safely": "مطمئن",
+  "professionally": "حرفه‌ای",
+  // The line under the home headline, in parts (design/hero/subtitles)
+  "Safe buying": "خرید مطمئن",
+  "instant delivery": "تحویل آنی",
+  "real support": "پشتیبانی واقعی",
+  "everything just as you'd expect.": "همه‌چیز همون‌طور که انتظار داری.",
+  "Safe buying, instant delivery and real support: everything just as you'd expect.": "خرید مطمئن، تحویل آنی و پشتیبانی واقعی؛ همه‌چیز همون‌طور که انتظار داری.",
   "Search 2,000+ services": "جستجو در بیش از ۲٬۰۰۰ سرویس",
   "Refund guarantee": "تضمین بازگشت وجه",
   "View all": "مشاهده همه",

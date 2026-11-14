@@ -36,6 +36,19 @@ export async function accountApi<T>(path: string, body?: Record<string, unknown>
   return json.data as T;
 }
 
+// A multipart POST (a ticket with an attached image). Same envelope and errors as accountApi.
+export async function accountForm<T>(path: string, body: FormData, retried = false): Promise<T> {
+  const res = await fetch(BASE + path, { method: "POST", credentials: "same-origin", headers: { Accept: "application/json", "X-XSRF-TOKEN": xsrf() }, body });
+  if (res.status === 419 && !retried) {
+    await fetch(BASE + "me", { credentials: "same-origin", headers: { Accept: "application/json" } });
+    return accountForm<T>(path, body, true);
+  }
+  let json: { success?: boolean; message?: string | null; code?: string; data?: unknown } = {};
+  try { json = await res.json(); } catch { /* not JSON: handled below */ }
+  if (!res.ok || !json.success) throw new ApiError(json.message ?? `HTTP ${res.status}`, json.code ?? (res.status === 413 ? "file_invalid" : res.status === 429 ? "busy" : "network"), res.status, (json.data as Record<string, unknown>) ?? null);
+  return json.data as T;
+}
+
 export type Account = {
   status: "loading" | "guest" | "user";
   user: AccountUser | null;
@@ -73,5 +86,5 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 const guest: Account = { status: "guest", user: null, wallet: null, refresh: async () => {}, signedIn: () => {}, setWallet: () => {}, signOut: async () => {} };
 export const useAccount = () => useContext(Ctx) ?? guest;
 
-// The old site's wallet page (top-up by card), served by Laravel through the fallback rewrite.
-export const TOP_UP_HREF = "/user/wallet";
+// Wallet top-up by card: the account's Add funds page (Front/src/app/account).
+export const TOP_UP_HREF = "/account/funds";

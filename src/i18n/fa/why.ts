@@ -22,7 +22,7 @@ export const why: Record<string, string> = {
   "Hi, how can we help?": "سلام، چطور کمکتان کنیم؟",
   "Refunded to your wallet": "به کیف پولتان برگشت",
   "No code arrived, so you weren't charged.": "کدی نرسید، پس هزینه‌ای از شما کم نشد.",
-  "Refunded": "برگشت داده شد",
+  "Refunded": "وجه برگشت داده شد",
   "What do you need?": "چه چیزی لازم دارید؟",
   "Virtual number": "شماره مجازی",
   "Wallet balance": "موجودی کیف پول",

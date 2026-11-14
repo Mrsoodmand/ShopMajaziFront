@@ -10,7 +10,7 @@ import HeroC from "./hero/HeroC";
 import HeroD from "./hero/HeroD";
 import HeroE from "./hero/HeroE";
 import HeroF from "./hero/HeroF";
-import HeroG from "./hero/HeroG";
+import HeroG, { HeroSubChips, HeroSubGradient, HeroSubIcons, HeroSubMarker, HeroSubPlain, HeroWordBlur, HeroWordSlot, HeroWordType } from "./hero/HeroG";
 import HeroH from "./hero/HeroH";
 import HeroI from "./hero/HeroI";
 import HeroJ from "./hero/HeroJ";
@@ -205,10 +205,13 @@ import { MotionA, MotionB, MotionC, MotionD, MotionE, MotionF, MotionG, MotionH,
 import AccountA from "./account/AccountA";
 import AccountB from "./account/AccountB";
 import AccountC from "./account/AccountC";
+import { OrdersA, OrdersB, OrdersC, OrdersD, OrdersE, OrdersNow } from "./account/orders";
+import { SignInA, SignInB, SignInC, SignInD, SignInF, SignInG, SignInH, SignInI, SignInNow } from "./signin/offers";
+import { InvoiceA, InvoiceB, InvoiceC, InvoiceD, InvoiceE } from "./account/invoice";
 
 // archived offers stay in the code but are hidden from the comparison page unless "Show archived" is on.
 // `overlay` (headers only): the header floats over the hero instead of sitting above it.
-export type Offer = { id: string; name: string; summary: string; Component: ComponentType<{ card?: string; bare?: "overlay" | "flow"; orderView?: string; slug?: string; topic?: string; method?: string; panel?: string; hero?: string; texture?: string; icons?: string; object?: string; bg?: string; code?: string }>; archived?: boolean; overlay?: boolean };
+export type Offer = { id: string; name: string; summary: string; Component: ComponentType<{ card?: string; bare?: "overlay" | "flow"; orderView?: string; slug?: string; topic?: string; method?: string; word?: string; panel?: string; hero?: string; texture?: string; icons?: string; object?: string; bg?: string; code?: string }>; archived?: boolean; overlay?: boolean };
 // A section with `variantOf` refines another section (e.g. its arrow style); on the home page its chosen offer replaces the parent's.
 // `context` is rendered under each offer on the comparison page (e.g. the hero under a header).
 // `kind: "page"` marks a whole-page design (with its own header and footer); `kind: "brand"` marks a site-wide
@@ -254,6 +257,29 @@ export const sections: Section[] = [
       { id: "I", name: "Globe", summary: "Dark navy wireframe globe with live country pins and prices. Leads with coverage.", Component: HeroI, archived: true },
       { id: "J", name: "Mega Bento", summary: "Full-width bento where every tile shows a tiny live UI of its service.", Component: HeroJ, archived: true },
       { id: "K", name: "Dashboard Preview", summary: "SaaS style. A tilted preview of the customer dashboard: wallet, numbers, orders.", Component: HeroK, archived: true },
+    ],
+  },
+  {
+    id: "hero-word",
+    title: "Hero · Headline with a changing word",
+    variantOf: "hero",
+    offers: [
+      { id: "A", name: "Slot Flip", summary: "«خدمات دیجیتال را [آنی ← مطمئن ← حرفه‌ای] دریافت کنید.» The word slides up and out while the next slides in from below, every 2.6 seconds. Only the word moves; the line keeps its width.", Component: HeroWordSlot },
+      { id: "B", name: "Blur Swap", summary: "The same words, fading through a soft blur into the next one, like the sign-in page's text.", Component: HeroWordBlur },
+      { id: "C", name: "Typewriter", summary: "The word is deleted letter by letter and the next one typed, with a blinking indigo cursor. The most noticeable of the three.", Component: HeroWordType },
+      { id: "D", name: "Current", summary: "«خدمات دیجیتال را دریافت کنید.» as it is now, nothing moves.", Component: HeroG },
+    ],
+  },
+  {
+    id: "hero-subtitle",
+    title: "Hero · The line under the headline",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Soft Chips", summary: "The three promises («خرید مطمئن», «تحویل آنی», «پشتیبانی واقعی») in pale green, amber and indigo tints that pop in one after another; the ending stays plain.", Component: HeroSubChips },
+      { id: "B", name: "Highlighter", summary: "The promises in bold, with a soft marker stroke that draws under each one, start to end, after the line has arrived.", Component: HeroSubMarker },
+      { id: "C", name: "Display Line (current)", summary: "The line in the headline's font, a size bigger; the promises in the headline's indigo-to-pink gradient with a light sheen passing through them once. The ending is quieter.", Component: HeroSubGradient },
+      { id: "D", name: "Icon Row", summary: "The promises as one row, each with a coloured icon (shield, lightning, headset); \"everything just as you'd expect\" on its own quieter line under it.", Component: HeroSubIcons },
+      { id: "E", name: "Word by word", summary: "One grey line that writes itself in word by word (before C was chosen).", Component: HeroSubPlain },
     ],
   },
   {
@@ -520,6 +546,49 @@ export const sections: Section[] = [
       { id: "A", name: "Needs You", summary: "A deep indigo band holds the page title, the wallet and the tabs. The overview sorts by what each thing needs: first what's waiting on you (a paused order, a support reply, a code that just came in), beside it what's on its way with timers drawn to scale, then a table of what's done. Orders filter by the same states; each order, ticket and form is its own page.", Component: AccountA },
       { id: "B", name: "One Page", summary: "The whole account on one scrolling page: right now, orders, add funds, support, profile, password. A solid indigo index on the side follows the scroll, a filled square on the section you're in (chips on phones). Orders and tickets unfold in place with everything they have; nothing opens a new page.", Component: AccountB },
       { id: "C", name: "Passbook", summary: "Read like a bank passbook: the home page is the wallet statement, each top-up, purchase and refund on a line with the balance after it, today's balance at the head of the column. An order opens as a receipt whose money lines add up. Deep indigo rail on the side, a tab bar on phones; orders grouped by service; support as a two-pane inbox.", Component: AccountC },
+    ],
+  },
+  {
+    id: "page-signin",
+    title: "Page · Sign in (/login page and the header's sign-in popup)",
+    kind: "page",
+    offers: [
+      { id: "A", name: "Trust Split", summary: "A deep indigo panel with the logo, \"Your orders, codes and wallet in one place\", three promises (delivered in seconds, money back to your wallet, support around the clock) and Enamad; the form beside it. Popup: the same indigo strip on top of the form.", Component: SignInA },
+      { id: "B", name: "Quiet Card", summary: "One centered card on a faint blueprint grid, the logo above it and a three-step strip under it (mobile → password or SMS code → your account), with a line on how the number is used. Popup: the card with the step strip.", Component: SignInB, archived: true },
+      { id: "C", name: "Phone First", summary: "A big phone icon and \"One number, your whole account\"; the form with no heading of its own, and under it the three ways in: password, SMS code, or a new account in a minute. Popup: icon, heading and form, centered.", Component: SignInC, archived: true },
+      { id: "D", name: "Account Preview", summary: "Beside the form, a picture of what signing in opens: the wallet balance and a live order with its countdown and code, in the Passbook look. Popup: wide, the same picture beside the form (phones: form only).", Component: SignInD, archived: true },
+      { id: "E", name: "Current", summary: "The /login page as it is now; its popup is the plain form.", Component: SignInNow },
+      { id: "F", name: "Trust Split · Light", summary: "A, with the panel in pale indigo and dark text instead of deep indigo: the same logo, headline, three promises and Enamad line, calmer on light pages. Popup: a pale strip on top.", Component: SignInF },
+      { id: "G", name: "Trust Split · Services", summary: "A's deep indigo panel, but it shows what the account is for: \"One account for everything you buy here\" over six service tiles (numbers, Google Voice, Apple ID, Telegram Premium, Instagram, subscriptions) and the refund-to-wallet line. Popup: logo and the tiles on top.", Component: SignInG },
+      { id: "H", name: "Trust Split · Glow", summary: "A's indigo with the site's faint grid and a soft breathing glow, a lock icon, the headline and the four promises as small chips. Popup: the glow strip with two chips.", Component: SignInH },
+      { id: "I", name: "Trust Split · Steps", summary: "The form comes first; a slimmer indigo panel after it walks through what happens: enter your mobile, password or SMS code, you're in, plus how the number is used. Popup: form, with the privacy line in an indigo footer.", Component: SignInI },
+    ],
+  },
+  {
+    id: "page-account-orders",
+    title: "Page · Account · Passbook · Orders list",
+    kind: "page",
+    variantOf: "page-account",
+    offers: [
+      { id: "A", name: "Status Tabs", summary: "One list, newest first, with tabs by what each order needs: Needs you, In progress, Delivered, Refunded & cancelled, each with its count. Opens on Needs you when something waits on you.", Component: OrdersA },
+      { id: "B", name: "Ledger Table", summary: "Every order in one table: order with its status, date, how it was paid and price, in fixed columns. Sort by date or price, filter by service. Most orders on screen at once.", Component: OrdersB },
+      { id: "C", name: "Handover Cards", summary: "A card per order that already shows what it handed over: the number with its code and copy buttons, the countdown, the delivery bar, or how many login details are inside. Orders that need you come first.", Component: OrdersC },
+      { id: "D", name: "By Day", summary: "Reads like the statement: orders still going are pinned in an In progress box on top; the rest fall under Today, Yesterday and dates, with the time on the start side.", Component: OrdersD },
+      { id: "E", name: "List & Preview", summary: "Wide screens: a compact list beside the chosen order's handover, price and payment, so you can go through orders without changing page. Phones: tap opens the receipt.", Component: OrdersE },
+      { id: "F", name: "Current", summary: "Grouped by service (Virtual numbers, Telegram, Social growth, Accounts), as it is now.", Component: OrdersNow },
+    ],
+  },
+  {
+    id: "page-account-invoice",
+    title: "Page · Account · Passbook · Printable invoice",
+    kind: "page",
+    variantOf: "page-account",
+    offers: [
+      { id: "A", name: "Official", summary: "The Iranian sales-invoice layout: boxed seller and buyer, a ruled table with row number, quantity, unit price and amount, the total in figures and in words, payment boxes.", Component: InvoiceA },
+      { id: "B", name: "Passbook", summary: "Matches the account: a deep indigo head with the amount paid, who it's for and from, the order and any refund as money lines on dashed rules.", Component: InvoiceB },
+      { id: "C", name: "Slip", summary: "A narrow till slip: centred, dashed rules, total and amount in words at the foot. Half a page on paper, readable as a screenshot on a phone.", Component: InvoiceC },
+      { id: "D", name: "Clean", summary: "Lots of white: the amount and a Paid mark first, billed to / paid with / from in three columns, one line table and a green total.", Component: InvoiceD },
+      { id: "E", name: "Bilingual", summary: "Persian and English on every label and both calendars, whatever language the site is in, for showing a company, accountant or embassy.", Component: InvoiceE },
     ],
   },
   {

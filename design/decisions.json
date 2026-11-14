@@ -166,5 +166,29 @@
   "page-errors": {
     "offer": "D",
     "savedAt": "2026-11-13T21:10:27.000Z"
+  },
+  "page-account": {
+    "offer": "C",
+    "savedAt": "2026-11-14T12:00:00.000Z"
+  },
+  "page-account-orders": {
+    "offer": "D",
+    "savedAt": "2026-11-14T21:00:00.000Z"
+  },
+  "page-account-invoice": {
+    "offer": "D",
+    "savedAt": "2026-11-14T22:00:00.000Z"
+  },
+  "page-signin": {
+    "offer": "H",
+    "savedAt": "2026-11-15T10:00:00.000Z"
+  },
+  "hero-word": {
+    "offer": "B",
+    "savedAt": "2026-11-15T12:00:00.000Z"
+  },
+  "hero-subtitle": {
+    "offer": "C",
+    "savedAt": "2026-11-15T13:00:00.000Z"
   }
 }

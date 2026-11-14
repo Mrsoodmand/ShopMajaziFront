@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Wallet, LogOut } from "lucide-react";
-import SignInForm from "@/components/account/SignInForm";
+import { SignInCard } from "@/components/account/SignIn";
 import { PageShell } from "@/design/otp/parts";
 import { TOP_UP_HREF, useAccount } from "@/lib/account";
 import { toman } from "@/lib/money";
@@ -18,10 +18,11 @@ export default function LoginView({ next }: { next: string }) {
 
   return (
     <PageShell>
-      <div className="mx-auto flex max-w-md flex-col px-6 py-16 sm:py-24">
+      {/* Guests: design H (components/account/SignIn), the same look as the header's sign-in popup. */}
+      {account.status === "guest" && <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-16"><SignInCard onDone={() => router.push(lp(next))} /></div>}
+      {account.status !== "guest" && <div className="mx-auto flex max-w-md flex-col px-6 py-16 sm:py-24">
         <div className="rounded-[2rem] bg-white p-6 shadow-xl shadow-slate-900/5 ring-1 ring-slate-200 sm:p-8 dark:bg-[#0E1424] dark:shadow-black/30 dark:ring-white/10">
           {account.status === "loading" && <div className="h-64 animate-pulse rounded-2xl bg-slate-100 dark:bg-white/5" />}
-          {account.status === "guest" && <SignInForm onDone={() => router.push(lp(next))} />}
           {account.status === "user" && account.user && (
             <div>
               <h1 className="font-display text-xl font-semibold text-slate-900 dark:text-white">{t("You're signed in")}</h1>
@@ -32,13 +33,13 @@ export default function LoginView({ next }: { next: string }) {
               </div>
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
                 <Link href={next} className="rounded-2xl bg-indigo-600 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-700">{t("Continue shopping")}</Link>
-                <a href={TOP_UP_HREF} className="rounded-2xl py-3 text-center text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300 dark:text-slate-200 dark:ring-white/15">{t("Top up wallet")}</a>
+                <Link href={TOP_UP_HREF} className="rounded-2xl py-3 text-center text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:ring-slate-300 dark:text-slate-200 dark:ring-white/15">{t("Top up wallet")}</Link>
               </div>
               <button onClick={() => account.signOut()} className="mx-auto mt-5 flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-rose-600 dark:text-slate-400"><LogOut className="h-4 w-4 rtl:rotate-180" />{t("Sign out")}</button>
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </PageShell>
   );
 }

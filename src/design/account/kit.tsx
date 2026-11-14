@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  Apple, Check, Clock, CreditCard, Eye, EyeOff, Hand, Instagram, Loader2, Lock, MessageCircle,
-  Music, Music2, Paperclip, Phone, Plus, RotateCcw, Send, ShieldCheck, Star, X, Copy, type LucideIcon,
+  Apple, Ban, Check, Clock, CreditCard, Eye, EyeOff, Hand, Instagram, Loader2, Lock, MessageCircle,
+  Music, Music2, Paperclip, Phone, Plus, RotateCcw, Send, Server, ShieldCheck, Star, X, Copy, type LucideIcon,
 } from "lucide-react";
 import {
   DEMO_NOW, TOP_UP_MAX, TOP_UP_MIN, accountOrders, accountTickets, accountUser, bankCards, departments, strayCard, topUpPresets, topUps as sampleTopUps,
@@ -26,15 +26,45 @@ export const linkCls = `rounded font-semibold text-indigo-700 underline-offset-4
 
 const DAY = 86_400_000;
 
+// ---------- What the account pages run on: the sample (useAccountDemo) or the live account (lib/account-panel) ----------
+
+export type Clock = { msLeft: number; text: string; fraction: number };
+export type Store = {
+  live?: boolean;
+  orders: AccountOrder[]; tickets: Ticket[]; cards: BankCard[]; wallet: number; statement: Line[];
+  user: { name: string; mobile: string; email: string | null; since: string };
+  arrived: number[]; // orders whose code came in while the page was open
+  limits: { min: number; max: number }; // top-up, Toman
+  clockOf: (o: AccountOrder) => Clock; // time left for a number waiting for its code
+  cardOf: (id: string) => BankCard | undefined;
+  cancel: (id: number) => void | Promise<void>;
+  resume?: (id: number) => void; // sample only: the paused order goes on
+  reply: (id: number, text: string, file?: File) => void | Promise<void>;
+  closeTicket: (id: number) => void | Promise<void>;
+  openTicket: (x: { subject: string; dept: Dept; orderId?: number; text: string; file?: File }) => number | Promise<number>;
+  topUp: (amount: number, cardId: string, newCard?: BankCard, cardNumber?: string) => void | Promise<void>;
+  saveName: (name: string) => void | Promise<void>;
+  changePassword?: (current: string, next: string) => Promise<void>;
+  loadOrder?: (id: number) => void; // live: fetch what the order hands over
+  loadTicket?: (id: number) => void; // live: fetch the whole conversation
+};
+
+// The live pages: an error from the API in the visitor's language.
+export const errorText = (e: unknown, fallback: string) => (e instanceof Error && e.message && !/^HTTP \d/.test(e.message) ? e.message : fallback);
+
+// "Now" for day labels: the sample's fixed day on the design pages, the real time on the live pages.
+export const NowContext = createContext<string | null>(DEMO_NOW);
+
 // ---------- Formatting ----------
 
 export function useFmt() {
   const t = useT();
+  const nowIso = useContext(NowContext);
   return useMemo(() => {
     const loc = t.locale === "fa" ? "fa-IR" : "en-GB";
     const n = (v: number) => Math.round(v).toLocaleString(t.locale === "fa" ? "fa-IR" : "en-US");
     const d = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(loc, o).format(new Date(iso));
-    const now = new Date(DEMO_NOW);
+    const now = nowIso ? new Date(nowIso) : new Date();
     const dayStart = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
     return {
       num: n,
@@ -45,10 +75,10 @@ export function useFmt() {
       when: (iso: string) => d(iso, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
       day: (iso: string) => {
         const diff = Math.round((dayStart(now) - dayStart(new Date(iso))) / DAY);
-        return diff === 0 ? t("Today") : diff === 1 ? t("Yesterday") : d(iso, { weekday: "long", day: "numeric", month: "long" });
+        return diff === 0 ? t("Today") : diff === 1 ? t("Yesterday") : d(iso, { weekday: "long", day: "numeric", month: "long", ...(diff > 300 ? { year: "numeric" } : {}) });
       },
     };
-  }, [t]);
+  }, [t, nowIso]);
 }
 export type Fmt = ReturnType<typeof useFmt>;
 
@@ -66,6 +96,7 @@ const stateLook = {
   delivering: { label: "Delivering", Icon: Loader2, cls: "bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200" },
   delivered: { label: "Delivered", Icon: Check, cls: "bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200" },
   refunded: { label: "Refunded", Icon: RotateCcw, cls: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200" },
+  cancelled: { label: "Cancelled", Icon: Ban, cls: "border border-slate-300 text-slate-600 dark:border-white/20 dark:text-slate-300" },
   replied: { label: "Support replied", Icon: MessageCircle, cls: "bg-indigo-600 text-white dark:bg-indigo-500" },
   open: { label: "Waiting for support", Icon: Clock, cls: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200" },
   closed: { label: "Closed", Icon: Check, cls: "border border-slate-300 text-slate-600 dark:border-white/20 dark:text-slate-300" },
@@ -96,10 +127,11 @@ const tiles: Record<string, { Icon?: LucideIcon; letter?: string; cls: string }>
   Google: { letter: "G", cls: "bg-blue-600 text-white" },
   Apple: { Icon: Apple, cls: "bg-slate-900 text-white dark:bg-white dark:text-slate-900" },
   Spotify: { Icon: Music, cls: "bg-green-600 text-white" },
+  "Static IP": { Icon: Server, cls: "bg-slate-700 text-white" },
 };
 
 export function ServiceTile({ service, size = "md" }: { service: string; size?: "sm" | "md" | "lg" }) {
-  const tile = tiles[service] ?? { letter: service[0], cls: "bg-slate-600 text-white" };
+  const tile = tiles[service] ?? { letter: (service[0] ?? "#").toUpperCase(), cls: "bg-slate-600 text-white" };
   const s = size === "lg" ? "h-12 w-12 rounded-2xl [&>svg]:h-6 [&>svg]:w-6 text-lg" : size === "sm" ? "h-8 w-8 rounded-lg [&>svg]:h-4 [&>svg]:w-4 text-sm" : "h-10 w-10 rounded-xl [&>svg]:h-5 [&>svg]:w-5";
   return <span aria-hidden className={`grid shrink-0 place-items-center font-display font-bold ${tile.cls} ${s}`}>{tile.Icon ? <tile.Icon /> : tile.letter}</span>;
 }
@@ -153,12 +185,12 @@ export function useAccountDemo() {
   const cancel = (id: number, reason = "Cancelled by you") => patch(id, (o) => ({ ...o, state: "refunded", refund: { amount: o.price, reason, at: stamp() } }));
   const resume = (id: number) => patch(id, (o) => ({ ...o, state: "delivering", delivery: o.delivery.type === "progress" ? { ...o.delivery, problem: undefined } : o.delivery }));
 
-  const reply = (id: number, text: string, file?: string) =>
-    setTickets((l) => l.map((x) => (x.id === id ? { ...x, state: "waiting", messages: [...x.messages, { from: "you", at: stamp(), text, file }] } : x)));
+  const reply = (id: number, text: string, file?: File) =>
+    setTickets((l) => l.map((x) => (x.id === id ? { ...x, state: "waiting", messages: [...x.messages, { from: "you", at: stamp(), text, file: file?.name }] } : x)));
   const closeTicket = (id: number) => setTickets((l) => l.map((x) => (x.id === id ? { ...x, state: "closed" } : x)));
-  const openTicket = (x: { subject: string; dept: Dept; orderId?: number; text: string; file?: string }) => {
+  const openTicket = (x: { subject: string; dept: Dept; orderId?: number; text: string; file?: File }) => {
     const id = Math.max(...tickets.map((k) => k.id)) + 1;
-    setTickets((l) => [{ id, subject: x.subject, dept: x.dept, orderId: x.orderId, state: "waiting", messages: [{ from: "you", at: stamp(), text: x.text, file: x.file }] }, ...l]);
+    setTickets((l) => [{ id, subject: x.subject, dept: x.dept, orderId: x.orderId, state: "waiting", messages: [{ from: "you", at: stamp(), text: x.text, file: x.file?.name }] }, ...l]);
     return id;
   };
   const topUp = (amount: number, cardId: string, newCard?: BankCard) => {
@@ -171,14 +203,17 @@ export function useAccountDemo() {
   const wallet = statement.find((l) => l.balance != null)?.balance ?? 0;
   const cardOf = (id: string) => cards.find((c) => c.id === id) ?? (id === strayCard.id ? strayCard : undefined);
 
-  return { orders, tickets, topUps, cards, user, wallet, statement, clock, arrived, cancel, resume, reply, closeTicket, openTicket, topUp, saveName, cardOf };
+  const clockOf = () => clock;
+  const limits = { min: TOP_UP_MIN, max: TOP_UP_MAX };
+
+  return { orders, tickets, topUps, cards, user, wallet, statement, clock, clockOf, limits, arrived, cancel, resume, reply, closeTicket, openTicket, topUp, saveName, cardOf };
 }
 export type Demo = ReturnType<typeof useAccountDemo>;
 
 // ---------- Wallet statement (every money movement, newest first, with the balance after each) ----------
 
 export type Line = {
-  key: string; at: string; kind: "top-up" | "purchase" | "refund" | "card";
+  key: string; at: string; kind: "top-up" | "purchase" | "refund" | "card" | "commission";
   amount: number; balance: number | null; // null: didn't move the wallet (on hold, or paid by card)
   title: string; sub: string; orderId?: number; topUp?: TopUp; held?: boolean;
 };
@@ -247,15 +282,22 @@ export function Bar({ fraction, tone = "amber", className = "" }: { fraction: nu
 }
 
 // Cancel with an inline confirmation: the button turns into "Cancel and refund …? / Keep it".
-export function CancelInline({ order, demo, keepLabel = "Keep waiting", label = "Cancel & refund", className = "" }: { order: AccountOrder; demo: Demo; keepLabel?: string; label?: string; className?: string }) {
+export function CancelInline({ order, demo, keepLabel = "Keep waiting", label = "Cancel & refund", className = "" }: { order: AccountOrder; demo: Store; keepLabel?: string; label?: string; className?: string }) {
   const t = useT();
   const f = useFmt();
   const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const run = async () => {
+    setBusy(true); setError(null);
+    try { await demo.cancel(order.id); } catch (e) { setError(errorText(e, t("Something went wrong. Please try again."))); } finally { setBusy(false); }
+  };
   if (asking)
     return (
       <div role="group" aria-label={t("Cancel this order?")} className={`flex flex-wrap items-center gap-2 ${className}`}>
         <span className="w-full text-sm text-slate-700 dark:text-slate-300">{t("Cancel it?")}{" "}<b className="text-slate-900 dark:text-white">{f.money(order.price)}</b>{" "}{t("goes back to your wallet.")}</span>
-        <button type="button" onClick={() => demo.cancel(order.id)} className={`${smallBtn} bg-red-700 text-white hover:bg-red-800 dark:bg-red-500 dark:text-white dark:hover:bg-red-400`}><X aria-hidden className="h-4 w-4" />{t("Yes, cancel")}</button>
+        {error && <span role="alert" className="w-full text-sm font-semibold text-red-700 dark:text-red-400">{error}</span>}
+        <button type="button" onClick={run} disabled={busy} className={`${smallBtn} bg-red-700 text-white hover:bg-red-800 disabled:opacity-60 dark:bg-red-500 dark:text-white dark:hover:bg-red-400`}>{busy ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : <X aria-hidden className="h-4 w-4" />}{t("Yes, cancel")}</button>
         <button type="button" onClick={() => setAsking(false)} className={`${smallBtn} border border-slate-300 text-slate-800 hover:bg-slate-50 dark:border-white/20 dark:text-slate-100 dark:hover:bg-white/5`}>{t(keepLabel)}</button>
       </div>
     );
@@ -264,13 +306,14 @@ export function CancelInline({ order, demo, keepLabel = "Keep waiting", label = 
 
 // ---------- What an order hands over ----------
 
-export function Delivery({ order, demo, compact = false }: { order: AccountOrder; demo: Demo; compact?: boolean }) {
+export function Delivery({ order, demo, compact = false }: { order: AccountOrder; demo: Store; compact?: boolean }) {
   const t = useT();
   const f = useFmt();
   const d = order.delivery;
 
   if (d.type === "number") {
     const waiting = order.state === "waiting";
+    const clock = demo.clockOf(order);
     return (
       <div>
         <div className="flex items-center gap-3">
@@ -284,9 +327,9 @@ export function Delivery({ order, demo, compact = false }: { order: AccountOrder
           <div className={`mt-4 ${inner} p-4`}>
             <div className="flex items-baseline justify-between gap-3">
               <span className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white"><Loader2 aria-hidden className="h-4 w-4 animate-spin text-amber-600 dark:text-amber-300" />{t("Waiting for the SMS code")}</span>
-              <span className="font-mono text-lg font-bold tabular-nums text-slate-900 dark:text-white" aria-label={t("{0} left", { 0: demo.clock.text })}>{demo.clock.text}</span>
+              <span className="font-mono text-lg font-bold tabular-nums text-slate-900 dark:text-white" aria-label={t("{0} left", { 0: clock.text })}>{clock.text}</span>
             </div>
-            <Bar fraction={demo.clock.fraction} className="mt-3" />
+            <Bar fraction={clock.fraction} className="mt-3" />
             <p className="mt-2 flex items-start gap-1.5 text-sm text-slate-600 dark:text-slate-400"><ShieldCheck aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />{t("Enter the number in {0}. The code shows up here; no code in time means an automatic refund.", { 0: d.app })}</p>
             <CancelInline order={order} demo={demo} className="mt-3" />
           </div>
@@ -321,10 +364,10 @@ export function Delivery({ order, demo, compact = false }: { order: AccountOrder
           <div className="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-400/30 dark:bg-indigo-400/10">
             <p className="flex items-center gap-2 font-semibold text-indigo-950 dark:text-indigo-100"><Hand aria-hidden className="h-4 w-4" />{t(d.problem.title)}</p>
             <p className="mt-1 text-sm text-indigo-900/80 dark:text-indigo-100/80">{t(d.problem.text)}</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={() => demo.resume(order.id)} className={`${smallBtn} bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400`}><Check aria-hidden className="h-4 w-4" />{t("It's public now, continue")}</button>
+            {demo.resume && <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" onClick={() => demo.resume?.(order.id)} className={`${smallBtn} bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400`}><Check aria-hidden className="h-4 w-4" />{t("It's public now, continue")}</button>
               <CancelInline order={order} demo={demo} keepLabel="Keep it" label="Cancel for a refund" />
-            </div>
+            </div>}
           </div>
         )}
         {order.refund && <RefundNote order={order} className="mt-4" />}
@@ -340,6 +383,19 @@ export function Delivery({ order, demo, compact = false }: { order: AccountOrder
           <div className="font-semibold text-slate-900 dark:text-white">{t(d.what)}</div>
           <div className="text-sm text-slate-600 dark:text-slate-400">{t("Sent to")}{" "}<b dir="ltr" className="font-semibold text-slate-900 dark:text-white">{d.recipient}</b>{order.deliveredAt ? ` · ${f.when(order.deliveredAt)}` : ""}</div>
         </div>
+      </div>
+    );
+
+  if (d.type === "details")
+    return (
+      <div>
+        {d.loading && !d.fields.length ? (
+          <div className="space-y-3" aria-busy="true">{[0, 1].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100 dark:bg-white/5" />)}</div>
+        ) : (
+          !!d.fields.length && <div className="divide-y divide-slate-200 dark:divide-white/10">{d.fields.map((x, i) => <SecretRow key={`${x.label}${i}`} {...x} />)}</div>
+        )}
+        {d.note && <p className={`${d.fields.length ? "mt-2" : ""} flex items-start gap-1.5 text-sm text-slate-600 dark:text-slate-400`}><ShieldCheck aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />{t(d.note)}</p>}
+        {order.refund && <RefundNote order={order} className="mt-4" />}
       </div>
     );
 
@@ -377,18 +433,19 @@ export function RefundNote({ order, className = "" }: { order: AccountOrder; cla
 // Where "Buy again" goes for each kind of order.
 export function buyAgainHref(o: AccountOrder) {
   if (o.kind === "telegram") return o.title.includes("Stars") ? "/telegram/stars" : "/telegram/premium";
-  return { number: "/virtual-number", social: "/virtual-service", "google-voice": "/google-voice", "apple-id": "/apple-id", subscription: "/accounts" }[o.kind];
+  return { number: "/virtual-number", social: "/virtual-service", "google-voice": "/google-voice", "apple-id": "/apple-id", subscription: "/accounts", "static-ip": "/" }[o.kind];
 }
 
 // One line a list row shows about where an order is.
 export function useOrderLine() {
   const t = useT();
-  return (o: AccountOrder, demo: Demo) => {
+  return (o: AccountOrder, demo: Store) => {
     const d = o.delivery;
-    if (o.state === "waiting") return t("Code expected · {0} left", { 0: demo.clock.text });
+    if (o.state === "waiting") return t("Code expected · {0} left", { 0: demo.clockOf(o).text });
     if (o.state === "needs-you" && d.type === "progress" && d.problem) return t(d.problem.title);
     if (o.state === "delivering" && d.type === "progress") return t("{0} of {1} added", { 0: d.done.toLocaleString("en-US"), 1: d.total.toLocaleString("en-US") });
     if (o.state === "refunded" && o.refund) return t(o.refund.reason);
+    if (o.state === "cancelled") return t("Cancelled");
     if (d.type === "number" && d.code) return t("Code {0}", { 0: d.code });
     return t(o.detail);
   };
@@ -400,18 +457,18 @@ export function OrderSteps({ order }: { order: AccountOrder }) {
   const f = useFmt();
   const d = order.delivery;
   const middle = d.type === "number" ? t("Number handed over") : d.type === "progress" ? t("Delivery started") : t("Processing");
-  const last = order.state === "refunded" ? t("Refunded") : order.state === "needs-you" ? t("Paused, needs you") : order.state === "waiting" ? t("Waiting for the code") : order.state === "delivering" ? t("Delivering") : t("Delivered");
+  const last = order.state === "refunded" ? t("Refunded") : order.state === "cancelled" ? t("Cancelled") : order.state === "needs-you" ? t("Paused, needs you") : order.state === "waiting" ? t("Waiting for the code") : order.state === "delivering" ? t("Delivering") : t("Delivered");
   const steps = [
     { label: t("Paid"), at: order.at, done: true },
     { label: middle, at: order.at, done: true },
-    { label: last, at: order.refund?.at ?? order.deliveredAt, done: order.state === "delivered" || order.state === "refunded", now: order.state === "waiting" || order.state === "delivering" || order.state === "needs-you" },
+    { label: last, at: order.refund?.at ?? order.deliveredAt, done: order.state === "delivered" || order.state === "refunded" || order.state === "cancelled", now: order.state === "waiting" || order.state === "delivering" || order.state === "needs-you" },
   ];
   return (
     <ol className="space-y-0">
       {steps.map((s, i) => (
         <li key={i} className="relative flex gap-3 pb-5 last:pb-0">
           {i < steps.length - 1 && <span aria-hidden className="absolute start-[11px] top-6 h-[calc(100%-1.25rem)] w-0.5 bg-slate-200 dark:bg-white/10" />}
-          <span aria-hidden className={`relative grid h-6 w-6 shrink-0 place-items-center rounded-full ${s.done ? (order.state === "refunded" && i === 2 ? "bg-slate-500 text-white" : "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-emerald-950") : s.now ? (order.state === "needs-you" ? "bg-indigo-600 text-white" : "bg-amber-500 text-white") : "bg-slate-200 dark:bg-white/10"}`}>
+          <span aria-hidden className={`relative grid h-6 w-6 shrink-0 place-items-center rounded-full ${s.done ? ((order.state === "refunded" || order.state === "cancelled") && i === 2 ? "bg-slate-500 text-white" : "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-emerald-950") : s.now ? (order.state === "needs-you" ? "bg-indigo-600 text-white" : "bg-amber-500 text-white") : "bg-slate-200 dark:bg-white/10"}`}>
             {s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : s.now ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
           </span>
           <span className="min-w-0">
@@ -425,7 +482,7 @@ export function OrderSteps({ order }: { order: AccountOrder }) {
 }
 
 // Price, how it was paid and refunds, as summary rows.
-export function PaymentRows({ order, demo }: { order: AccountOrder; demo: Demo }) {
+export function PaymentRows({ order, demo }: { order: AccountOrder; demo: Store }) {
   const t = useT();
   const f = useFmt();
   const c = order.paidWith === "wallet" ? null : demo.cardOf(order.paidWith);
@@ -486,7 +543,7 @@ function RadioDot({ on }: { on: boolean }) {
 
 // ---------- Add funds ----------
 
-export function useTopUp(demo: Demo) {
+export function useTopUp(demo: Store) {
   const t = useT();
   const f = useFmt();
   const [amount, setAmount] = useState<number | null>(500_000);
@@ -496,10 +553,12 @@ export function useTopUp(demo: Demo) {
   const [tried, setTried] = useState(false);
   const [phase, setPhase] = useState<"form" | "bank" | "done">("form");
   const [doneAmount, setDoneAmount] = useState(0);
+  const [failed, setFailed] = useState<string | null>(null);
+  const { min, max } = demo.limits;
 
   const value = amount ?? (Number(custom.replace(/\D/g, "")) || 0);
   const digits = newCard.replace(/\D/g, "");
-  const amountError = !value ? t("Choose or enter an amount") : value < TOP_UP_MIN ? t("The smallest top-up is {0}", { 0: f.money(TOP_UP_MIN) }) : value > TOP_UP_MAX ? t("The largest top-up is {0}", { 0: f.money(TOP_UP_MAX) }) : null;
+  const amountError = !value ? t("Choose or enter an amount") : value < min ? t("The smallest top-up is {0}", { 0: f.money(min) }) : value > max ? t("The largest top-up is {0}", { 0: f.money(max) }) : null;
   const cardError = cardId === "new" && digits.length !== 16 ? (digits.length ? t("A card number has 16 digits; this one has {0}", { 0: digits.length }) : t("Enter the card you'll pay with")) : null;
   const errors = { amount: tried ? amountError : null, card: tried ? cardError : null };
   const chosen: BankCard | null = cardId === "new" ? (digits.length === 16 ? { id: `c${digits.slice(-4)}`, bank: t("New card"), first6: digits.slice(0, 6), last4: digits.slice(-4) } : null) : demo.cards.find((c) => c.id === cardId) ?? null;
@@ -508,7 +567,13 @@ export function useTopUp(demo: Demo) {
     setTried(true);
     if (amountError) { document.getElementById(amount === null ? "topup-custom" : "topup-amount-first")?.focus(); return; }
     if (cardError) { document.getElementById("topup-newcard")?.focus(); return; }
-    setPhase("bank");
+    setPhase("bank"); setFailed(null);
+    if (demo.live) {
+      // Live: the store sends the browser to the bank; it only comes back here on an error.
+      Promise.resolve(demo.topUp(value, cardId, undefined, cardId === "new" ? digits : undefined))
+        .catch((e) => { setFailed(errorText(e, t("Couldn't reach the bank. Please try again."))); setPhase("form"); });
+      return;
+    }
     // Demo: the bank page is skipped and the payment comes back as paid.
     setTimeout(() => {
       demo.topUp(value, chosen!.id, cardId === "new" ? chosen! : undefined);
@@ -517,7 +582,7 @@ export function useTopUp(demo: Demo) {
       setNewCard(""); setTried(false);
     }, 1400);
   };
-  return { amount, setAmount, custom, setCustom, cardId, setCardId, newCard, setNewCard, value, errors, chosen, submit, phase, setPhase, doneAmount };
+  return { amount, setAmount, custom, setCustom, cardId, setCardId, newCard, setNewCard, value, errors, chosen, submit, phase, setPhase, doneAmount, setDoneAmount, failed, min, max };
 }
 export type TopUpState = ReturnType<typeof useTopUp>;
 
@@ -527,8 +592,8 @@ export function AmountPicker({ s, cols = "grid-cols-2 sm:grid-cols-4" }: { s: To
   const err = s.errors.amount;
   return (
     <fieldset aria-describedby={err ? "topup-amount-error" : undefined}>
-      <legend className="text-base font-semibold text-slate-900 dark:text-white">{t("Amount")}</legend>
-      <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{t("From {0} to {1}.", { 0: f.money(TOP_UP_MIN), 1: f.money(TOP_UP_MAX) })}</p>
+      <legend className="text-base font-semibold text-slate-900 dark:text-white">{t.locale === "en" ? "Amount" : t("Sum of money")}</legend>
+      <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{t("From {0} to {1}.", { 0: f.money(s.min), 1: f.money(s.max) })}</p>
       <FieldError id="topup-amount-error">{err}</FieldError>
       <div className={`mt-3 grid gap-3 ${cols}`}>
         {topUpPresets.map((v, i) => {
@@ -559,7 +624,7 @@ export function AmountPicker({ s, cols = "grid-cols-2 sm:grid-cols-4" }: { s: To
   );
 }
 
-export function CardPicker({ s, demo }: { s: TopUpState; demo: Demo }) {
+export function CardPicker({ s, demo }: { s: TopUpState; demo: Store }) {
   const t = useT();
   const err = s.errors.card;
   return (
@@ -607,7 +672,7 @@ export function CardPicker({ s, demo }: { s: TopUpState; demo: Demo }) {
 }
 
 // The sidebar: what's about to happen, and the bank button. `line` lets an offer add its own row.
-export function TopUpSummary({ s, demo, className = card, extra }: { s: TopUpState; demo: Demo; className?: string; extra?: ReactNode }) {
+export function TopUpSummary({ s, demo, className = card, extra }: { s: TopUpState; demo: Store; className?: string; extra?: ReactNode }) {
   const t = useT();
   const f = useFmt();
   const head = useId();
@@ -640,9 +705,10 @@ export function TopUpSummary({ s, demo, className = card, extra }: { s: TopUpSta
         {busy ? <Loader2 aria-hidden className="h-5 w-5 animate-spin" /> : <Lock aria-hidden className="h-5 w-5" />}
         {busy ? t("Opening the bank…") : t("Pay at the bank")}
       </button>
+      {s.failed && <p role="alert" className="mt-2 text-sm font-semibold text-red-700 dark:text-red-400">{s.failed}</p>}
       {(s.errors.amount || s.errors.card) && <p className="mt-2 text-sm font-semibold text-red-700 dark:text-red-400">{s.errors.amount ? t("Choose an amount above to continue.") : t("Add the card number above to continue.")}</p>}
       <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">{t("You pay on the bank's secure page and come straight back here. The money is in your wallet as soon as the bank confirms.")}</p>
-      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("Sample: the bank page is skipped and the top-up comes back paid.")}</p>
+      {!demo.live && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("Sample: the bank page is skipped and the top-up comes back paid.")}</p>}
     </section>
   );
 }
@@ -667,8 +733,8 @@ export function Thread({ ticket }: { ticket: Ticket }) {
                 <b className={you ? "text-white" : "text-slate-900 dark:text-white"}>{you ? t("You") : t("{0} · ShopMajazi support", { 0: m.name ?? "" })}</b>
                 <span>{f.when(m.at)}</span>
               </div>
-              <p className="mt-1 text-[15px] leading-relaxed">{t(m.text)}</p>
-              {m.file && <p className={`mt-2 flex items-center gap-1.5 text-sm ${you ? "text-indigo-100" : "text-slate-600 dark:text-slate-400"}`}><Paperclip aria-hidden className="h-4 w-4" /><span dir="ltr">{m.file}</span></p>}
+              <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed">{t(m.text)}</p>
+              {m.file && <p className={`mt-2 flex items-center gap-1.5 text-sm ${you ? "text-indigo-100" : "text-slate-600 dark:text-slate-400"}`}><Paperclip aria-hidden className="h-4 w-4" />{m.file.startsWith("/") ? <a href={m.file} target="_blank" rel="noreferrer" className="underline underline-offset-2">{t("Attachment")}</a> : <span dir="ltr">{m.file}</span>}</p>}
             </div>
           </li>
         );
@@ -711,22 +777,31 @@ function AttachButton({ id, att }: { id: string; att: ReturnType<typeof useAttac
   );
 }
 
-export function ReplyBox({ ticket, demo }: { ticket: Ticket; demo: Demo }) {
+export function ReplyBox({ ticket, demo }: { ticket: Ticket; demo: Store }) {
   const t = useT();
   const id = useId();
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const att = useAttachment();
   const area = useRef<HTMLTextAreaElement>(null);
-  if (ticket.state === "closed")
+  const [busy, setBusy] = useState<"send" | "close" | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  if (ticket.state === "closed" && !demo.live)
     return <p className={`${inner} px-4 py-3 text-sm text-slate-700 dark:text-slate-300`}>{t("This ticket is closed. Open a new one if you need more help.")}</p>;
-  const send = () => {
+  const send = async () => {
     if (!text.trim()) { setError(t("Write your reply first")); area.current?.focus(); return; }
-    demo.reply(ticket.id, text.trim(), att.file?.name);
-    setText(""); setError(null); att.clear();
+    setBusy("send"); setFailed(null);
+    try { await demo.reply(ticket.id, text.trim(), att.file ?? undefined); setText(""); setError(null); att.clear(); }
+    catch (e) { setFailed(errorText(e, t("Your reply wasn't sent. Please try again."))); }
+    finally { setBusy(null); }
+  };
+  const close = async () => {
+    setBusy("close"); setFailed(null);
+    try { await demo.closeTicket(ticket.id); } catch (e) { setFailed(errorText(e, t("Something went wrong. Please try again."))); } finally { setBusy(null); }
   };
   return (
     <div>
+      {ticket.state === "closed" && <p className={`${inner} mb-4 px-4 py-3 text-sm text-slate-700 dark:text-slate-300`}>{t("This ticket is closed. Writing again opens it.")}</p>}
       <label htmlFor={`${id}-reply`} className="block text-base font-semibold text-slate-900 dark:text-white">{t("Your reply")}</label>
       <FieldError id={`${id}-reply-error`}>{error}</FieldError>
       <textarea ref={area} id={`${id}-reply`} rows={4} value={text} onChange={(e) => { setText(e.target.value); if (error) setError(null); }}
@@ -735,15 +810,16 @@ export function ReplyBox({ ticket, demo }: { ticket: Ticket; demo: Demo }) {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <AttachButton id={`${id}-file`} att={att} />
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => demo.closeTicket(ticket.id)} className={`${smallBtn} px-4 py-3 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10`}>{t("Close ticket")}</button>
-          <button type="button" onClick={send} className={`${primary} !px-5 !py-3`}><Send aria-hidden className="h-4 w-4 rtl:-scale-x-100" />{t("Send reply")}</button>
+          {ticket.state !== "closed" && <button type="button" onClick={close} disabled={!!busy} className={`${smallBtn} px-4 py-3 text-slate-700 hover:bg-slate-100 disabled:opacity-60 dark:text-slate-200 dark:hover:bg-white/10`}>{busy === "close" && <Loader2 aria-hidden className="h-4 w-4 animate-spin" />}{t("Close ticket")}</button>}
+          <button type="button" onClick={send} disabled={!!busy} className={`${primary} !px-5 !py-3 disabled:opacity-60`}>{busy === "send" ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : <Send aria-hidden className="h-4 w-4 rtl:-scale-x-100" />}{t("Send reply")}</button>
         </div>
       </div>
+      {failed && <p role="alert" className="mt-3 text-sm font-semibold text-red-700 dark:text-red-400">{failed}</p>}
     </div>
   );
 }
 
-export function NewTicketForm({ demo, orderId, onDone, onCancel }: { demo: Demo; orderId?: number; onDone: (id: number) => void; onCancel?: () => void }) {
+export function NewTicketForm({ demo, orderId, onDone, onCancel }: { demo: Store; orderId?: number; onDone: (id: number) => void; onCancel?: () => void }) {
   const t = useT();
   const f = useFmt();
   const [dept, setDept] = useState<Dept | null>(orderId ? "orders" : null);
@@ -751,6 +827,8 @@ export function NewTicketForm({ demo, orderId, onDone, onCancel }: { demo: Demo;
   const [subject, setSubject] = useState("");
   const [text, setText] = useState("");
   const [tried, setTried] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const att = useAttachment();
   const err = {
     dept: tried && !dept ? t("Choose who should answer") : null,
@@ -758,11 +836,14 @@ export function NewTicketForm({ demo, orderId, onDone, onCancel }: { demo: Demo;
     subject: tried && !subject.trim() ? t("Add a short subject") : subject.length > 150 ? t("Keep the subject under 150 characters") : null,
     text: tried && !text.trim() ? t("Tell us what happened") : null,
   };
-  const submit = () => {
+  const submit = async () => {
     setTried(true);
     const first = !dept ? "nt-dept-first" : dept === "orders" && !order ? "nt-order" : !subject.trim() || subject.length > 150 ? "nt-subject" : !text.trim() ? "nt-text" : null;
     if (first) { document.getElementById(first)?.focus(); return; }
-    onDone(demo.openTicket({ subject: subject.trim(), dept: dept!, orderId: dept === "orders" ? Number(order) : undefined, text: text.trim(), file: att.file?.name }));
+    setBusy(true); setFailed(null);
+    try { onDone(await demo.openTicket({ subject: subject.trim(), dept: dept!, orderId: dept === "orders" ? Number(order) : undefined, text: text.trim(), file: att.file ?? undefined })); }
+    catch (e) { setFailed(errorText(e, t("Your ticket wasn't sent. Please try again."))); }
+    finally { setBusy(false); }
   };
   return (
     <form noValidate onSubmit={(e) => { e.preventDefault(); submit(); }} className="space-y-7">
@@ -795,9 +876,10 @@ export function NewTicketForm({ demo, orderId, onDone, onCancel }: { demo: Demo;
       </Labeled>
       <AttachButton id="nt-file" att={att} />
       <div className="flex flex-wrap gap-3">
-        <button type="submit" className={primary}><Send aria-hidden className="h-4 w-4 rtl:-scale-x-100" />{t("Send ticket")}</button>
+        <button type="submit" disabled={busy} className={`${primary} disabled:opacity-60`}>{busy ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : <Send aria-hidden className="h-4 w-4 rtl:-scale-x-100" />}{t("Send ticket")}</button>
         {onCancel && <button type="button" onClick={onCancel} className={secondary}>{t("Cancel")}</button>}
       </div>
+      {failed && <p role="alert" className="text-sm font-semibold text-red-700 dark:text-red-400">{failed}</p>}
       <p className="text-sm text-slate-600 dark:text-slate-400">{t("Support answers around the clock. Replies show up here, in this ticket.")}</p>
     </form>
   );
@@ -805,16 +887,22 @@ export function NewTicketForm({ demo, orderId, onDone, onCancel }: { demo: Demo;
 
 // ---------- Profile and password ----------
 
-export function ProfileForm({ demo, showCards = true }: { demo: Demo; showCards?: boolean }) {
+export function ProfileForm({ demo, showCards = true }: { demo: Store; showCards?: boolean }) {
   const t = useT();
   const [name, setName] = useState(demo.user.name);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
   const dirty = name.trim() !== demo.user.name;
-  const save = () => {
-    if (!name.trim()) { setError(t("Enter your name")); document.getElementById("pf-name")?.focus(); return; }
-    if (name.trim().length > 60) { setError(t("Keep your name under 60 characters")); document.getElementById("pf-name")?.focus(); return; }
-    demo.saveName(name.trim()); setError(null); setSaved(true);
+  const save = async () => {
+    const v = name.trim();
+    if (!v) { setError(t("Enter your name")); document.getElementById("pf-name")?.focus(); return; }
+    if (demo.live && v.length < 3) { setError(t("Use at least 3 letters")); document.getElementById("pf-name")?.focus(); return; }
+    if (v.length > (demo.live ? 40 : 60)) { setError(demo.live ? t("Keep your name under 40 characters") : t("Keep your name under 60 characters")); document.getElementById("pf-name")?.focus(); return; }
+    setBusy(true);
+    try { await demo.saveName(v); setError(null); setSaved(true); }
+    catch (e) { setError(errorText(e, t("Something went wrong. Please try again."))); }
+    finally { setBusy(false); }
   };
   return (
     <form noValidate onSubmit={(e) => { e.preventDefault(); save(); }} className="space-y-6">
@@ -822,23 +910,24 @@ export function ProfileForm({ demo, showCards = true }: { demo: Demo; showCards?
         <input id="pf-name" autoComplete="name" value={name} onChange={(e) => { setName(e.target.value); setSaved(false); if (error) setError(null); }} aria-invalid={!!error} aria-describedby={describe("pf-name", true, error)} className={`${field} ${error ? bad : ""}`} />
       </Labeled>
       <ReadOnly label={t("Mobile number")} value={demo.user.mobile} hint={t("You sign in with this number. To change it, write to support.")} />
-      <ReadOnly label={t("Email")} value={demo.user.email} hint={t("Receipts go here. To change it, write to support.")} />
+      {demo.user.email && <ReadOnly label={t("Email")} value={demo.user.email} hint={t("Receipts go here. To change it, write to support.")} />}
       {showCards && <SavedCards demo={demo} />}
       <div className="flex flex-wrap items-center gap-4">
-        <button type="submit" disabled={!dirty} className={`${primary} disabled:cursor-not-allowed disabled:opacity-40`}>{t("Save changes")}</button>
+        <button type="submit" disabled={!dirty || busy} className={`${primary} disabled:cursor-not-allowed disabled:opacity-40`}>{busy && <Loader2 aria-hidden className="h-4 w-4 animate-spin" />}{t("Save changes")}</button>
         <span aria-live="polite" className="flex items-center gap-1.5 text-sm font-semibold text-emerald-800 dark:text-emerald-300">{saved && <><Check aria-hidden className="h-4 w-4" />{t("Saved")}</>}</span>
       </div>
     </form>
   );
 }
 
-export function SavedCards({ demo }: { demo: Demo }) {
+export function SavedCards({ demo }: { demo: Store }) {
   const t = useT();
   return (
     <div>
       <div className="text-base font-semibold text-slate-900 dark:text-white">{t("Your bank cards")}</div>
       <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{t("Top-ups are accepted from these cards. A new card is added when you top up with it.")}</p>
-      <ul className="mt-2 divide-y divide-slate-200 rounded-xl border border-slate-200 dark:divide-white/10 dark:border-white/15">
+      {!demo.cards.length && <p className={`${inner} mt-2 px-4 py-3 text-sm text-slate-700 dark:text-slate-300`}>{t("No cards yet. Your first top-up adds the card you pay with.")}</p>}
+      {!!demo.cards.length && <ul className="mt-2 divide-y divide-slate-200 rounded-xl border border-slate-200 dark:divide-white/10 dark:border-white/15">
         {demo.cards.map((c) => (
           <li key={c.id} className="flex items-center gap-3 px-4 py-3">
             <CreditCard aria-hidden className="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400" />
@@ -846,7 +935,7 @@ export function SavedCards({ demo }: { demo: Demo }) {
             <span dir="ltr" className="font-mono text-sm text-slate-600 dark:text-slate-400">{masked(c)}</span>
           </li>
         ))}
-      </ul>
+      </ul>}
     </div>
   );
 }
@@ -866,30 +955,38 @@ function PasswordInput({ id, value, onChange, error, hint, autoComplete }: { id:
   );
 }
 
-export function PasswordForm({ demo }: { demo: Demo }) {
+export function PasswordForm({ demo }: { demo: Store }) {
   const t = useT();
   const [cur, setCur] = useState("");
   const [next, setNext] = useState("");
   const [again, setAgain] = useState("");
   const [tried, setTried] = useState(false);
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [wrong, setWrong] = useState<string | null>(null);
   const rules = [
     { ok: next.length >= 8, text: t("At least 8 characters") },
     { ok: !!next && next.replace(/\s/g, "") !== demo.user.mobile.replace(/\s/g, ""), text: t("Not your mobile number") },
     { ok: !!next && next !== cur, text: t("Different from your current password") },
   ];
   const err = {
-    cur: tried && !cur ? t("Enter your current password") : null,
+    cur: tried && !cur ? t("Enter your current password") : wrong,
     next: tried && !rules.every((r) => r.ok) ? (next ? t("This password doesn't meet the rules below") : t("Choose a new password")) : null,
     again: tried && again !== next ? t("The two passwords don't match") : tried && !again ? t("Type the new password again") : null,
   };
-  const submit = () => {
-    setTried(true);
+  const submit = async () => {
+    setTried(true); setWrong(null);
     const first = !cur ? "pw-cur" : !rules.every((r) => r.ok) ? "pw-new" : !again || again !== next ? "pw-again" : null;
     if (first) { document.getElementById(first)?.focus(); return; }
+    if (demo.changePassword) {
+      setBusy(true);
+      try { await demo.changePassword(cur, next); }
+      catch (e) { setWrong(errorText(e, t("Something went wrong. Please try again."))); document.getElementById("pw-cur")?.focus(); return; }
+      finally { setBusy(false); }
+    }
     setDone(true); setCur(""); setNext(""); setAgain(""); setTried(false);
   };
-  const masked4 = demo.user.mobile.replace(/^(\d{4}) (\d{3}) (\d{4})$/, "$1 ••• $3");
+  const masked4 = demo.user.mobile.replace(/^(\d{4}) ?(\d{3}) ?(\d{4})$/, "$1 ••• $3");
   return (
     <form noValidate onSubmit={(e) => { e.preventDefault(); submit(); }} className="space-y-6">
       {done && (
@@ -898,7 +995,7 @@ export function PasswordForm({ demo }: { demo: Demo }) {
         </p>
       )}
       <Labeled id="pw-cur" label={t("Current password")} hint={<>{t("Don't remember it? Sign out and sign in with a code sent to")}{" "}<span dir="ltr">{masked4}</span>{t(", then set a new one here.")}</>} error={err.cur}>
-        <PasswordInput id="pw-cur" value={cur} onChange={(v) => { setCur(v); setDone(false); }} error={err.cur} hint autoComplete="current-password" />
+        <PasswordInput id="pw-cur" value={cur} onChange={(v) => { setCur(v); setDone(false); setWrong(null); }} error={err.cur} hint autoComplete="current-password" />
       </Labeled>
       <Labeled id="pw-new" label={t("New password")} error={err.next}>
         <PasswordInput id="pw-new" value={next} onChange={(v) => { setNext(v); setDone(false); }} error={err.next} hint={false} autoComplete="new-password" />
@@ -914,7 +1011,7 @@ export function PasswordForm({ demo }: { demo: Demo }) {
       <Labeled id="pw-again" label={t("New password again")} error={err.again}>
         <PasswordInput id="pw-again" value={again} onChange={setAgain} error={err.again} hint={false} autoComplete="new-password" />
       </Labeled>
-      <button type="submit" className={primary}><Lock aria-hidden className="h-4 w-4" />{t("Change password")}</button>
+      <button type="submit" disabled={busy} className={`${primary} disabled:opacity-60`}>{busy ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : <Lock aria-hidden className="h-4 w-4" />}{t("Change password")}</button>
     </form>
   );
 }

@@ -375,7 +375,7 @@ function Orders({ demo, go, initial }: { demo: Demo; go: Go; initial: Lane | "al
   );
 }
 
-const deliveryTitle = (o: AccountOrder) => ({ number: "Your number", progress: "Delivery", gift: "Gift", login: "Login details", activation: "Subscription" })[o.delivery.type];
+const deliveryTitle = (o: AccountOrder) => ({ number: "Your number", progress: "Delivery", gift: "Gift", login: "Login details", activation: "Subscription", details: "Order details" })[o.delivery.type];
 
 function OrderPage({ order, demo, go }: { order: AccountOrder; demo: Demo; go: Go }) {
   const t = useT();

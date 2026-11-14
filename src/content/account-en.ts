@@ -2,8 +2,8 @@
 // prices and tickets are made up so every state shows (waiting for an SMS, delivering, paused and needing the
 // buyer, delivered, refunded, a top-up on hold). Replaced by the Laravel account API once a design is chosen.
 
-export type OrderState = "waiting" | "delivering" | "needs-you" | "delivered" | "refunded";
-export type OrderKind = "number" | "social" | "telegram" | "google-voice" | "apple-id" | "subscription";
+export type OrderState = "waiting" | "delivering" | "needs-you" | "delivered" | "refunded" | "cancelled";
+export type OrderKind = "number" | "social" | "telegram" | "google-voice" | "apple-id" | "subscription" | "static-ip";
 
 // What the order hands over, by type of service.
 export type Delivery =
@@ -11,7 +11,9 @@ export type Delivery =
   | { type: "progress"; unit: string; done: number; total: number; target: string; refillDays: number; problem?: { title: string; text: string } }
   | { type: "gift"; what: string; recipient: string }
   | { type: "login"; fields: { label: string; value: string; secret?: boolean }[]; note: string }
-  | { type: "activation"; plan: string; email: string; ends: string };
+  | { type: "activation"; plan: string; email: string; ends: string }
+  // Live orders whose details come from the order form or support (rows may still be loading).
+  | { type: "details"; fields: { label: string; value: string; secret?: boolean }[]; note: string; loading?: boolean };
 
 export type AccountOrder = {
   id: number;
@@ -25,6 +27,7 @@ export type AccountOrder = {
   at: string; // ISO, when it was paid
   deliveredAt?: string;
   refund?: { amount: number; reason: string; at: string };
+  unpaid?: boolean; // the bank payment never went through (the account lists paid orders only, so not set today)
   delivery: Delivery;
 };
 

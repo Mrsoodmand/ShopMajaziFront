@@ -6,10 +6,22 @@ import { UserRound, Wallet, LogOut, ListOrdered, Plus, Loader2 } from "lucide-re
 import Link from "@/i18n/Link";
 import { stripLocale } from "@/i18n/config";
 import { TOP_UP_HREF, useAccount } from "@/lib/account";
+import { useSignInPopup } from "@/components/account/SignIn";
 import { toman } from "@/lib/money";
 import { useT } from "@/i18n/client";
 
 // "/login?next=<this page>", so signing in comes back here.
+// "Sign in" opens the sign-in popup over the page (components/account/SignIn) instead of going to /login. The link
+// still points at /login, for a new tab, a middle click or before the page's script has loaded.
+function usePopupClick() {
+  const popup = useSignInPopup();
+  return (e: React.MouseEvent) => {
+    if (!popup || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    popup.open();
+  };
+}
+
 function useLoginHref() {
   const path = stripLocale(usePathname() || "/");
   return path === "/login" || path === "/" ? "/login" : `/login?next=${encodeURIComponent(path)}`;
@@ -22,6 +34,7 @@ export function AccountButton({ label, outline = false }: { label: string; outli
   const t = useT();
   const account = useAccount();
   const loginHref = useLoginHref();
+  const signIn = usePopupClick();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -46,12 +59,12 @@ export function AccountButton({ label, outline = false }: { label: string; outli
   if (account.status !== "user" || !account.user) {
     if (outline)
       return (
-        <Link href={loginHref} className="ms-1 hidden h-10 items-center gap-2 whitespace-nowrap rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/[.04] sm:flex">
+        <Link href={loginHref} data-no-loader onClick={signIn} className="ms-1 hidden h-10 items-center gap-2 whitespace-nowrap rounded-full border border-slate-200 px-4 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:text-white dark:hover:border-white/20 dark:hover:bg-white/[.04] sm:flex">
           <UserRound className="h-4 w-4 text-slate-500 dark:text-slate-400" />{label}
         </Link>
       );
     return (
-      <Link href={loginHref} className="ms-1 hidden items-center gap-2 rounded-full bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 hover:bg-indigo-700 sm:flex">
+      <Link href={loginHref} data-no-loader onClick={signIn} className="ms-1 hidden items-center gap-2 rounded-full bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/25 hover:bg-indigo-700 sm:flex">
         <UserRound className="h-4 w-4" />{label}
       </Link>
     );
@@ -79,9 +92,10 @@ export function AccountButton({ label, outline = false }: { label: string; outli
         </div>
         <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-3 dark:bg-white/5">
           <span><span className="block text-xs text-slate-500 dark:text-slate-400">{t("Wallet")}</span><b className="font-display text-slate-900 dark:text-white">{toman(account.wallet ?? 0, t.locale)}</b></span>
-          <a href={TOP_UP_HREF} role="menuitem" className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"><Plus className="h-3.5 w-3.5" />{t("Top up")}</a>
+          <Link href={TOP_UP_HREF} role="menuitem" className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"><Plus className="h-3.5 w-3.5" />{t("Top up")}</Link>
         </div>
-        <a href="/user/orders" role="menuitem" className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"><ListOrdered className="h-4 w-4 text-slate-400" />{t("My orders")}</a>
+        <Link href="/account" role="menuitem" onClick={() => setOpen(false)} className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"><Wallet className="h-4 w-4 text-slate-400" />{t("My account")}</Link>
+        <Link href="/account/orders" role="menuitem" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5"><ListOrdered className="h-4 w-4 text-slate-400" />{t("My orders")}</Link>
         <button role="menuitem" onClick={() => { setOpen(false); account.signOut(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm text-slate-700 hover:bg-rose-50 hover:text-rose-700 dark:text-slate-200 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"><LogOut className="h-4 w-4 text-slate-400 rtl:rotate-180" />{t("Sign out")}</button>
       </div>
     </div>
@@ -93,6 +107,7 @@ export function AccountMobile({ label, onClose }: { label: string; onClose: () =
   const t = useT();
   const account = useAccount();
   const loginHref = useLoginHref();
+  const signIn = usePopupClick();
   if (account.status === "loading")
     return (
       <div role="status" aria-live="polite" className="flex cursor-wait items-center justify-center gap-2 rounded-xl bg-indigo-600/80 py-3 text-sm font-semibold text-white">
@@ -100,14 +115,15 @@ export function AccountMobile({ label, onClose }: { label: string; onClose: () =
       </div>
     );
   if (account.status !== "user" || !account.user) {
-    return <Link href={loginHref} onClick={onClose} className="block rounded-xl bg-indigo-600 py-3 text-center text-sm font-semibold text-white">{label}</Link>;
+    return <Link href={loginHref} data-no-loader onClick={(e) => { onClose(); signIn(e); }} className="block rounded-xl bg-indigo-600 py-3 text-center text-sm font-semibold text-white">{label}</Link>;
   }
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between rounded-xl bg-white/60 px-3 py-2.5 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10">
         <span className="min-w-0"><span className="block truncate text-sm font-semibold">{account.user.name}</span><span className="block text-xs opacity-70">{t("Wallet")}{" "}{toman(account.wallet ?? 0, t.locale)}</span></span>
-        <a href={TOP_UP_HREF} className="shrink-0 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white">{t("Top up")}</a>
+        <Link href={TOP_UP_HREF} onClick={onClose} className="shrink-0 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white">{t("Top up")}</Link>
       </div>
+      <Link href="/account" onClick={onClose} className="block w-full rounded-xl py-2.5 text-center text-sm font-semibold ring-1 ring-slate-200 dark:ring-white/10">{t("My account")}</Link>
       <button onClick={() => { onClose(); account.signOut(); }} className="w-full rounded-xl py-2.5 text-sm font-medium opacity-80 ring-1 ring-slate-200 dark:ring-white/10">{t("Sign out")}</button>
     </div>
   );

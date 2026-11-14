@@ -16,7 +16,7 @@ export default function ErrorsD({ code: fixed, onRetry }: { code?: string; onRet
   return (
     <PageShell>
       <ErrorFrame switcher={switcher}>
-        <div className="mx-auto grid max-w-6xl items-center gap-12 pt-8 sm:pt-14 lg:grid-cols-2">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 lg:grid-cols-2">
           <div>
             <p className="font-mono text-sm font-semibold text-slate-400">{tx("Error {0}", { 0: code })}</p>
             <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl dark:text-white">{tx(copy.title)}</h1>

@@ -1,5 +1,11 @@
 "use client";
 
+import RotatingWord, { type WordMotion } from "@/components/ui/RotatingWord";
+import WordReveal from "@/components/ui/WordReveal";
+import { HeroSubtitle, type SubStyle } from "./subtitles";
+import { LocaleProvider } from "@/i18n/client";
+import { usePathname } from "next/navigation";
+
 import { useLayoutEffect, useRef, useState } from "react";
 import Link from "@/i18n/Link";
 import {
@@ -62,7 +68,24 @@ const cols: Record<number, string> = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 l
 // Offer G — "Catalog Tabs": centered headline over a tabbed shop window. Each tab shows its categories as cards that lead to the category page.
 // `bare` drops the built-in nav for pages with a separate site header: "overlay" when that header floats over the hero
 // (adds room for it at the top), "flow" when it sits above the hero.
-export default function HeroG({ bare }: { bare?: "overlay" | "flow" }) {
+// `word` (gallery section hero-word): the headline's middle word changes every few seconds, in one of three motions.
+const grad = "bg-gradient-to-r from-indigo-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:to-fuchsia-300";
+
+// "خدمات دیجیتال را [آنی · مطمئن · حرفه‌ای] دریافت کنید." / "Get your digital services [instantly · safely · professionally]."
+// The word order differs, so each language builds its own line around the changing word.
+function HeadlineWords({ motion }: { motion: WordMotion }) {
+  const tx = useT();
+  const words = [tx("instantly"), tx("safely"), tx("professionally")];
+  const rotating = <RotatingWord words={words} motion={motion} className={grad} />;
+  // Persian: one line on wide screens (it fits at 1024px even with the longest word); two fixed lines below that, so a longer word never pushes the end of the sentence onto
+  // a line of its own.
+  return tx.locale === "fa"
+    ? <>{tx("Get your")}<br className="lg:hidden" />{" "}{rotating} <span className="whitespace-nowrap">{tx("digital services.")}</span></>
+    : <>Get your digital services<br />{rotating}.</>; // too long for one line in English
+}
+
+// `sub`: the line under the headline; "gradient" (Display Line, chosen 2026-11-15) unless a gallery offer asks otherwise.
+export default function HeroG({ bare, word, sub = "gradient" }: { bare?: "overlay" | "flow"; word?: string; sub?: SubStyle | "plain" }) {
   const tx = useT();
   const [tabId, setTabId] = useState(tx.tr(catalog)[0].id);
   const tab = tx.tr(catalog).find((t) => t.id === tabId)!;
@@ -101,10 +124,10 @@ export default function HeroG({ bare }: { bare?: "overlay" | "flow" }) {
         <span className="inline-flex items-center gap-2 rounded-full border border-white bg-white/70 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
           <Zap className="h-3.5 w-3.5 text-amber-500" />{tx("Instant delivery")}<span className="text-slate-300 dark:text-slate-600">·</span><ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />{tx("Refund guarantee")}
         </span>
-        <h1 className="mx-auto mt-6 max-w-4xl font-display text-4xl font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl dark:text-white">
-          {tx("Get your")}{" "}<span className="bg-gradient-to-r from-indigo-600 to-fuchsia-500 bg-clip-text dark:from-indigo-300 dark:to-fuchsia-300 text-transparent">{tx("digital services.")}</span>
+        <h1 className={`mx-auto mt-6 max-w-4xl font-display text-4xl font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-6xl dark:text-white ${word && tx.locale === "fa" ? "lg:max-w-none lg:whitespace-nowrap" : ""}`}>
+          {word ? <HeadlineWords motion={word as WordMotion} /> : <>{tx("Get your")}{" "}<span className={grad}>{tx("digital services.")}</span></>}
         </h1>
-        <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600 dark:text-slate-400">{tx("Real numbers, real accounts, real growth. Instant delivery and a refund if anything goes wrong.")}</p>
+        {sub !== "plain" ? <HeroSubtitle look={sub} /> : <p className="mx-auto mt-5 max-w-xl text-lg text-slate-600 dark:text-slate-400"><WordReveal once text={tx("Safe buying, instant delivery and real support: everything just as you'd expect.")} delay={350} step={45} /></p>}
 
         <div className="mt-12 rounded-3xl border border-white bg-white/80 p-3 text-start shadow-2xl shadow-indigo-200/60 backdrop-blur-xl dark:border-white/10 dark:bg-white/[.04] dark:shadow-black/40">
           {/* The sliding pill overshoots a little when it lands on an end tab; with no scrollbar that never flashes one. Phones still swipe the row. */}
@@ -122,7 +145,7 @@ export default function HeroG({ bare }: { bare?: "overlay" | "flow" }) {
 
           <div className={`grid gap-3 p-2 pt-4 ${cols[tab.cards.length]}`}>
             {tab.cards.map((c, i) => (
-              <div key={tab.id + c.name} className="animate-fade-up" style={{ animationDelay: `${i * 60}ms` }}>
+              <div key={tab.id + c.name} className="animate-blur-in" style={{ animationDelay: `${i * 70}ms` }}>
               <Link href={c.href} className="group relative flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-indigo-400/50 dark:hover:shadow-black/30">
                 {c.hot && <span className="absolute end-4 top-4 flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-600 dark:bg-orange-500/15 dark:text-orange-300"><Flame className="h-3 w-3" />{tx("Popular")}</span>}
                 <span className={`grid h-11 w-11 place-items-center rounded-xl ${c.tint}`}><c.icon className="h-5 w-5" /></span>
@@ -142,7 +165,7 @@ export default function HeroG({ bare }: { bare?: "overlay" | "flow" }) {
             ))}
           </div>
           {tab.viewAll && (
-            <Link key={tab.id} href={tab.viewAll} className="group mx-auto mt-1 flex w-fit animate-fade-up [animation-delay:180ms] items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-500/10">
+            <Link key={tab.id} href={tab.viewAll} className="group mx-auto mt-1 flex w-fit animate-blur-in [animation-delay:240ms] items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-500/10">
               {tx("View all")}{" "}{tab.name.toLowerCase()} <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
             </Link>
           )}
@@ -151,3 +174,29 @@ export default function HeroG({ bare }: { bare?: "overlay" | "flow" }) {
     </section>
   );
 }
+
+// The hero-word offers: the same hero with a changing headline word. The gallery is English, so these open in
+// Persian (the site's main language) with a switch, to see both sentences. The switch shows on /design only.
+function InLanguage({ word, bare, sub }: { word: WordMotion; bare?: "overlay" | "flow"; sub?: SubStyle | "plain" }) {
+  const [lang, setLang] = useState<"fa" | "en">("fa");
+  // On the home page (the chosen offer, app/page.tsx) the hero runs in the visitor's language, without the switch.
+  if (!usePathname()?.startsWith("/design")) return <HeroG bare={bare} word={word} sub={sub} />;
+  return (
+    <div className="relative">
+      <div role="group" aria-label="Language" className="absolute end-4 top-4 z-20 flex rounded-xl border border-slate-300 bg-white p-1 text-sm shadow-sm dark:border-white/15 dark:bg-slate-800">
+        {(["fa", "en"] as const).map((l) => <button key={l} type="button" aria-pressed={lang === l} onClick={() => setLang(l)} className={`rounded-lg px-3 py-1.5 ${lang === l ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "text-slate-700 dark:text-slate-300"}`}>{l === "fa" ? "فارسی" : "English"}</button>)}
+      </div>
+      <div dir={lang === "fa" ? "rtl" : "ltr"} lang={lang}><LocaleProvider locale={lang}><HeroG key={lang} bare={bare} word={word} sub={sub} /></LocaleProvider></div>
+    </div>
+  );
+}
+export const HeroWordSlot = (p: { bare?: "overlay" | "flow" }) => <InLanguage {...p} word="slot" />;
+export const HeroWordBlur = (p: { bare?: "overlay" | "flow" }) => <InLanguage {...p} word="blur" />;
+export const HeroWordType = (p: { bare?: "overlay" | "flow" }) => <InLanguage {...p} word="type" />;
+
+// The hero-subtitle offers: the chosen headline (blur swap) with each style of the line under it.
+export const HeroSubChips = (p: { bare?: "overlay" | "flow" }) => <InLanguage {...p} word="blur" sub="chips" />;
+export const HeroSubMarker = (p: { bare?: "overlay" | "flow" }) => <InLanguage {...p} word="blur" sub="marker" />;
+export const HeroSubGradient = (p: { bare?: "overlay" | "flow" }) => <InLanguage {...p} word="blur" sub="gradient" />;
+export const HeroSubIcons = (p: { bare?: "overlay" | "flow" }) => <InLanguage {...p} word="blur" sub="icons" />;
+export const HeroSubPlain = (p: { bare?: "overlay" | "flow" }) => <InLanguage {...p} word="blur" sub="plain" />;
