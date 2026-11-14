@@ -56,8 +56,9 @@ function Segments({ s, show = "price" }: { s: Subs; show?: "price" | "month" }) 
                 <span aria-hidden className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-colors ${on ? "border-violet-700 bg-violet-700 dark:border-violet-400 dark:bg-violet-400" : "border-slate-400 dark:border-white/30"}`}>{on && <Check className="h-3 w-3 text-white dark:text-violet-950" strokeWidth={3.5} />}</span>
                 <span className="min-w-0 flex-1 text-[15px] font-semibold text-slate-900 dark:text-white">{pl.name}</span>
               </span>
-              <span className="ps-7">
-                <span className="block whitespace-nowrap text-base font-bold tabular-nums text-slate-900 dark:text-white">{main}</span>
+              <span className="min-w-0 sm:ps-7">
+                {/* May wrap before the currency: two cards side by side on a phone are too narrow for "5,937,800 Toman". */}
+                <span className="block text-base font-bold tabular-nums text-slate-900 dark:text-white">{main}</span>
                 {(sub || save > 0) && (
                   <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                     {sub && <span className="whitespace-nowrap text-xs tabular-nums text-slate-600 dark:text-slate-400">{sub}</span>}
