@@ -221,7 +221,7 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
           <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-slate-900 dark:text-white"><MessageSquare aria-hidden className="h-5 w-5" />{tx("Leave a comment")}</h3>
           <p aria-live="polite" className="mt-2 text-[15px] text-emerald-800 dark:text-emerald-300">{sent && tx("Thanks! Your comment will appear after a quick review.")}</p>
           {failed && <p role="alert" className="mt-2 text-[15px] font-semibold text-red-700 dark:text-red-400">{failed}</p>}
-          <form noValidate onSubmit={submit} className="mt-2 space-y-5">
+          <form noValidate onSubmit={submit} className="relative mt-2 space-y-5">
             <div>
               <label htmlFor={nId} className="block text-base font-semibold text-slate-900 dark:text-white">{tx("Name")}</label>
               {errName && <p id={`${nId}-e`} className="text-sm font-semibold text-red-700 dark:text-red-400"><span className="sr-only">{tx("Error:")}{" "}</span>{errName}</p>}
@@ -235,7 +235,7 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
                 aria-describedby={[`${tId}-h`, errText && `${tId}-e`, `${tId}-c`].filter(Boolean).join(" ")} className={`${field} mt-2 resize-y ${errText ? "!border-red-700 dark:!border-red-400" : ""}`} />
               <p id={`${tId}-c`} className="mt-1 text-end text-sm text-slate-600 dark:text-slate-400">{text.length} / 1000</p>
             </div>
-            <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden value={website} onChange={(e) => setWebsite(e.target.value)} className="absolute -left-[9999px] h-px w-px opacity-0" />
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden value={website} onChange={(e) => setWebsite(e.target.value)} className="pointer-events-none absolute start-0 top-0 h-px w-px overflow-hidden opacity-0 [clip-path:inset(50%)]" />
             <button type="submit" disabled={sending} className={`${primary} w-full disabled:opacity-60`}><Send aria-hidden className="h-4 w-4" />{tx(sending ? "Sending…" : "Post comment")}</button>
           </form>
         </div>
