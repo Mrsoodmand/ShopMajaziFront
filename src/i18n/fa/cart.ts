@@ -52,4 +52,6 @@ export const cart: Record<string, string> = {
   "Nothing could be bought.": "هیچ موردی خریداری نشد.",
   "{0} is in your wallet for the items that didn't go through.": "مبلغ {0} بابت مواردی که انجام نشد در کیف پول شماست.",
   "See my orders": "مشاهده سفارش‌ها",
+  // Telegram Stars page (design/telegram/parts.tsx useStars)
+  "Telegram Stars sales are paused for now. Please check back a little later.": "فروش استارز تلگرام فعلا متوقف است. لطفا کمی بعد دوباره سر بزنید.",
 };

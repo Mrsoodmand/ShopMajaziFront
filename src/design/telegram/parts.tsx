@@ -3,6 +3,11 @@ import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode 
 import Link from "@/i18n/Link";
 import { AtSign, BadgeCheck, Check, ChevronRight, Crown, Loader2, Megaphone, ShieldCheck, Star, X } from "lucide-react";
 import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
+import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
+import { useCart } from "@/lib/cart";
+import { SubsNoticeToast, type SubsNotice } from "../subs/parts";
+import { useLivePremium, usePremiumPlans, type ShownPlan } from "./livePremium";
+import { liveStarPrice, useLiveStars } from "./liveStars";
 import { useMoney } from "@/lib/money";
 import {
   AD_BUTTON_MAX, AD_CPM, AD_MAX_BUDGET, AD_MIN_BUDGET, AD_TEXT_MAX, adCountries, adGoals, adLanguages, adTargets, adTopics, checkUsername, cleanUsername, estViews, lookupUser,
@@ -234,7 +239,8 @@ export function UsernameField({ r, s, id = `tg-user-${s}`, label = "Telegram use
 
 // ---------- Order (all three services) ----------
 
-export type TgOrder = { service: TgService; title: string; detail: string; total: number; to: string; paidWith: PayMethod; at: number };
+// `orderId`: a real order (live Premium): support activates it, so the steps wait instead of playing through.
+export type TgOrder = { service: TgService; title: string; detail: string; total: number; to: string; paidWith: PayMethod; at: number; orderId?: number };
 
 export function useCheckout() {
   const [payOpen, setPayOpen] = useState(false);
@@ -252,22 +258,35 @@ export function useStars(initial = 500) {
   const tx = useT();
   const r = useRecipient();
   const c = useCheckout();
-  const [amount, setRaw] = useState(initial);
+  const liveAny = useLiveStars();
+  const live = liveAny && !liveAny.off ? liveAny : null;
+  const off = !!liveAny?.off;
+  const { setWallet } = useAccount();
+  const cart = useCart();
+  const [notice, setNotice] = useState<SubsNotice | null>(null);
+  // Live: the admin's range and plans; samples otherwise.
+  const MIN = live ? live.min : tx.tr(STAR_MIN);
+  const MAX = live ? live.max : STAR_MAX;
+  const packs = live ? live.plans.map((p) => p.count) : null;
+  // Off: no prices to show (0 → "—").
+  const priceOf = (n: number) => (live ? liveStarPrice(live, n) : off ? 0 : starPrice(n));
+  const [amount, setRaw] = useState(() => (live && live.plans.length && !live.plans.some((p) => p.count === initial) ? live.plans[Math.min(2, live.plans.length - 1)].count : initial));
   const [anon, setAnon] = useState(false);
   const [amountTouched, setAmountTouched] = useState(false);
   const [tried, setTried] = useState(false);
   // Amounts over the maximum are kept (and explained), not silently cut down.
-  const setAmount = (n: number) => setRaw(Math.min(STAR_MAX * 10, Math.max(0, Math.round(n) || 0)));
-  const valid = amount >= tx.tr(STAR_MIN) && amount <= STAR_MAX;
-  const total = valid ? starPrice(amount) : 0;
+  const setAmount = (n: number) => setRaw(Math.min(MAX * 10, Math.max(0, Math.round(n) || 0)));
+  const valid = !off && amount >= MIN && amount <= MAX;
+  const total = valid ? priceOf(amount) : 0;
   // `amountError` is the raw check; `amountShown` waits until the field is left or Continue is pressed, so the
   // error doesn't flash while someone is still typing.
-  const amountError = amount < tx.tr(STAR_MIN) ? tx("The smallest order is {0} Stars", { 0: STAR_MIN }) : amount > STAR_MAX ? tx("Up to {0} Stars per order", { 0: STAR_MAX.toLocaleString("en-US") }) : undefined;
+  const amountError = amount < MIN ? tx("The smallest order is {0} Stars", { 0: MIN }) : amount > MAX ? tx("Up to {0} Stars per order", { 0: MAX.toLocaleString("en-US") }) : undefined;
   const amountShown = amountTouched || tried ? amountError : undefined;
   // Why Continue can't go on yet, shown under the button after a try.
   const blocker = !tried ? undefined : r.error ? (cleanUsername(r.value) ? tx("Check the username above") : tx("Add a username above to continue")) : amountError ? tx("Check the amount above") : undefined;
   // On failure, bring the first problem into view and put the cursor there.
   const proceed = () => {
+    if (off) { setNotice({ good: false, text: tx("Telegram Stars sales are paused for now. Please check back a little later.") }); return false; }
     const okUser = r.validate();
     setTried(true); setAmountTouched(true);
     if (okUser && valid) { c.openPay(); return true; }
@@ -275,8 +294,57 @@ export function useStars(initial = 500) {
     if (el && el.offsetParent !== null) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus({ preventScroll: true }); }
     return false;
   };
-  const buy = (m: PayMethod) => c.finish({ service: "stars", title: tx("{0} Telegram Stars", { 0: amount.toLocaleString("en-US") }), detail: anon ? tx("Sent anonymously") : tx("Sent with your name"), total, to: cleanUsername(r.value), paidWith: m });
-  return { r, ...c, amount, setAmount, each: starEach(Math.min(STAR_MAX, Math.max(amount, tx.tr(STAR_MIN)))), total, valid, amountError, amountShown, touchAmount: () => setAmountTouched(true), blocker, anon, setAnon, proceed, buy };
+  const view = (m: PayMethod, orderId?: number, n = amount, to = cleanUsername(r.value), paid = total) =>
+    c.finish({ service: "stars", title: tx("{0} Telegram Stars", { 0: n.toLocaleString("en-US") }), detail: anon ? tx("Sent anonymously") : tx("Sent with your name"), total: paid, to, paidWith: m, orderId });
+  // Live: a "telegram-stars" service order. A plan when the amount is one, otherwise the typed amount.
+  const body = () => {
+    if (!live) return null;
+    const plan = live.plans.find((p) => p.count === amount);
+    return { service_id: live.serviceId, ...(plan ? { plan_id: plan.id } : { count: amount }), fields: { [live.field]: `@${cleanUsername(r.value)}` } };
+  };
+  const buy = async (m: PayMethod) => {
+    const b = body();
+    if (!b) return view(m);
+    try {
+      if (m === "card") {
+        try { sessionStorage.setItem("tg-stars-pending", JSON.stringify({ to: cleanUsername(r.value), amount, total })); } catch { /* private mode */ }
+        const res = await accountApi<{ url: string }>("services/pay-card", { ...b, price: total, return: window.location.pathname });
+        window.location.assign(res.url);
+        return new Promise<void>(() => {}); // the page is leaving; keep the modal busy
+      }
+      const res = await accountApi<{ order: { id: number; price: number }; wallet: number }>("services/buy", { ...b, price: total });
+      setWallet(res.wallet);
+      view(m, res.order.id, amount, cleanUsername(r.value), res.order.price);
+    } catch (e) {
+      if (e instanceof ApiError && typeof e.data?.wallet === "number") setWallet(e.data.wallet);
+      throw e; // the modal shows why
+    }
+  };
+  const addToCart = cart && live ? () => { const b = body(); return b ? cart.add("service", b) : Promise.resolve(); } : undefined;
+
+  // Back from the bank: show the order, or what happened. Then clean the address so a reload doesn't repeat it.
+  useEffect(() => {
+    if (!live) return;
+    const q = new URLSearchParams(window.location.search);
+    const pay = q.get("pay");
+    const id = Number(q.get("order"));
+    if (!pay) return;
+    q.delete("pay"); q.delete("order");
+    window.history.replaceState(null, "", window.location.pathname + (q.size ? `?${q}` : "") + window.location.hash);
+    let pending: { to?: string; amount?: number; total?: number } = {};
+    try { pending = JSON.parse(sessionStorage.getItem("tg-stars-pending") ?? "{}"); sessionStorage.removeItem("tg-stars-pending"); } catch { /* nothing kept */ }
+    if (pay === "ok" && id && pending.to && pending.amount) view("card", id, pending.amount, pending.to, pending.total ?? 0);
+    else if (pay === "ok") setNotice({ good: true, text: tx("Payment received. You'll find the order in your orders.") });
+    else setNotice(pay === "cancelled"
+      ? { good: false, text: tx("Payment cancelled. Nothing was charged.") }
+      : { good: false, text: tx("The payment didn't go through. If money left your account, the bank returns it within 72 hours.") });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return {
+    r, ...c, amount, setAmount, each: live ? 0 : starEach(Math.min(STAR_MAX, Math.max(amount, tx.tr(STAR_MIN)))), total, valid, amountError, amountShown, touchAmount: () => setAmountTouched(true), blocker, anon, setAnon, proceed, buy,
+    live: !!live, off, min: MIN, max: MAX, packs, priceOf, addToCart, notice, dismissNotice: () => setNotice(null),
+  };
 }
 export type StarsState = ReturnType<typeof useStars>;
 
@@ -288,11 +356,11 @@ export function StarAmountInput({ st, id = "star-amount", label = "Or enter an a
   return (
     <div>
       <label htmlFor={id} className="text-base font-semibold text-slate-900 dark:text-white">{label}</label>
-      <p id={`${id}-hint`} className="text-sm text-slate-600 dark:text-slate-400">{tx.tr(STAR_MIN)}{" "}{tx("to")}{" "}{STAR_MAX.toLocaleString("en-US")}{" "}{tx("Stars")}</p>
+      <p id={`${id}-hint`} className="text-sm text-slate-600 dark:text-slate-400">{st.min.toLocaleString("en-US")}{" "}{tx("to")}{" "}{st.max.toLocaleString("en-US")}{" "}{tx("Stars")}</p>
       {e && <p id={`${id}-error`} className="mt-1 flex items-start gap-1.5 text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" /><span><span className="sr-only">{tx("Error:")}{" "}</span>{e}</span></p>}
       <div className="relative mt-2">
         <StarGlyph className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2" />
-        <input id={id} type="number" inputMode="numeric" min={tx.tr(STAR_MIN)} max={STAR_MAX} value={st.amount || ""} onChange={(x) => st.setAmount(Number(x.target.value))} onBlur={st.touchAmount}
+        <input id={id} type="number" inputMode="numeric" min={st.min} max={st.max} value={st.amount || ""} onChange={(x) => st.setAmount(Number(x.target.value))} onBlur={st.touchAmount}
           aria-invalid={!!e} aria-describedby={[`${id}-hint`, e && `${id}-error`].filter(Boolean).join(" ")} className={`${field} ps-10 font-semibold tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${e ? "!border-red-700 focus-visible:!ring-red-600 dark:!border-red-400 dark:focus-visible:!ring-red-400" : ""}`} />
       </div>
     </div>
@@ -312,8 +380,12 @@ export function AnonToggle({ st }: { st: StarsState }) {
 export function StarsCheckout({ st }: { st: StarsState }) {
   const tx = useT();
   return (
-    <CheckoutModal open={st.payOpen} onClose={st.closePay} price={st.total} itemLabel={tx("{0} Stars", { 0: st.amount.toLocaleString("en-US") })} note={tx("Delivered in 1–5 minutes. Wrong username? Nothing is sent and you're refunded.")} onPay={st.buy}
+    <>
+    {st.notice && <SubsNoticeToast n={st.notice} onClose={st.dismissNotice} />}
+    <CheckoutModal open={st.payOpen} onClose={st.closePay} price={st.total} itemLabel={tx("{0} Stars", { 0: st.amount.toLocaleString("en-US") })} note={tx("Delivered in 1–5 minutes. Wrong username? Nothing is sent and you're refunded.")} onPay={st.buy} onAddToCart={st.addToCart}
+      {...(st.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<><ServiceIcon s="stars" /><div className="min-w-0 flex-1"><div className="truncate font-semibold text-slate-900 dark:text-white">{st.amount.toLocaleString("en-US")}{" "}{tx("Telegram Stars")}</div><div className="truncate text-xs text-slate-500 dark:text-slate-400">{tx("To @")}{cleanUsername(st.r.value)}{st.anon ? tx(" · anonymous") : ""}</div></div></>} />
+    </>
   );
 }
 
@@ -323,7 +395,14 @@ export function usePremium(initialMonths = 12) {
   const tx = useT();
   const r = useRecipient();
   const c = useCheckout();
-  const [plan, setPlan] = useState<PremiumPlan>(tx.tr(premiumPlans).find((p) => p.months === initialMonths) ?? tx.tr(premiumPlans)[2]);
+  const live = useLivePremium();
+  const plans = usePremiumPlans();
+  const { setWallet } = useAccount();
+  const cart = useCart();
+  const [notice, setNotice] = useState<SubsNotice | null>(null);
+  const [planRaw, setPlan] = useState<ShownPlan>(plans.find((p) => p.months === initialMonths) ?? plans[plans.length - 1]);
+  // Always the shown list's own copy (live price and id), whatever a design handed to setPlan.
+  const plan: ShownPlan = plans.find((p) => p.months === planRaw.months) ?? planRaw;
   const [tried, setTried] = useState(false);
   // Why Continue can't go on yet, shown under the button after a try.
   const blocker = tried && r.error ? (cleanUsername(r.value) ? tx("Check the username above") : tx("Add a username above to continue")) : undefined;
@@ -336,16 +415,63 @@ export function usePremium(initialMonths = 12) {
     if (el && el.offsetParent !== null) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus({ preventScroll: true }); }
     return false;
   };
-  const buy = (m: PayMethod) => c.finish({ service: "premium", title: tx("Telegram Premium · {0}", { 0: plan.label }), detail: tx("Gift to the username"), total: plan.price, to: cleanUsername(r.value), paidWith: m });
-  return { r, ...c, plan, setPlan, total: plan.price, proceed, blocker, buy };
+  const view = (m: PayMethod, orderId?: number, to = cleanUsername(r.value), p: ShownPlan = plan) =>
+    c.finish({ service: "premium", title: tx("Telegram Premium · {0}", { 0: p.label }), detail: tx("Gift to the username"), total: p.price, to, paidWith: m, orderId });
+  // Live: the "telegram-premium" subscription, the username in its Telegram ID field (same body as /accounts).
+  const body = () => live && plan.planId ? { product_id: live.productId, plan_id: plan.planId, fields: { [live.field]: `@${cleanUsername(r.value)}` } } : null;
+  const buy = async (m: PayMethod) => {
+    const b = body();
+    if (!b) return view(m);
+    try {
+      if (m === "card") {
+        try { sessionStorage.setItem("tg-premium-pending", JSON.stringify({ to: cleanUsername(r.value), months: plan.months })); } catch { /* private mode */ }
+        const res = await accountApi<{ url: string }>("subscriptions/pay-card", { ...b, price: plan.price, return: window.location.pathname });
+        window.location.assign(res.url);
+        return new Promise<void>(() => {}); // the page is leaving; keep the modal busy
+      }
+      const res = await accountApi<{ order: { id: number }; wallet: number }>("subscriptions/buy", { ...b, price: plan.price });
+      setWallet(res.wallet);
+      view(m, res.order.id);
+    } catch (e) {
+      if (e instanceof ApiError && typeof e.data?.wallet === "number") setWallet(e.data.wallet);
+      throw e; // the modal shows why
+    }
+  };
+  const addToCart = cart && live ? () => { const b = body(); return b ? cart.add("subscription", b) : Promise.resolve(); } : undefined;
+
+  // Back from the bank: show the order, or what happened. Then clean the address so a reload doesn't repeat it.
+  useEffect(() => {
+    if (!live) return;
+    const q = new URLSearchParams(window.location.search);
+    const pay = q.get("pay");
+    const id = Number(q.get("order"));
+    if (!pay) return;
+    q.delete("pay"); q.delete("order");
+    window.history.replaceState(null, "", window.location.pathname + (q.size ? `?${q}` : "") + window.location.hash);
+    let pending: { to?: string; months?: number } = {};
+    try { pending = JSON.parse(sessionStorage.getItem("tg-premium-pending") ?? "{}"); sessionStorage.removeItem("tg-premium-pending"); } catch { /* nothing kept */ }
+    const p = plans.find((x) => x.months === pending.months);
+    if (pay === "ok" && id && p && pending.to) view("card", id, pending.to, p);
+    else if (pay === "ok") setNotice({ good: true, text: tx("Payment received. You'll find the order in your orders.") });
+    else setNotice(pay === "cancelled"
+      ? { good: false, text: tx("Payment cancelled. Nothing was charged.") }
+      : { good: false, text: tx("The payment didn't go through. If money left your account, the bank returns it within 72 hours.") });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { r, ...c, plan, setPlan, total: plan.price, proceed, blocker, buy, addToCart, live: !!live, notice, dismissNotice: () => setNotice(null) };
 }
 export type PremiumState = ReturnType<typeof usePremium>;
 
 export function PremiumCheckout({ pm }: { pm: PremiumState }) {
   const tx = useT();
   return (
-    <CheckoutModal open={pm.payOpen} onClose={pm.closePay} price={pm.total} itemLabel={tx("Premium · {0}", { 0: pm.plan.label })} note={tx("Activated in a few minutes on the account. Nothing else is needed from you.")} onPay={pm.buy}
+    <>
+    {pm.notice && <SubsNoticeToast n={pm.notice} onClose={pm.dismissNotice} />}
+    <CheckoutModal open={pm.payOpen} onClose={pm.closePay} price={pm.total} itemLabel={tx("Premium · {0}", { 0: pm.plan.label })} note={tx("Activated in a few minutes on the account. Nothing else is needed from you.")} onPay={pm.buy} onAddToCart={pm.addToCart}
+      {...(pm.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<><ServiceIcon s="premium" /><div className="min-w-0 flex-1"><div className="truncate font-semibold text-slate-900 dark:text-white">{tx("Telegram Premium ·")}{" "}{pm.plan.label}</div><div className="truncate text-xs text-slate-500 dark:text-slate-400">{tx("To @")}{cleanUsername(pm.r.value)}</div></div></>} />
+    </>
   );
 }
 
@@ -614,10 +740,11 @@ export function TgOrderView({ o, onAgain }: { o: TgOrder; onAgain: () => void })
   const usd = useMoney().format;
   const tx = useT();
   const steps = tx.tr(orderSteps)[o.service];
-  const last = o.service === "ads" ? 1 : steps.length - 1;
+  // A real order waits on support (step 2 stays current); samples play the steps through.
+  const last = o.service === "ads" || o.orderId ? 1 : steps.length - 1;
   const [done, setDone] = useState(1);
   useEffect(() => { if (done >= last) return; const t = setTimeout(() => setDone((d) => d + 1), 2500); return () => clearTimeout(t); }, [done, last]);
-  const finished = done >= last && o.service !== "ads";
+  const finished = done >= last && o.service !== "ads" && !o.orderId;
   return (
     <div className="mx-auto max-w-2xl animate-fade-up">
       {finished && o.service !== "ads" && <StarRain tone={o.service} />}
@@ -643,7 +770,7 @@ export function TgOrderView({ o, onAgain }: { o: TgOrder; onAgain: () => void })
         })}
       </ol>
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link href="/dashboard/orders" className={accent[o.service].btn}>{tx("View in my orders")}</Link>
+        <Link href={o.orderId ? `/account/orders/${o.orderId}` : "/dashboard/orders"} className={accent[o.service].btn}>{tx("View in my orders")}</Link>
         <button onClick={onAgain} className={`inline-flex items-center justify-center rounded-xl border border-slate-300 px-6 py-3.5 font-semibold text-slate-800 hover:bg-slate-50 dark:border-white/20 dark:text-slate-100 dark:hover:bg-white/5 ${ring}`}>{o.service === "ads" ? tx("Create another ad") : tx("Buy again")}</button>
       </div>
     </div>

@@ -73,18 +73,21 @@ export function Coin({ amount, valid }: { amount: number; valid: boolean }) {
 // "Other amount" opens the custom field (already open when the amount isn't one of the packs).
 export function AmountPicker({ st }: { st: StarsState }) {
   const t = useT();
-  const [open, setOpen] = useState(!PACKS.includes(st.amount));
-  const show = open || !PACKS.includes(st.amount);
+  // Live: the admin's plans; the first in the middle when the sample popular pack isn't one of them.
+  const packs = st.packs ?? PACKS;
+  const popular = packs.includes(t.tr(POPULAR_PACK)) ? t.tr(POPULAR_PACK) : packs[Math.min(2, packs.length - 1)];
+  const [open, setOpen] = useState(!packs.includes(st.amount));
+  const show = open || !packs.includes(st.amount);
   const toggle = () => {
-    if (show) { if (!PACKS.includes(st.amount)) st.setAmount(t.tr(POPULAR_PACK)); setOpen(false); }
+    if (show) { if (!packs.includes(st.amount) && popular) st.setAmount(popular); setOpen(false); }
     else { setOpen(true); setTimeout(() => document.getElementById("star-amount")?.focus(), 0); }
   };
   return (
     <div className="space-y-4">
-      <PackRadios st={st} cols={3} packs={PACKS} savings />
+      {packs.length > 0 && <PackRadios st={st} cols={3} packs={packs} savings />}
       <TierLine st={st} />
       <button type="button" onClick={toggle} aria-expanded={show} aria-controls="star-other" className={`flex items-center gap-1.5 rounded-lg font-semibold text-amber-800 underline-offset-4 hover:underline dark:text-amber-300 ${ring}`}>
-        {!show ? t("Other amount") : PACKS.includes(st.amount) ? t("Hide other amount") : t("Use a pack instead")}<ChevronDown aria-hidden className={`h-4 w-4 transition-transform ${show ? "rotate-180" : ""}`} />
+        {!show ? t("Other amount") : packs.includes(st.amount) ? t("Hide other amount") : t("Use a pack instead")}<ChevronDown aria-hidden className={`h-4 w-4 transition-transform ${show ? "rotate-180" : ""}`} />
       </button>
       <div id="star-other" hidden={!show} className="space-y-3">{show && <><div className="sm:max-w-xs"><StarAmountInput st={st} label={t("Amount")} /></div><TierNudge st={st} /></>}</div>
     </div>

@@ -18,7 +18,8 @@ export function PackRadios({ st, cols = 4, legend = "How many Stars?", dark = fa
   const usd = useMoney().format;
   const tx = useT();
   legend = tx(legend);
-  packs = tx.tr(packs);
+  packs = st.packs ?? tx.tr(packs);
+  if (st.live || st.off) savings = false; // live prices are per Star, no volume steps
   const name = useId();
   const grid = cols === 4 ? "grid-cols-2 sm:grid-cols-4" : cols === 3 ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2";
   return (
@@ -34,7 +35,7 @@ export function PackRadios({ st, cols = 4, legend = "How many Stars?", dark = fa
               {on && <span aria-hidden className="absolute end-2.5 top-2.5 grid h-5 w-5 place-items-center rounded-full bg-amber-500 text-white dark:bg-amber-400 dark:text-amber-950"><Check className="h-3 w-3" strokeWidth={3} /></span>}
               {n === tx.tr(POPULAR_PACK) && <span className="absolute -top-2.5 start-3 rounded-full bg-amber-400 px-2 py-0.5 text-[11px] font-bold text-amber-950">{tx("Popular")}</span>}
               <span className={`flex items-center gap-1.5 font-display text-lg font-bold ${dark ? "text-white" : "text-slate-900 dark:text-white"}`}><StarGlyph className={`h-4 w-4 transition-transform duration-500 ${on ? "rotate-[144deg] scale-125" : ""}`} />{fmt(n)}<span className="sr-only">{" "}{tx("Stars")}</span></span>
-              <span className={`text-sm tabular-nums ${dark ? "text-white/70" : "text-slate-600 dark:text-slate-400"}`}>{usd(starPrice(n))}</span>
+              <span className={`text-sm tabular-nums ${dark ? "text-white/70" : "text-slate-600 dark:text-slate-400"}`}>{st.priceOf(n) ? usd(st.priceOf(n)) : "—"}</span>
               {savings && <span className={`text-xs font-semibold ${save > 0 ? "text-emerald-700 dark:text-emerald-400" : "invisible"}`}>{tx("Save")}{" "}{save}%</span>}
             </label>
           );
@@ -91,6 +92,7 @@ export function UsesGrid({ dark = false }: { dark?: boolean }) {
 // The price steps in one line, the current one in bold.
 export function TierLine({ st }: { st: StarsState }) {
   const tx = useT();
+  if (st.live || st.off) return null; // live prices have no volume steps
   const steps = tx.tr(starTiers).slice(1);
   return (
     <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -108,6 +110,7 @@ export function TierLine({ st }: { st: StarsState }) {
 export function TierNudge({ st }: { st: StarsState }) {
   const usd = useMoney().format;
   const tx = useT();
+  if (st.live || st.off) return null; // live prices have no volume steps
   const next = tx.tr(starTiers).find((t) => t.from > st.amount);
   if (!st.valid || !next) return null;
   const more = next.from - st.amount;
@@ -150,7 +153,7 @@ export function StarsSummary({ st, children, title = "Your order", className = c
         <SumRows rows={[
           [tx("Stars"), <span key="s" className="inline-flex items-center gap-1"><StarGlyph className="h-3.5 w-3.5" />{st.amount > 0 ? <span className={st.valid ? "" : "text-red-700 dark:text-red-400"}>{fmt(st.amount)}</span> : "—"}</span>],
           [tx("To"), st.r.user ? `@${st.r.user.username}` : "—"],
-          ...(st.valid && savePct(st.amount) > 0 ? [[tx("You save"), <span key="v" className="tabular-nums text-emerald-700 dark:text-emerald-400">{savePct(st.amount)}% · {usd(st.amount * tx.tr(starTiers)[0].each - st.total)}</span>] as [string, ReactNode]] : []),
+          ...(!st.live && st.valid && savePct(st.amount) > 0 ? [[tx("You save"), <span key="v" className="tabular-nums text-emerald-700 dark:text-emerald-400">{savePct(st.amount)}% · {usd(st.amount * tx.tr(starTiers)[0].each - st.total)}</span>] as [string, ReactNode]] : []),
           [tx("Delivery"), tx("1–5 minutes")],
         ]} />
       </div>

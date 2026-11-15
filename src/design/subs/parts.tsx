@@ -460,7 +460,7 @@ export function SubsCheckout({ s }: { s: Subs }) {
 }
 
 // What happened at the bank (or why buying is paused): a toast at the bottom until it's closed.
-function SubsNoticeToast({ n, onClose }: { n: { good: boolean; text: string }; onClose: () => void }) {
+export function SubsNoticeToast({ n, onClose }: { n: { good: boolean; text: string }; onClose: () => void }) {
   const tx = useT();
   return (
     <div role={n.good ? "status" : "alert"} className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-lg items-start gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-2xl shadow-black/30 dark:bg-white dark:text-slate-900">

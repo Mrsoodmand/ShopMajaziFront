@@ -60,7 +60,8 @@ export const premiumPlans = [
 ];
 export type PremiumPlan = (typeof premiumPlans)[number];
 export const perMonth = (p: PremiumPlan) => Math.round((p.price / p.months) * 100) / 100;
-export const premiumSaving = (p: PremiumPlan) => Math.round((1 - perMonth(p) / perMonth(premiumPlans[0])) * 100);
+// Saving per month against `base` (the shortest plan on show: the live prices on the live page).
+export const premiumSaving = (p: PremiumPlan, base: PremiumPlan = premiumPlans[0]) => Math.round((1 - perMonth(p) / perMonth(base)) * 100);
 
 export const premiumFeatures = [
   { id: "ads", title: "No ads", text: "Sponsored messages in public channels disappear.", short: "Sponsored messages disappear" },

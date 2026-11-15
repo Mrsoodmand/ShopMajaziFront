@@ -2,7 +2,8 @@
 import { useId, type ReactNode } from "react";
 import { BadgeCheck, Ban, Check, Download, FolderPlus, Mic, Smile, Sparkles, Upload } from "lucide-react";
 import { useMoney } from "@/lib/money";
-import { perMonth, premiumCompare, premiumFeatures, premiumPlans, premiumSaving } from "@/content/telegram-en";
+import { perMonth, premiumCompare, premiumFeatures, premiumSaving } from "@/content/telegram-en";
+import { usePremiumPlans } from "./livePremium";
 import { accent, card, SumRows, type PremiumState } from "./parts";
 import { useT } from "@/i18n/client";
 
@@ -17,15 +18,16 @@ export function PlanRadios({ pm, layout = "cards", legend = "How long?", dark = 
   const t = useT();
   legend = t(legend);
   const name = useId();
+  const plans = usePremiumPlans();
   const text = dark ? "text-white" : "text-slate-900 dark:text-white";
   const sub = dark ? "text-white/70" : "text-slate-600 dark:text-slate-400";
   return (
     <fieldset>
       <legend className={`text-base font-semibold ${text}`}>{legend}</legend>
       <div className={`mt-3 grid gap-2.5 ${layout === "list" ? "" : "grid-cols-3"} ${layout === "cards" ? "sm:gap-4" : ""}`}>
-        {t.tr(premiumPlans).map((p) => {
+        {plans.map((p) => {
           const on = pm.plan.months === p.months;
-          const save = premiumSaving(p);
+          const save = premiumSaving(p, plans[0]);
           return (
             <label key={p.months} className={`relative flex cursor-pointer rounded-2xl border-2 transition-colors duration-200 has-[:focus-visible]:ring-2 ${still ? "" : `hover:-translate-y-0.5 transition ${on ? "animate-pop shadow-lg shadow-violet-600/20" : ""}`} ${still ? "has-[:focus-visible]:ring-emerald-400 has-[:focus-visible]:ring-offset-[#140a2a]" : "has-[:focus-visible]:ring-violet-500"} has-[:focus-visible]:ring-offset-2
               ${layout === "list" ? "items-center justify-between gap-3 px-4 py-3.5" : layout === "row" ? "flex-col items-center px-2 py-3 text-center" : "flex-col p-4 sm:p-5"}
