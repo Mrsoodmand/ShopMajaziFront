@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Wallet, CreditCard, Bitcoin, Check, AlertCircle, Lock, Loader2, Plus } from "lucide-react";
+import { X, Wallet, CreditCard, Bitcoin, Check, AlertCircle, Lock, Loader2, Plus, ShoppingBag } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMoney } from "@/lib/money";
 import { useT } from "@/i18n/client";
@@ -25,11 +25,13 @@ const methods: { id: PayMethod; label: string; desc: string; icon: typeof Wallet
 // Live pages: `signIn` asks guests to sign in first (in the modal, so their choices stay); `only` limits the
 // payment methods; `onPay` may return a promise: the modal waits, closes on success and shows why on failure.
 // `topUpHref` links to topping up when the wallet is short. `fees` / `notes` override a method's fee (%) and
-// description; `busyLabels` the waiting text per method (default `busyLabel`).
-export default function CheckoutModal({ open, onClose, summary, price, itemLabel = "Item", payLabel = "Pay", note, onPay, signIn = false, only, topUpHref, busyLabel = "Processing…", fees, notes, busyLabels }: {
+// description; `busyLabels` the waiting text per method (default `busyLabel`). `onAddToCart` adds an "Add to cart"
+// button under Pay (guests too): it puts the same purchase in the cart (lib/cart.tsx), which then opens.
+export default function CheckoutModal({ open, onClose, summary, price, itemLabel = "Item", payLabel = "Pay", note, onPay, signIn = false, only, topUpHref, busyLabel = "Processing…", fees, notes, busyLabels, onAddToCart }: {
   open: boolean; onClose: () => void; summary?: ReactNode; price: number; itemLabel?: string; payLabel?: string; note?: string;
   onPay: (method: PayMethod) => unknown; signIn?: boolean; only?: PayMethod[]; topUpHref?: string; busyLabel?: string;
   fees?: Partial<Record<PayMethod, number>>; notes?: Partial<Record<PayMethod, string>>; busyLabels?: Partial<Record<PayMethod, string>>;
+  onAddToCart?: () => Promise<unknown>;
 }) {
   const t = useT();
   itemLabel = t(itemLabel);
@@ -39,6 +41,7 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
   const account = useAccount();
   const [pay, setPay] = useState<PayMethod>("wallet");
   const [busy, setBusy] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { if (open) setError(null); }, [open, price]);
   const needSignIn = signIn && account.status !== "user";
@@ -80,6 +83,18 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
     try { await r; onClose(); } catch (e) { setError(errorText(e, t, usd)); } finally { setBusy(false); }
   };
 
+  const addToCart = async () => {
+    if (!onAddToCart) return;
+    setAdding(true); setError(null);
+    try { await onAddToCart(); onClose(); } catch (e) { setError(errorText(e, t, usd)); } finally { setAdding(false); }
+  };
+  const cartButton = onAddToCart && (
+    <button type="button" onClick={addToCart} disabled={!price || busy || adding}
+      className={`mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:ring-white/15 dark:hover:bg-white/5 ${focus}`}>
+      {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}{t("Add to cart")}
+    </button>
+  );
+
   return (
     <div className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open} inert={!open}>
       <div onClick={onClose} className={`absolute inset-0 bg-slate-950/50 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`} />
@@ -98,6 +113,7 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
           <div className="mt-5 border-t border-slate-100 pt-5 dark:border-white/10">
             {account.status === "loading" ? <div className="h-40 animate-pulse rounded-2xl bg-slate-100 dark:bg-white/5" /> : <SignInForm />}
             <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">{t("Sign in to pay. Your choices stay as they are.")}</p>
+            {onAddToCart && <>{error && <p role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</p>}{cartButton}</>}
           </div>
         ) : <>
         <div className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-400">{t("Pay with")}</div>
@@ -136,6 +152,7 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
           className={`mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-600/25 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}>
           {busy ? <><Loader2 className="h-4 w-4 animate-spin" />{t(busyLabels?.[m.id] ?? busyLabel)}</> : <><Lock className="h-4 w-4" />{payLabel} {usd(total)}</>}
         </button>
+        {cartButton}
         </>}
         {note && <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">{note}</p>}
       </div>

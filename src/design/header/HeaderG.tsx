@@ -9,6 +9,7 @@ import { LangSwitch, Logo, MobileMenu, SearchPalette, ThemeToggle, useScrolled, 
 import { useT } from "@/i18n/client";
 import { stripLocale } from "@/i18n/config";
 import { AccountButton } from "./AccountMenu";
+import { CartButton } from "@/components/cart/CartDrawer";
 import { ServicesMega } from "./ServicesMega";
 
 type MenuId = "services" | "about";
@@ -94,6 +95,7 @@ export default function HeaderG({ overDark = false }: { overDark?: boolean; bare
             <button onClick={() => setSearch(true)} aria-label={t("Search services (Ctrl K)")} title={t("Search (Ctrl K)")} className={round}><Search className="h-[18px] w-[18px]" /></button>
             <div className="hidden sm:block"><LangSwitch variant="pill" /></div>
             <ThemeToggle className="border border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[.04]" />
+            <CartButton className={round} />
             <AccountButton outline label={t("Sign in / Sign up")} />
             <button onClick={() => setMobile(true)} aria-label={t("Open menu")} className={`${round} lg:hidden`}><Menu className="h-5 w-5" /></button>
           </div>

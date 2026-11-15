@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import HeroA from "./hero/HeroA";
+import { CartA, CartB, CartC, CartD, CartE } from "./cart/offers";
 import ErrorsA from "./errors/ErrorsA";
 import ErrorsB from "./errors/ErrorsB";
 import ErrorsC from "./errors/ErrorsC";
@@ -221,6 +222,18 @@ export type Section = { id: string; title: string; offers: Offer[]; variantOf?: 
 
 // Every page section we design gets an entry here; offers stay saved even after one is chosen.
 export const sections: Section[] = [
+  {
+    id: "cart",
+    title: "Shopping cart · header button, cart, add to cart",
+    kind: "page",
+    offers: [
+      { id: "A", name: "Side Drawer", summary: "Cart icon with a count in the header. Add to cart slides a drawer in from the side with the lines, quantity steppers, total and Wallet / Card; the page stays behind it.", Component: CartA },
+      { id: "B", name: "Cart Page", summary: "A Cart button with the count opens its own page: lines in a card on one side, a sticky summary with Wallet / Card and the pay button on the other. Most room for long carts.", Component: CartB },
+      { id: "C", name: "Bottom Bar", summary: "Phones first: after the first add a dark bar floats at the bottom with the count, total and View cart; it opens the cart as a bottom sheet, like the payment step.", Component: CartC },
+      { id: "D", name: "Header Popover", summary: "The header button shows the running total. It drops a compact cart under it (lines with remove, total, Pay for all), like the Services menu; no page change.", Component: CartD },
+      { id: "E", name: "Receipt", summary: "The cart as a receipt beside the product: numbered lines on dashed rules, a torn edge, a big green total. Matches the Passbook and the invoice.", Component: CartE },
+    ],
+  },
   {
     // The chosen mark is used by the header and footer logo and by the page-change loader (components/brand).
     id: "logo",

@@ -8,6 +8,7 @@ import { GV_PRICE, gvFaq, gvFeatures, gvIncluded, gvNumbers, gvSampleLogin, gvSt
 import { CopyButton } from "../otp/parts";
 import { useT } from "@/i18n/client";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
+import { useCart } from "@/lib/cart";
 import { useMoney } from "@/lib/money";
 import { toGvNumber, type ApiGvOrder } from "@/lib/google-voice";
 import { useLiveGv } from "./live";
@@ -47,6 +48,9 @@ export function useGv() {
     const next = numbers.find((x) => x.id !== n.id);
     if (next) setSelected(next);
   };
+
+  const cart = useCart();
+  const addToCart = live && cart ? () => cart.add("google_voice", { id: selected.pid }) : undefined;
 
   const buy = async (m: PayMethod) => {
     if (!live) return show({ number: selected, paidWith: m, login: tx.tr(gvSampleLogin) });
@@ -96,7 +100,7 @@ export function useGv() {
 
   return {
     live: !!live, numbers, error: live?.error, notice, selected, setSelected, payOpen,
-    openPay: () => setPayOpen(true), closePay: () => setPayOpen(false), order, buy, reset: () => setOrder(null),
+    openPay: () => setPayOpen(true), closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => setOrder(null),
   };
 }
 export type Gv = ReturnType<typeof useGv>;
@@ -108,7 +112,7 @@ export function GvCheckout({ gv }: { gv: Gv }) {
   const tx = useT();
   return (
     <CheckoutModal open={gv.payOpen} onClose={gv.closePay} price={gvPrice(gv.selected)} itemLabel={tx("Google Voice number")} payLabel={tx("Pay")}
-      note={tx("Login not working? We replace the number or refund you.")} onPay={gv.buy}
+      note={tx("Login not working? We replace the number or refund you.")} onPay={gv.buy} onAddToCart={gv.addToCart}
       {...(gv.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<>
         <GvIcon />

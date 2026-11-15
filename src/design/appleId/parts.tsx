@@ -13,6 +13,7 @@ import { formatNum } from "@/i18n/translate";
 import { useLocalePath } from "@/i18n/Link";
 import { stripLocale } from "@/i18n/config";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
+import { useCart } from "@/lib/cart";
 import { useMoney } from "@/lib/money";
 import type { ApiAppleAccount, ApiAppleOrder } from "@/lib/apple-id";
 import { useLiveApple } from "./live";
@@ -138,6 +139,11 @@ export function useApple(initial: AppleMethod = "ready") {
     return true;
   };
 
+  const cart = useCart();
+  const addToCart = live && cart ? () => cart.add("apple_id", method === "ready"
+    ? { kind: "ready", qty: count }
+    : { kind: "custom", first: form.first.trim(), last: form.last.trim(), email: form.email.trim(), birthday: `${form.year}-${pad(form.month)}-${pad(form.day)}`, password: form.password }) : undefined;
+
   const buy = async (m: PayMethod) => {
     if (!live) return show({ method, qty: count, total, form: method === "custom" ? form : undefined, paidWith: m, at: Date.now() });
     const body = method === "ready"
@@ -202,7 +208,7 @@ export function useApple(initial: AppleMethod = "ready") {
     method, setMethod: chooseMethod, opening: navigating ? opening : null, qty, setQty, pack, setPack, count, total,
     form, set: (k: FormKey, v: string) => setForm((f) => ({ ...f, [k]: v })), touch: (k: keyof Errors) => setTouched((t) => ({ ...t, [k]: true })),
     errors, allErrors: all, submitted,
-    payOpen, proceed, closePay: () => setPayOpen(false), order, buy, reset: () => { setOrder(null); setSubmitted(0); setTouched({}); setNotice(null); },
+    payOpen, proceed, closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => { setOrder(null); setSubmitted(0); setTouched({}); setNotice(null); },
   };
 }
 export type AppleState = ReturnType<typeof useApple>;
@@ -600,7 +606,7 @@ export function AppleCheckout({ a }: { a: AppleState }) {
   const info = tx.tr(methodInfo)[a.method];
   return (
     <CheckoutModal open={a.payOpen} onClose={a.closePay} price={a.total} itemLabel={a.method === "ready" ? tx("Apple ID × {0}", { 0: a.count }) : tx("Custom Apple ID")} payLabel={tx("Pay")}
-      note={a.method === "ready" ? (a.short ? tx("You get the ones ready now straight away; the rest follow in the same order. Login not working? We replace it or refund you.") : tx("Login not working? We replace it or refund you.")) : tx("Ready in about 10 minutes. You'll see it on your order page.")} onPay={a.buy}
+      note={a.method === "ready" ? (a.short ? tx("You get the ones ready now straight away; the rest follow in the same order. Login not working? We replace it or refund you.") : tx("Login not working? We replace it or refund you.")) : tx("Ready in about 10 minutes. You'll see it on your order page.")} onPay={a.buy} onAddToCart={a.addToCart}
       {...(a.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<>
         <MethodIcon m={a.method} />

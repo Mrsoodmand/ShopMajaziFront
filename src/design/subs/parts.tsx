@@ -5,6 +5,7 @@ import { Bot, Briefcase, Check, LayoutGrid, ChevronRight, Clapperboard, Clock, E
 import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
 import { useMoney } from "@/lib/money";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
+import { useCart } from "@/lib/cart";
 import type { ApiSubOrder } from "@/lib/subs";
 import { formatNum } from "@/i18n/translate";
 import { fromPrice, monthly, perMonth, savePct, subCats, subs, subsFaq, type SubCat, type SubPlan, type SubProduct } from "@/content/subs-en";
@@ -98,6 +99,12 @@ export function useSubs(initial?: string) {
     setChangedTo(price);
   };
 
+  const cart = useCart();
+  const addToCart = live && cart && product && plan ? () => cart.add("subscription", {
+    product_id: product.id, plan_id: Number(plan.id),
+    fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
+  }) : undefined;
+
   const buy = async (m: PayMethod) => {
     if (!product || !plan) return;
     if (!live) { show(product, plan, values, m); return; }
@@ -167,7 +174,7 @@ export function useSubs(initial?: string) {
     product, select, plan, setPlan, values, set: (k: string, v: string) => setValues((x) => ({ ...x, [k]: v })),
     touch: (k: string) => setTouched((t) => ({ ...t, [k]: true })), errors, proceed, quickBuy,
     // Buying another opens the page's own product again (a product page has nothing to show without one).
-    payOpen, closePay: () => setPayOpen(false), order, buy, reset: () => { setOrder(null); select(list.find((x) => x.slug === initial) ?? null); },
+    payOpen, closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => { setOrder(null); select(list.find((x) => x.slug === initial) ?? null); },
     live: !!live, notice, dismissNotice: () => setNotice(null), changedTo,
   };
 }
@@ -439,7 +446,7 @@ export function SubsCheckout({ s }: { s: Subs }) {
     <>
       {s.notice && <SubsNoticeToast n={s.notice} onClose={s.dismissNotice} />}
       <CheckoutModal open={s.payOpen && !!p && !!pl} onClose={s.closePay} price={pl?.price ?? 0} itemLabel={pl ? `${p?.name} · ${pl.name}` : tx("Subscription")} payLabel={tx("Pay")}
-        note={note} onPay={s.buy}
+        note={note} onPay={s.buy} onAddToCart={s.addToCart}
         {...(s.live ? { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } } : {})}
         summary={p && pl && <>
           <Tile p={p} />
