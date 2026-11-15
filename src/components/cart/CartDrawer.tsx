@@ -251,7 +251,10 @@ function Result({ checkout, notice, onBack, onClose, t, m }: { checkout: Checkou
         </ul>
       </div>
       <div className="mt-auto grid gap-2 border-t border-slate-100 p-5 dark:border-white/10">
-        <Link href="/account/orders" onClick={onClose} className={primary}>{t("See my orders")}</Link>
+        {/* Several services bought: they are one order (#C-{id}) in the account. */}
+        {checkout.items.filter((l) => l.order_id).length > 1
+          ? <Link href={`/account/orders/c${checkout.id}`} onClick={onClose} className={primary}>{t("See this order")}</Link>
+          : <Link href="/account/orders" onClick={onClose} className={primary}>{t("See my orders")}</Link>}
         <button type="button" onClick={() => { onBack(); onClose(); }} className={ghost}>{t("Keep shopping")}</button>
       </div>
     </div>

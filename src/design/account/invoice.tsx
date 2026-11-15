@@ -25,7 +25,31 @@ export type Invoice = {
   net: number; // what the customer paid in the end
   state: AccountOrder["state"];
   payment: "paid" | "unpaid" | "refunded"; // the money only; where the delivery stands is not on an invoice
+  // A cart order: every service as its own line (SheetD), refunds per line, and its number "C-12".
+  lines?: { title: string; detail: string; amount: number }[];
+  refunds?: { title: string; amount: number; reason: string }[];
+  label?: string;
 };
+
+// One invoice for a cart order: the services bought together (AccountOrder.cart), each a line.
+export function toCartInvoice(items: AccountOrder[], store: Store): Invoice {
+  const cart = items[0].cart!;
+  const c = cart.paidWith === "wallet" ? null : store.cardOf(cart.paidWith);
+  const total = items.reduce((s, o) => s + o.price, 0);
+  const refunds = items.filter((o) => o.refund).map((o) => ({ title: o.title, amount: o.refund!.amount, reason: o.refund!.reason }));
+  const back = refunds.reduce((s, r) => s + r.amount, 0);
+  return {
+    no: cart.id, label: `C-${cart.id}`, issued: cart.at,
+    buyer: store.user,
+    item: { title: items[0].title, detail: items[0].detail, amount: total },
+    lines: items.map((o) => ({ title: o.title, detail: o.detail, amount: o.price })),
+    refunds,
+    paid: { how: c ? cardShort(c) : "Wallet balance", at: cart.at },
+    net: total - back,
+    state: items[0].state,
+    payment: back >= total ? "refunded" : "paid",
+  };
+}
 
 export function toInvoice(o: AccountOrder, store: Store): Invoice {
   const c = o.paidWith === "wallet" ? null : store.cardOf(o.paidWith);
@@ -120,7 +144,7 @@ function Footnote({ f, inv, className = "" }: { f: Fmt; inv: Invoice; className?
   const t = useT();
   return (
     <p className={`text-xs leading-relaxed text-slate-500 ${className}`}>
-      {t("Issued online by ShopMajazi for order #{0} on {1}.", { 0: inv.no, 1: f.date(inv.issued) })}{" "}
+      {t("Issued online by ShopMajazi for order #{0} on {1}.", { 0: inv.label ?? inv.no, 1: f.date(inv.issued) })}{" "}
       {t("Questions about this invoice: {0}", { 0: SELLER.email })}
     </p>
   );
@@ -301,7 +325,7 @@ function SheetD({ inv }: { inv: Invoice }) {
         <Brand />
         <div className="text-end text-sm">
           <p className="font-display text-3xl font-bold">{t("Invoice")}</p>
-          <p className="mt-1 text-slate-500">#{idOf(inv.no, t.locale)} · {f.date(inv.issued)}</p>
+          <p className="mt-1 text-slate-500" dir="ltr">#{inv.label ?? idOf(inv.no, t.locale)} · {f.date(inv.issued)}</p>
         </div>
       </header>
       <div className="mt-14 flex flex-wrap items-end justify-between gap-6">
@@ -319,7 +343,10 @@ function SheetD({ inv }: { inv: Invoice }) {
       <table className="mt-8 w-full text-sm">
         <thead><tr className="text-slate-500"><th className="pb-3 text-start font-medium">{t("Description")}</th><th className="pb-3 text-end font-medium">{t("Line amount")}</th></tr></thead>
         <tbody>
-          <tr className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t(inv.item.title)}</span><span className="text-slate-600">{t(inv.item.detail)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">{f.money(inv.item.amount)}</td></tr>
+          {(inv.lines ?? [inv.item]).map((l, i) => (
+            <tr key={i} className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t(l.title)}</span><span className="text-slate-600">{t(l.detail)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">{f.money(l.amount)}</td></tr>
+          ))}
+          {inv.refunds?.map((r, i) => <tr key={`r${i}`} className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("Refund to wallet")} · {t(r.title)}</span><span className="text-slate-600">{t(r.reason)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">−{f.money(r.amount)}</td></tr>)}
           {inv.refund && <tr className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("Refund to wallet")}</span><span className="text-slate-600">{t(inv.refund.reason)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">−{f.money(inv.refund.amount)}</td></tr>}
         </tbody>
       </table>
@@ -448,7 +475,8 @@ function inPage(Sheet: ComponentType<{ inv: Invoice }>) {
 
 // The button on an order's receipt (chosen design D, 2026-11-14). The sheet sits at the end of <body>, hidden on
 // screen and in an ordinary page print; the button marks it .print-target so only it prints.
-export function PrintInvoice({ order, store, className = "" }: { order: AccountOrder; store: Store; className?: string }) {
+// `items`: a cart order's services, printed as one invoice (toCartInvoice) instead of `order` alone.
+export function PrintInvoice({ order, store, className = "", items }: { order: AccountOrder; store: Store; className?: string; items?: AccountOrder[] }) {
   const t = useT();
   const { ref, print } = usePrint();
   const [mounted, setMounted] = useState(false);
@@ -456,7 +484,7 @@ export function PrintInvoice({ order, store, className = "" }: { order: AccountO
   return (
     <>
       <button type="button" onClick={print} className={className}><Printer aria-hidden className="h-4 w-4" />{t("Print invoice")}</button>
-      {mounted && createPortal(<div ref={ref} className="print-only" aria-hidden><SheetD inv={toInvoice(order, store)} /></div>, document.body)}
+      {mounted && createPortal(<div ref={ref} className="print-only" aria-hidden><SheetD inv={items?.length ? toCartInvoice(items, store) : toInvoice(order, store)} /></div>, document.body)}
     </>
   );
 }

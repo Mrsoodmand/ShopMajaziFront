@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import HeroA from "./hero/HeroA";
 import { CartA, CartB, CartC, CartD, CartE } from "./cart/offers";
+import { CartOrderA, CartOrderB, CartOrderC, CartOrderD } from "./account/cartOrders";
 import ErrorsA from "./errors/ErrorsA";
 import ErrorsB from "./errors/ErrorsB";
 import ErrorsC from "./errors/ErrorsC";
@@ -589,6 +590,18 @@ export const sections: Section[] = [
       { id: "D", name: "By Day", summary: "Reads like the statement: orders still going are pinned in an In progress box on top; the rest fall under Today, Yesterday and dates, with the time on the start side.", Component: OrdersD },
       { id: "E", name: "List & Preview", summary: "Wide screens: a compact list beside the chosen order's handover, price and payment, so you can go through orders without changing page. Phones: tap opens the receipt.", Component: OrdersE },
       { id: "F", name: "Current", summary: "Grouped by service (Virtual numbers, Telegram, Social growth, Accounts), as it is now.", Component: OrdersNow },
+    ],
+  },
+  {
+    id: "page-account-cart-order",
+    title: "Page · Account · Passbook · Cart order (several services, one order)",
+    kind: "page",
+    variantOf: "page-account",
+    offers: [
+      { id: "A", name: "Expandable Row", summary: "The cart is one row in the list: its services' tiles stacked, 'Order #C-12 · 3 services', how many are delivered and one total. Tap to open it in place; each service underneath opens its own page as today.", Component: CartOrderA },
+      { id: "B", name: "Grouped Box", summary: "Always open: a green-edged box in the list with the order number, time, progress and total on top, and the services as normal rows inside it.", Component: CartOrderB },
+      { id: "C", name: "Order Page · Cards", summary: "One row in the list opens the cart order's own page: a card per service with its status and price (tap for its page), and a money box with the total, how it was paid, any refund and one invoice.", Component: CartOrderC },
+      { id: "D", name: "Order Page · Receipt", summary: "One row in the list opens a receipt-style page: numbered service lines on dashed rules, each with its status and its own order number, the total, and the money box with one invoice.", Component: CartOrderD },
     ],
   },
   {

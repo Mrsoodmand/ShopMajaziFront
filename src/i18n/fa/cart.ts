@@ -54,4 +54,17 @@ export const cart: Record<string, string> = {
   "See my orders": "مشاهده سفارش‌ها",
   // Telegram Stars page (design/telegram/parts.tsx useStars)
   "Telegram Stars sales are paused for now. Please check back a little later.": "فروش استارز تلگرام فعلا متوقف است. لطفا کمی بعد دوباره سر بزنید.",
+  // Cart orders in the account (design/account/cartOrders.tsx)
+  "Order #C-{0}": "سفارش ⁦#C-{0}⁩",
+  "{0} services": "{0} سرویس",
+  "One service needs you": "یکی از سرویس‌ها منتظر شماست",
+  "All {0} delivered": "هر {0} مورد تحویل شد",
+  "{0} of {1} delivered": "{0} از {1} تحویل شد",
+  "{0} refunded": "{0} مورد بازگشت وجه",
+  "Open this service": "مشاهده این سرویس",
+  "Print invoice": "چاپ فاکتور",
+  "One invoice with every service in this order.": "یک فاکتور با همه سرویس‌های این سفارش.",
+  "Services in this order": "سرویس‌های این سفارش",
+  "Part of order #C-{0}": "بخشی از سفارش ⁦#C-{0}⁩",
+  "See this order": "مشاهده این سفارش",
 };

@@ -18,7 +18,8 @@ import {
 // the head of that column. A purchase opens as a receipt whose money lines add up; a refund is a line of its own and
 // never erases the purchase. Navigation is a deep indigo rail on the start side, a tab bar on phones.
 
-export type Page = "statement" | "orders" | "order" | "funds" | "support" | "profile" | "password";
+// "cart": a cart order #C-{id} (several services bought together), drawn by Passbook's `CartOrder`.
+export type Page = "statement" | "orders" | "order" | "cart" | "funds" | "support" | "profile" | "password";
 // `id`: the order to show, or for support a ticket id (0 = a new ticket, a negative order id = a new ticket about it).
 export type View = { page: Page; id?: number };
 export type Go = (v: View) => void;
@@ -35,7 +36,7 @@ const NAV: { page: Page; label: string; Icon: typeof Wallet }[] = [
   { page: "profile", label: "Profile", Icon: UserRound },
   { page: "password", label: "Password", Icon: KeyRound },
 ];
-const navOf = (p: Page): Page => (p === "order" ? "orders" : p);
+const navOf = (p: Page): Page => (p === "order" || p === "cart" ? "orders" : p);
 
 // The design page: the sample account, navigated in place.
 export default function AccountC() {
@@ -48,7 +49,7 @@ export default function AccountC() {
 // `notice`: a message shown above the page (e.g. how a top-up at the bank went).
 // `OrdersList`: another design for the orders page (design/account/orders.tsx offers); the current one by default.
 export type OrdersListProps = { demo: Store; go: Go };
-export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps> }) {
+export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }> }) {
   const t = useT();
   const f = useFmt();
   const top = useRef<HTMLDivElement>(null);
@@ -105,6 +106,7 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
             {view.page === "statement" && <Statement demo={demo} go={go} />}
             {view.page === "orders" && <OrdersList demo={demo} go={go} />}
             {view.page === "order" && order && <Receipt order={order} demo={demo} go={go} />}
+            {view.page === "cart" && CartOrder && view.id != null && <CartOrder id={view.id} demo={demo} go={go} />}
             {view.page === "funds" && <Funds demo={demo} />}
             {view.page === "support" && <Support key={view.id ?? "list"} demo={demo} go={go} initial={view.id} />}
             {(view.page === "profile" || view.page === "password") && <Settings page={view.page} demo={demo} go={go} />}
@@ -351,11 +353,13 @@ function Receipt({ order, demo, go }: { order: AccountOrder; demo: Demo; go: Go 
   const gotTitle = { number: "Your number", progress: "Delivery", gift: "Gift", login: "Login details", activation: "Subscription", details: "Order details" }[order.delivery.type];
   const load = demo.loadOrder;
   useEffect(() => { load?.(order.id); }, [load, order.id]);
+  // Bought with other services from the cart: back goes to that order (only when it lists more than this one).
+  const inCart = !!order.cart && demo.orders.filter((o) => o.cart?.id === order.cart!.id).length > 1;
 
   return (
     <div>
-      <Head back={{ label: t("Orders"), onClick: () => go({ page: "orders" }) }} title={t(order.title)}
-        sub={<span className="flex flex-wrap items-center gap-x-3 gap-y-2">{t("Order #{0} · {1}", { 0: order.id, 1: f.when(order.at) })}<Badge kind={order.state} /></span>} />
+      <Head back={inCart ? { label: t("Order #C-{0}", { 0: order.cart!.id }), onClick: () => go({ page: "cart", id: order.cart!.id }) } : { label: t("Orders"), onClick: () => go({ page: "orders" }) }} title={t(order.title)}
+        sub={<span className="flex flex-wrap items-center gap-x-3 gap-y-2">{t("Order #{0} · {1}", { 0: order.id, 1: f.when(order.at) })}<Badge kind={order.state} />{inCart && <span className="text-sm text-slate-600 dark:text-slate-400">{t("Part of order #C-{0}", { 0: order.cart!.id })}</span>}</span>} />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
         <article className={card}>
           <section aria-labelledby="c-got" className="p-6 sm:p-8">

@@ -16,6 +16,7 @@ type ApiOrder = {
   id: number; type: number; kind: AccountOrder["kind"]; state: AccountOrder["state"]; price: number;
   paid_with: "wallet" | "card"; card: ApiCard; at: string; updated_at: string | null;
   refund: { amount: number; at: string | null } | null;
+  cart?: { id: number; paid_with: "wallet" | "card"; card: ApiCard; total: number; at: string } | null;
   name: Named; sub: Named; number: string | null; code: string | null; seconds_left: number; count: number | null;
   plan?: string | null; custom?: boolean;
   fields?: { label: string; value: string; secret?: boolean; raw?: boolean }[];
@@ -244,7 +245,8 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
   const paidWith = o.paid_with === "card" && o.card ? cardKey(o.card) : o.paid_with === "card" ? "m:000000:····" : "wallet";
   const refund = o.refund ? { amount: o.refund.amount, reason: o.kind === "number" ? "Cancelled or expired before a code arrived" : "Order not completed", at: o.refund.at ?? o.updated_at ?? o.at } : undefined;
   const deliveredAt = o.state === "delivered" ? o.updated_at ?? undefined : undefined;
-  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt };
+  const cart = o.cart ? { id: o.cart.id, at: o.cart.at, paidWith: o.cart.paid_with === "card" && o.cart.card ? cardKey(o.cart.card) : o.cart.paid_with === "card" ? "m:000000:····" : "wallet" } : undefined;
+  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart };
 
   if (o.kind === "number") {
     return {

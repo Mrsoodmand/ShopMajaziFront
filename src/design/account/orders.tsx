@@ -6,6 +6,7 @@ import { PageShell } from "../otp/parts";
 import { useT } from "@/i18n/client";
 import type { AccountOrder } from "@/content/account-en";
 import { Head, Orders as CurrentOrders, Passbook, families, familyOf, pageRing, type OrdersListProps, type View } from "./AccountC";
+import { CartRow, entryAt, entryBusy, group, type Entry } from "./cartKit";
 import { Badge, Bar, CopyButton, Delivery, Empty, ServiceTile, card, cardShort, field, laneOf, secondary, useAccountDemo, useFmt, useOrderLine, type Store } from "./kit";
 
 // Offers for the orders page of the account (design "Passbook", chosen 2026-11-14). Each is shown inside the whole
@@ -19,7 +20,7 @@ function useSearch(demo: Store) {
   const [q, setQ] = useState("");
   const list = useMemo(() => {
     const s = q.trim().toLowerCase().replace(/^#/, "");
-    return demo.orders.filter((o) => !s || `${o.id} ${o.title} ${o.detail}`.toLowerCase().includes(s));
+    return demo.orders.filter((o) => !s || `${o.id} ${o.cart ? `c-${o.cart.id} c${o.cart.id}` : ""} ${o.title} ${o.detail}`.toLowerCase().includes(s));
   }, [demo.orders, q]);
   return { q, setQ, list };
 }
@@ -271,10 +272,26 @@ export function ListD({ demo, go }: OrdersListProps) {
   const f = useFmt();
   const line = useOrderLine();
   const { q, setQ, list } = useSearch(demo);
-  const live = list.filter((o) => groupOf(o) === "needs" || groupOf(o) === "way");
-  const rest = list.filter((o) => !live.includes(o));
-  const days: { day: string; items: AccountOrder[] }[] = [];
-  rest.forEach((o) => { const d = f.day(o.at); const g = days[days.length - 1]; if (g?.day === d) g.items.push(o); else days.push({ day: d, items: [o] }); });
+  // Services bought together from the cart are one row (cartKit: order #C-{id}, its own page).
+  const entries = group(list);
+  const live = entries.filter(entryBusy);
+  const rest = entries.filter((e) => !live.includes(e));
+  const days: { day: string; items: Entry[] }[] = [];
+  rest.forEach((e) => { const d = f.day(entryAt(e)); const g = days[days.length - 1]; if (g?.day === d) g.items.push(e); else days.push({ day: d, items: [e] }); });
+  const keyOf = (e: Entry) => (e.type === "one" ? e.o.id : `c${e.id}`);
+  const one = (o: AccountOrder) => (
+    <button type="button" onClick={() => go({ page: "order", id: o.id })} className={`group flex w-full items-center gap-4 px-5 py-3.5 text-start transition-colors hover:bg-slate-50 sm:px-6 dark:hover:bg-white/[.03] ${rowBtn}`}>
+      <span className="w-12 shrink-0 text-sm tabular-nums text-slate-500 dark:text-slate-400">{f.time(o.at)}</span>
+      <ServiceTile service={o.service} size="sm" />
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="font-semibold text-slate-900 dark:text-white">{t(o.title)}</span>{o.state !== "delivered" && <Badge kind={o.state} />}</span>
+        <span className="block truncate text-sm text-slate-600 dark:text-slate-400">{line(o, demo)}</span>
+      </span>
+      <span className="text-[15px] font-semibold tabular-nums text-slate-900 dark:text-white">{f.num(o.price)}</span>
+      <DetailsCta />
+    </button>
+  );
+  const row = (e: Entry) => (e.type === "one" ? one(e.o) : <CartRow e={e} onClick={() => go({ page: "cart", id: e.id })} trailing={<DetailsCta />} />);
   return (
     <div>
       <Head title={t("Orders")} sub={t("What's still going stays on top; everything else by day, newest first.")} action={<SearchBox q={q} setQ={setQ} />} />
@@ -282,7 +299,7 @@ export function ListD({ demo, go }: OrdersListProps) {
         <section aria-labelledby="od-live" className="mb-8">
           <h2 id="od-live" className="mb-3 font-display text-lg font-bold text-slate-900 dark:text-white">{t("In progress")}</h2>
           <ul className={`${card} divide-y divide-slate-200 overflow-hidden !border-amber-300/70 dark:divide-white/10 dark:!border-amber-400/30`}>
-            {live.map((o) => <li key={o.id}><Row o={o} demo={demo} go={go} /></li>)}
+            {live.map((e) => <li key={keyOf(e)}>{e.type === "one" ? <Row o={e.o} demo={demo} go={go} /> : row(e)}</li>)}
           </ul>
         </section>
       )}
@@ -291,20 +308,7 @@ export function ListD({ demo, go }: OrdersListProps) {
           <section key={g.day} aria-label={g.day}>
             <h3 className="bg-slate-50 px-5 py-2 text-sm font-semibold text-slate-700 sm:px-6 dark:bg-white/[.03] dark:text-slate-300">{g.day}</h3>
             <ul className="divide-y divide-slate-200 dark:divide-white/10">
-              {g.items.map((o) => (
-                <li key={o.id}>
-                  <button type="button" onClick={() => go({ page: "order", id: o.id })} className={`group flex w-full items-center gap-4 px-5 py-3.5 text-start transition-colors hover:bg-slate-50 sm:px-6 dark:hover:bg-white/[.03] ${rowBtn}`}>
-                    <span className="w-12 shrink-0 text-sm tabular-nums text-slate-500 dark:text-slate-400">{f.time(o.at)}</span>
-                    <ServiceTile service={o.service} size="sm" />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="font-semibold text-slate-900 dark:text-white">{t(o.title)}</span>{o.state !== "delivered" && <Badge kind={o.state} />}</span>
-                      <span className="block truncate text-sm text-slate-600 dark:text-slate-400">{line(o, demo)}</span>
-                    </span>
-                    <span className="text-[15px] font-semibold tabular-nums text-slate-900 dark:text-white">{f.num(o.price)}</span>
-                    <DetailsCta />
-                  </button>
-                </li>
-              ))}
+              {g.items.map((e) => <li key={keyOf(e)}>{row(e)}</li>)}
             </ul>
           </section>
         ))}

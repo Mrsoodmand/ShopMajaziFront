@@ -194,5 +194,9 @@
   "cart": {
     "offer": "A",
     "savedAt": "2026-11-15T15:30:00.000Z"
+  },
+  "page-account-cart-order": {
+    "offer": "C",
+    "savedAt": "2026-11-15T17:30:00.000Z"
   }
 }

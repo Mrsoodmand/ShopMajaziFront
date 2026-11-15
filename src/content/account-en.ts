@@ -28,6 +28,8 @@ export type AccountOrder = {
   deliveredAt?: string;
   refund?: { amount: number; reason: string; at: string };
   unpaid?: boolean; // the bank payment never went through (the account lists paid orders only, so not set today)
+  // Bought together with other services from the cart: one cart order #C-{id}, paid at once (`paidWith` of the cart).
+  cart?: { id: number; paidWith: "wallet" | string; at: string };
   delivery: Delivery;
 };
 

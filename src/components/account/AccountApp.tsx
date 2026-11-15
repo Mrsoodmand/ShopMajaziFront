@@ -7,6 +7,10 @@ import { PageShell } from "@/design/otp/parts";
 import { Passbook, type Page, type View } from "@/design/account/AccountC";
 import { NowContext, secondary } from "@/design/account/kit";
 import { ListD as OrdersByDay } from "@/design/account/orders";
+import { cartEntry, CartOrderPage } from "@/design/account/cartKit";
+import { Empty } from "@/design/account/kit";
+import type { Go } from "@/design/account/AccountC";
+import type { Store } from "@/design/account/kit";
 import { useLiveAccount } from "@/lib/account-panel";
 import { useLocalePath } from "@/i18n/Link";
 import { useT } from "@/i18n/client";
@@ -17,6 +21,7 @@ const PAGES: Page[] = ["orders", "funds", "support", "profile", "password"];
 function viewOf(slug: string[], newFor: string | null): View {
   const [page, id] = slug;
   if (page === "orders" && id && /^\d+$/.test(id)) return { page: "order", id: Number(id) };
+  if (page === "orders" && id && /^c\d+$/i.test(id)) return { page: "cart", id: Number(id.slice(1)) };
   if (page === "support" && id === "new") return { page: "support", id: newFor && /^\d+$/.test(newFor) ? -Number(newFor) : 0 };
   if (page === "support" && id && /^\d+$/.test(id)) return { page: "support", id: Number(id) };
   return PAGES.includes(page as Page) ? { page: page as Page } : { page: "statement" };
@@ -24,6 +29,7 @@ function viewOf(slug: string[], newFor: string | null): View {
 function pathOf(v: View): string {
   if (v.page === "statement") return "/account";
   if (v.page === "order") return `/account/orders/${v.id}`;
+  if (v.page === "cart") return `/account/orders/c${v.id}`;
   if (v.page === "support" && v.id != null) return v.id > 0 ? `/account/support/${v.id}` : v.id < 0 ? `/account/support/new?order=${-v.id}` : "/account/support/new";
   return `/account/${v.page}`;
 }
@@ -73,7 +79,7 @@ export default function AccountApp({ slug }: { slug: string[] }) {
   return (
     <PageShell>
       <NowContext.Provider value={null}>
-        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersByDay}
+        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersByDay} CartOrder={CartOrder}
           onSignOut={async () => { await store.signOut(); router.replace(lp("/")); }} />
       </NowContext.Provider>
     </PageShell>
@@ -92,4 +98,12 @@ function TopUpNotice({ result }: { result: string }) {
       <look.Icon aria-hidden className="mt-0.5 h-4 w-4 shrink-0" /><span>{look.text}</span>
     </p>
   );
+}
+
+// /account/orders/c{id}: a cart order (several services bought together), or "not found" when none are listed.
+function CartOrder({ id, demo, go }: { id: number; demo: Store; go: Go }) {
+  const t = useT();
+  const e = cartEntry(demo.orders, id);
+  if (!e) return <Empty title={t("Order not found")} text={t("It may be older than the orders shown here. Write to support with its number.")} action={<button type="button" onClick={() => go({ page: "orders" })} className={secondary}>{t("All orders")}</button>} />;
+  return <CartOrderPage e={e} demo={demo} go={go} back={() => go({ page: "orders" })} />;
 }
