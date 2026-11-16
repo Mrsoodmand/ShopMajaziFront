@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Apple, Ban, Check, Clock, CreditCard, Eye, EyeOff, Hand, Instagram, Loader2, Lock, MessageCircle,
-  Music, Music2, Paperclip, Phone, Plus, RotateCcw, Send, Server, ShieldCheck, Star, X, Copy, type LucideIcon,
+  Music, Music2, Paperclip, Phone, Plus, RotateCcw, Send, Server, ShieldCheck, Sparkles, Star, X, Copy, type LucideIcon,
 } from "lucide-react";
 import {
   DEMO_NOW, TOP_UP_MAX, TOP_UP_MIN, accountOrders, accountTickets, accountUser, bankCards, departments, strayCard, topUpPresets, topUps as sampleTopUps,
@@ -47,6 +47,8 @@ export type Store = {
   changePassword?: (current: string, next: string) => Promise<void>;
   loadOrder?: (id: number) => void; // live: fetch what the order hands over
   loadTicket?: (id: number) => void; // live: fetch the whole conversation
+  payOrder?: (id: number, method: "wallet" | "card") => Promise<void>; // pay what the order still asks for
+  cancelOrder?: (id: number) => Promise<void>; // the buyer cancels a pending order; what they paid goes back
 };
 
 // The live pages: an error from the API in the visitor's language.
@@ -88,11 +90,12 @@ export const cardShort = (c: BankCard) => `${c.bank} •••• ${c.last4}`;
 // ---------- State words ----------
 
 export type Lane = "needs" | "way" | "done";
-export const laneOf = (o: AccountOrder): Lane => (o.state === "needs-you" ? "needs" : o.state === "waiting" || o.state === "delivering" ? "way" : "done");
+export const laneOf = (o: AccountOrder): Lane => (o.state === "needs-you" || o.state === "awaiting-payment" ? "needs" : o.state === "waiting" || o.state === "delivering" ? "way" : "done");
 
 const stateLook = {
   "needs-you": { label: "Needs you", Icon: Hand, cls: "bg-indigo-600 text-white dark:bg-indigo-500" },
   waiting: { label: "Waiting for code", Icon: Clock, cls: "bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200" },
+  "awaiting-payment": { label: "Waiting for payment", Icon: Clock, cls: "bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200" },
   delivering: { label: "Delivering", Icon: Loader2, cls: "bg-amber-100 text-amber-900 dark:bg-amber-400/15 dark:text-amber-200" },
   delivered: { label: "Delivered", Icon: Check, cls: "bg-emerald-100 text-emerald-900 dark:bg-emerald-400/15 dark:text-emerald-200" },
   refunded: { label: "Refunded", Icon: RotateCcw, cls: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200" },
@@ -128,6 +131,7 @@ const tiles: Record<string, { Icon?: LucideIcon; letter?: string; cls: string }>
   Apple: { Icon: Apple, cls: "bg-slate-900 text-white dark:bg-white dark:text-slate-900" },
   Spotify: { Icon: Music, cls: "bg-green-600 text-white" },
   "Static IP": { Icon: Server, cls: "bg-slate-700 text-white" },
+  "Custom order": { Icon: Sparkles, cls: "bg-indigo-600 text-white" },
 };
 
 export function ServiceTile({ service, size = "md" }: { service: string; size?: "sm" | "md" | "lg" }) {
@@ -433,7 +437,7 @@ export function RefundNote({ order, className = "" }: { order: AccountOrder; cla
 // Where "Buy again" goes for each kind of order.
 export function buyAgainHref(o: AccountOrder) {
   if (o.kind === "telegram") return o.title.includes("Stars") ? "/telegram/stars" : "/telegram/premium";
-  return { number: "/virtual-number", social: "/virtual-service", "google-voice": "/google-voice", "apple-id": "/apple-id", subscription: "/accounts", "static-ip": "/" }[o.kind];
+  return { number: "/virtual-number", social: "/virtual-service", "google-voice": "/google-voice", "apple-id": "/apple-id", subscription: "/accounts", "static-ip": "/", custom: "/" }[o.kind];
 }
 
 // One line a list row shows about where an order is.
@@ -442,6 +446,7 @@ export function useOrderLine() {
   return (o: AccountOrder, demo: Store) => {
     const d = o.delivery;
     if (o.state === "waiting") return t("Code expected · {0} left", { 0: demo.clockOf(o).text });
+    if (o.state === "awaiting-payment") return t("Waiting for your payment · {0}", { 0: t("{0} Toman", { 0: t.num(o.due ?? o.price) }) });
     if (o.state === "needs-you" && d.type === "progress" && d.problem) return t(d.problem.title);
     if (o.state === "delivering" && d.type === "progress") return t("{0} of {1} added", { 0: d.done.toLocaleString("en-US"), 1: d.total.toLocaleString("en-US") });
     if (o.state === "refunded" && o.refund) return t(o.refund.reason);
@@ -458,7 +463,12 @@ export function OrderSteps({ order }: { order: AccountOrder }) {
   const d = order.delivery;
   const middle = d.type === "number" ? t("Number handed over") : d.type === "progress" ? t("Delivery started") : t("Processing");
   const last = order.state === "refunded" ? t("Refunded") : order.state === "cancelled" ? t("Cancelled") : order.state === "needs-you" ? t("Paused, needs you") : order.state === "waiting" ? t("Waiting for the code") : order.state === "delivering" ? t("Delivering") : t("Delivered");
-  const steps = [
+  const unpaid = order.state === "awaiting-payment";
+  const steps = unpaid ? [
+    { label: t("Order made"), at: order.at, done: true },
+    { label: t("Waiting for payment"), at: undefined, done: false, now: true },
+    { label: t("Delivered"), at: undefined, done: false },
+  ] : [
     { label: t("Paid"), at: order.at, done: true },
     { label: middle, at: order.at, done: true },
     { label: last, at: order.refund?.at ?? order.deliveredAt, done: order.state === "delivered" || order.state === "refunded" || order.state === "cancelled", now: order.state === "waiting" || order.state === "delivering" || order.state === "needs-you" },

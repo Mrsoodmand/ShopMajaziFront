@@ -33,7 +33,7 @@ export function group(orders: AccountOrder[]): Entry[] {
   }
   return out;
 }
-export const busy = (o: AccountOrder) => o.state === "needs-you" || o.state === "waiting" || o.state === "delivering";
+export const busy = (o: AccountOrder) => o.state === "needs-you" || o.state === "awaiting-payment" || o.state === "waiting" || o.state === "delivering";
 export const entryBusy = (e: Entry) => (e.type === "one" ? busy(e.o) : e.items.some(busy));
 export const entryAt = (e: Entry) => (e.type === "one" ? e.o.at : e.at);
 

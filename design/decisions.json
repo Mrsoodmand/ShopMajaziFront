@@ -198,5 +198,13 @@
   "page-account-cart-order": {
     "offer": "C",
     "savedAt": "2026-11-15T17:30:00.000Z"
+  },
+  "page-account-order-pay": {
+    "offer": "A",
+    "savedAt": "2026-11-16T20:47:24.000Z"
+  },
+  "checkout-night-call": {
+    "offer": "A",
+    "savedAt": "2026-11-16T20:47:24.000Z"
   }
 }

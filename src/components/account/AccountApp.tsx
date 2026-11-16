@@ -7,6 +7,7 @@ import { PageShell } from "@/design/otp/parts";
 import { Passbook, type Page, type View } from "@/design/account/AccountC";
 import { NowContext, secondary } from "@/design/account/kit";
 import { ListD as OrdersByDay } from "@/design/account/orders";
+import { BannerAside, BannerTop } from "@/design/account/orderPay";
 import { cartEntry, CartOrderPage } from "@/design/account/cartKit";
 import { Empty } from "@/design/account/kit";
 import type { Go } from "@/design/account/AccountC";
@@ -50,7 +51,9 @@ export default function AccountApp({ slug }: { slug: string[] }) {
 
   // Back from the bank after a top-up (v2\ShopController::topUpBack): ?topup=ok|held|cancelled|failed.
   const topup = search.get("topup");
-  const notice = topup && view.page === "funds" ? <TopUpNotice result={topup} /> : undefined;
+  // Back from the bank after paying what an order asked for (StorefrontPanelController::payBack): ?pay=ok|wallet|held|cancelled|failed.
+  const pay = search.get("pay");
+  const notice = topup && view.page === "funds" ? <TopUpNotice result={topup} /> : pay && view.page === "order" ? <PayNotice result={pay} /> : undefined;
 
   if (store.status !== "ready")
     return (
@@ -79,10 +82,28 @@ export default function AccountApp({ slug }: { slug: string[] }) {
   return (
     <PageShell>
       <NowContext.Provider value={null}>
-        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersByDay} CartOrder={CartOrder}
+        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersByDay} CartOrder={CartOrder} OrderPay={ORDER_PAY}
           onSignOut={async () => { await store.signOut(); router.replace(lp("/")); }} />
       </NowContext.Provider>
     </PageShell>
+  );
+}
+
+// What an order still asks for (design page-account-order-pay A · Pay Banner): banner on top, cancel in the side column.
+const ORDER_PAY = { Top: BannerTop, Aside: BannerAside };
+
+function PayNotice({ result }: { result: string }) {
+  const t = useT();
+  const look = {
+    ok: { Icon: Check, cls: "bg-emerald-50 text-emerald-900 dark:bg-emerald-400/10 dark:text-emerald-100", text: t("Payment received. Your order is paid.") },
+    wallet: { Icon: Clock, cls: "bg-amber-50 text-amber-900 dark:bg-amber-400/10 dark:text-amber-100", text: t("The card payment is in your wallet, but the order couldn't be paid from it. Try Pay again, or write to support.") },
+    held: { Icon: Clock, cls: "bg-amber-50 text-amber-900 dark:bg-amber-400/10 dark:text-amber-100", text: t("Your payment is being checked. Refresh in a moment.") },
+    cancelled: { Icon: X, cls: "bg-slate-100 text-slate-800 dark:bg-white/[.06] dark:text-slate-200", text: t("The payment was cancelled. Nothing was taken from your card.") },
+  }[result] ?? { Icon: X, cls: "bg-red-50 text-red-900 dark:bg-red-400/10 dark:text-red-100", text: t("The bank didn't confirm the payment. If money left your card, the bank returns it within 72 hours.") };
+  return (
+    <p role="status" className={`mb-6 flex items-start gap-2.5 rounded-2xl px-4 py-3 text-[15px] ${look.cls}`}>
+      <look.Icon aria-hidden className="mt-0.5 h-4 w-4 shrink-0" /><span>{look.text}</span>
+    </p>
   );
 }
 

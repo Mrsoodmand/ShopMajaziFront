@@ -2,6 +2,8 @@ import type { ComponentType } from "react";
 import HeroA from "./hero/HeroA";
 import { CartA, CartB, CartC, CartD, CartE } from "./cart/offers";
 import { CartOrderA, CartOrderB, CartOrderC, CartOrderD } from "./account/cartOrders";
+import { OrderPayA, OrderPayB, OrderPayC } from "./account/orderPay";
+import { NightCallA, NightCallB, NightCallC } from "./checkout/nightCall";
 import ErrorsA from "./errors/ErrorsA";
 import ErrorsB from "./errors/ErrorsB";
 import ErrorsC from "./errors/ErrorsC";
@@ -602,6 +604,27 @@ export const sections: Section[] = [
       { id: "B", name: "Grouped Box", summary: "Always open: a green-edged box in the list with the order number, time, progress and total on top, and the services as normal rows inside it.", Component: CartOrderB },
       { id: "C", name: "Order Page · Cards", summary: "One row in the list opens the cart order's own page: a card per service with its status and price (tap for its page), and a money box with the total, how it was paid, any refund and one invoice.", Component: CartOrderC },
       { id: "D", name: "Order Page · Receipt", summary: "One row in the list opens a receipt-style page: numbered service lines on dashed rules, each with its status and its own order number, the total, and the money box with one invoice.", Component: CartOrderD },
+    ],
+  },
+  {
+    id: "page-account-order-pay",
+    title: "Page · Account · Passbook · Pay what's due & cancel",
+    kind: "page",
+    variantOf: "page-account",
+    offers: [
+      { id: "A", name: "Pay Banner", summary: "An amber band across the top of the order: what support asked for (the order support made, or VAT added later), the amount, wallet or card, Pay. Cancel is a quiet red link in the side column.", Component: OrderPayA },
+      { id: "B", name: "In the Money table", summary: "The unpaid lines sit in a dashed amber box under the order's Money table, with the total to pay and the Pay controls right there. A 'Changed your mind?' card in the side column cancels with a refund.", Component: OrderPayB },
+      { id: "C", name: "Side Pay Card", summary: "A deep indigo card at the top of the side column: the amount to pay in big type, its lines, then wallet/card and Pay. Under it a 'Not started yet' card with Cancel & refund.", Component: OrderPayC },
+    ],
+  },
+  {
+    id: "checkout-night-call",
+    title: "Checkout · Available for a call at night?",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Segmented", summary: "One question with a phone icon and a Yes / No pill switch; Pay waits for an answer.", Component: NightCallA },
+      { id: "B", name: "Moon & Sun cards", summary: "Two cards side by side — moon 'Yes, at night too', sun 'Daytime only' — each saying what it means; Pay waits for a pick.", Component: NightCallB },
+      { id: "C", name: "Quiet switch", summary: "A single row with a moon and a switch, off by default: nobody has to answer to pay; only a yes is recorded as 'may call at night'.", Component: NightCallC },
     ],
   },
   {

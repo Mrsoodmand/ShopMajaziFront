@@ -14,11 +14,14 @@ type Named = { fa: string; en: string; slug?: string } | null;
 type ApiCard = { first6: string; last4: string } | null;
 type ApiOrder = {
   id: number; type: number; kind: AccountOrder["kind"]; state: AccountOrder["state"]; price: number;
-  paid_with: "wallet" | "card"; card: ApiCard; at: string; updated_at: string | null;
+  paid_with: "wallet" | "card" | "outside"; card: ApiCard; at: string; updated_at: string | null;
   refund: { amount: number; at: string | null } | null;
   cart?: { id: number; paid_with: "wallet" | "card"; card: ApiCard; total: number; at: string } | null;
   name: Named; sub: Named; number: string | null; code: string | null; seconds_left: number; count: number | null;
   plan?: string | null; custom?: boolean;
+  // What the order still asks for (an order support made, tax, VAT…) and whether the buyer may cancel it.
+  charges?: { id: number; kind: "order" | "extra"; title: string; price: number; paid: boolean; at: string | null }[];
+  due?: number; cancellable?: boolean; night_call?: boolean | null;
   fields?: { label: string; value: string; secret?: boolean; raw?: boolean }[];
 };
 type ApiLine = { id: number; kind: Line["kind"]; amount: number; balance: number | null; held: boolean; order_id: number | null; card: ApiCard; at: string };
@@ -191,6 +194,17 @@ export function useLiveAccount(): LiveAccount {
       try { await accountApi(`virtual-numbers/orders/${id}/cancel`, {}); } catch (e) { fail(e, "Couldn't cancel. Please try again."); }
       await reload();
     },
+    payOrder: async (id, method) => {
+      try {
+        const r = await accountApi<{ url?: string }>(`panel/orders/${id}/pay`, { method, return: window.location.pathname });
+        if (r?.url) { window.location.assign(r.url); return; }
+      } catch (e) { fail(e, "Payment didn't go through. Please try again."); }
+      await reload();
+    },
+    cancelOrder: async (id) => {
+      try { await accountApi(`panel/orders/${id}/cancel`, {}); } catch (e) { fail(e, "Couldn't cancel. Please try again."); }
+      await reload();
+    },
     reply: async (id, text, file) => {
       try { putTicket((await accountForm<{ ticket: ApiTicket }>(`panel/tickets/${id}/reply`, form({ text }, file))).ticket); }
       catch (e) { fail(e, "Your reply wasn't sent. Please try again."); }
@@ -242,11 +256,12 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
   const nm = (n: Named) => (n ? (fa ? n.fa : n.en) : "");
   const name = nm(o.name);
   const sub = nm(o.sub);
-  const paidWith = o.paid_with === "card" && o.card ? cardKey(o.card) : o.paid_with === "card" ? "m:000000:····" : "wallet";
+  const paidWith = o.paid_with === "outside" ? "outside" : o.paid_with === "card" && o.card ? cardKey(o.card) : o.paid_with === "card" ? "m:000000:····" : "wallet";
   const refund = o.refund ? { amount: o.refund.amount, reason: o.kind === "number" ? "Cancelled or expired before a code arrived" : "Order not completed", at: o.refund.at ?? o.updated_at ?? o.at } : undefined;
   const deliveredAt = o.state === "delivered" ? o.updated_at ?? undefined : undefined;
   const cart = o.cart ? { id: o.cart.id, at: o.cart.at, paidWith: o.cart.paid_with === "card" && o.cart.card ? cardKey(o.cart.card) : o.cart.paid_with === "card" ? "m:000000:····" : "wallet" } : undefined;
-  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart };
+  const charges = (o.charges ?? []).map((c) => ({ ...c, at: c.at ?? o.at }));
+  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart, charges, due: o.due ?? 0, cancellable: !!o.cancellable, nightCall: o.night_call ?? null };
 
   if (o.kind === "number") {
     return {
@@ -257,6 +272,7 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
   }
   const notes: Record<string, string> = {
     delivering: "We're preparing this order. What it hands over shows here once it's ready.",
+    "awaiting-payment": "Support made this order for you. Pay it and support starts right away.",
     "needs-you": "Support paused this order and needs something from you. Check your tickets, or write to support about it.",
     delivered: o.kind === "google-voice" ? "Sign in at voice.google.com. Use the number now and then so Google keeps it active."
       : o.kind === "apple-id" ? "Change the password after you sign in, and keep the security answers somewhere safe."
@@ -275,6 +291,8 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
       return { ...base, kind: "apple-id", service: "Apple", title: o.custom ? t("Apple ID · made for you") : t("Apple ID"), detail: o.count && o.count > 1 ? t("{0} accounts", { 0: t.num(o.count) }) : t("1 account"), delivery };
     case "google-voice":
       return { ...base, kind: "google-voice", service: "Google Voice", title: t("Google Voice number"), detail: o.number ? `⁦${o.number}⁩` : "", delivery };
+    case "custom":
+      return { ...base, kind: "custom", service: "Custom order", title: name || t("Custom order"), detail: t("Made for you by support"), delivery };
     case "static-ip":
       return { ...base, kind: "static-ip", service: "Static IP", title: t("Static IP"), detail: "", delivery };
     default:

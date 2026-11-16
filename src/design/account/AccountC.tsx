@@ -49,7 +49,10 @@ export default function AccountC() {
 // `notice`: a message shown above the page (e.g. how a top-up at the bank went).
 // `OrdersList`: another design for the orders page (design/account/orders.tsx offers); the current one by default.
 export type OrdersListProps = { demo: Store; go: Go };
-export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }> }) {
+// `OrderPay`: where an order page shows what's still to pay and the buyer's cancel (offers in design/account/orderPay.tsx).
+export type OrderSlot = ComponentType<{ order: AccountOrder; demo: Store; go: Go }>;
+export type OrderPaySlots = { Top?: OrderSlot; Money?: OrderSlot; Aside?: OrderSlot };
+export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder, OrderPay }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }>; OrderPay?: OrderPaySlots }) {
   const t = useT();
   const f = useFmt();
   const top = useRef<HTMLDivElement>(null);
@@ -105,7 +108,7 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
             {view.page === "order" && !order && <Empty title={t("Order not found")} text={t("It may be older than the orders shown here. Write to support with its number.")} action={<button type="button" onClick={() => go({ page: "orders" })} className={secondary}>{t("All orders")}</button>} />}
             {view.page === "statement" && <Statement demo={demo} go={go} />}
             {view.page === "orders" && <OrdersList demo={demo} go={go} />}
-            {view.page === "order" && order && <Receipt order={order} demo={demo} go={go} />}
+            {view.page === "order" && order && <Receipt order={order} demo={demo} go={go} slots={OrderPay} />}
             {view.page === "cart" && CartOrder && view.id != null && <CartOrder id={view.id} demo={demo} go={go} />}
             {view.page === "funds" && <Funds demo={demo} />}
             {view.page === "support" && <Support key={view.id ?? "list"} demo={demo} go={go} initial={view.id} />}
@@ -173,6 +176,7 @@ function Statement({ demo, go }: { demo: Demo; go: Go }) {
   const live = [
     ...demo.orders.filter((o) => demo.arrived.includes(o.id)).map((o) => ({ key: `c${o.id}`, text: t("{0} code is here", { 0: o.service }), go: () => go({ page: "order", id: o.id }), dot: "bg-emerald-600" })),
     ...demo.orders.filter((o) => o.state === "needs-you").map((o) => ({ key: `n${o.id}`, text: t("{0} needs you", { 0: t(o.title) }), go: () => go({ page: "order", id: o.id }), dot: "bg-indigo-600" })),
+    ...demo.orders.filter((o) => (o.due ?? 0) > 0).map((o) => ({ key: `p${o.id}`, text: t("{0}: {1} to pay", { 0: t(o.title), 1: t("{0} Toman", { 0: t.num(o.due!) }) }), go: () => go({ page: "order", id: o.id }), dot: "bg-amber-500" })),
     ...demo.tickets.filter((x) => x.state === "replied").map((x) => ({ key: `t${x.id}`, text: t("Support replied on #{0}", { 0: x.id }), go: () => go({ page: "support", id: x.id }), dot: "bg-indigo-600" })),
     ...demo.orders.filter((o) => laneOf(o) === "way").map((o) => ({ key: `w${o.id}`, text: o.state === "waiting" ? t("{0} · {1} left", { 0: t(o.title), 1: demo.clockOf(o).text }) : t("{0} · delivering", { 0: t(o.title) }), go: () => go({ page: "order", id: o.id }), dot: "bg-amber-500" })),
   ];
@@ -341,13 +345,16 @@ export function Orders({ demo, go }: OrdersListProps) {
 
 // ---------- Receipt (one order) ----------
 
-function Receipt({ order, demo, go }: { order: AccountOrder; demo: Demo; go: Go }) {
+function Receipt({ order, demo, go, slots = {} }: { order: AccountOrder; demo: Demo; go: Go; slots?: OrderPaySlots }) {
   const t = useT();
   const f = useFmt();
-  const c = order.paidWith === "wallet" ? null : demo.cardOf(order.paidWith);
-  const money: { label: string; sub: string; amount: number }[] = [
-    { label: c ? t("Paid by card") : t("Paid from wallet"), sub: `${f.when(order.at)}${c ? ` · ${cardShort(c)}` : ""}`, amount: -order.price },
+  const c = order.paidWith === "wallet" || order.paidWith === "outside" ? null : demo.cardOf(order.paidWith);
+  const paidLabel = order.paidWith === "outside" ? t("Paid to support") : c ? t("Paid by card") : t("Paid from wallet");
+  const money: { label: string; sub: string; amount: number }[] = order.state === "awaiting-payment" ? [] : [
+    { label: paidLabel, sub: `${f.when(order.at)}${c ? ` · ${cardShort(c)}` : ""}`, amount: -order.price },
   ];
+  // Extra amounts support added (tax, VAT…) that are paid: lines of their own. Unpaid ones are the slots' business.
+  for (const x of order.charges ?? []) if (x.paid && x.kind === "extra") money.push({ label: t(x.title), sub: f.when(x.at), amount: -x.price });
   if (order.refund) money.push({ label: t("Refund to wallet"), sub: `${f.when(order.refund.at)} · ${t(order.refund.reason)}`, amount: order.refund.amount });
   const net = money.reduce((s, m) => s + m.amount, 0);
   const gotTitle = { number: "Your number", progress: "Delivery", gift: "Gift", login: "Login details", activation: "Subscription", details: "Order details" }[order.delivery.type];
@@ -356,10 +363,12 @@ function Receipt({ order, demo, go }: { order: AccountOrder; demo: Demo; go: Go 
   // Bought with other services from the cart: back goes to that order (only when it lists more than this one).
   const inCart = !!order.cart && demo.orders.filter((o) => o.cart?.id === order.cart!.id).length > 1;
 
+  const { Top, Money: MoneySlot, Aside } = slots;
   return (
     <div>
       <Head back={inCart ? { label: t("Order #C-{0}", { 0: order.cart!.id }), onClick: () => go({ page: "cart", id: order.cart!.id }) } : { label: t("Orders"), onClick: () => go({ page: "orders" }) }} title={t(order.title)}
         sub={<span className="flex flex-wrap items-center gap-x-3 gap-y-2">{t("Order #{0} · {1}", { 0: order.id, 1: f.when(order.at) })}<Badge kind={order.state} />{inCart && <span className="text-sm text-slate-600 dark:text-slate-400">{t("Part of order #C-{0}", { 0: order.cart!.id })}</span>}</span>} />
+      {Top && <Top order={order} demo={demo} go={go} />}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
         <article className={card}>
           <section aria-labelledby="c-got" className="p-6 sm:p-8">
@@ -378,28 +387,33 @@ function Receipt({ order, demo, go }: { order: AccountOrder; demo: Demo; go: Go 
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
+              {money.length > 0 && <tfoot>
                 <tr>
                   <th scope="row" className="pt-4 text-start text-[15px] font-semibold text-slate-900 dark:text-white">{order.refund ? t("You paid in the end") : t("Total")}</th>
                   <td className="pt-4 text-end font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{f.money(Math.abs(net))}</td>
                 </tr>
-              </tfoot>
+              </tfoot>}
             </table>
+            {money.length === 0 && <p className="py-3 text-[15px] text-slate-600 dark:text-slate-400">{t("Nothing paid yet.")}</p>}
+            {MoneySlot && <MoneySlot order={order} demo={demo} go={go} />}
           </section>
           <section aria-labelledby="c-steps" className="border-t border-dashed border-slate-300 p-6 sm:p-8 dark:border-white/20">
             <h2 id="c-steps" className="mb-4 font-display text-lg font-semibold text-slate-900 dark:text-white">{t("Progress")}</h2>
             <OrderSteps order={order} />
           </section>
         </article>
-        <aside className={`${card} p-6 xl:sticky xl:top-24`}>
+        <div className="grid gap-6 xl:sticky xl:top-24">
+        {Aside && <Aside order={order} demo={demo} go={go} />}
+        <aside className={`${card} p-6`}>
           <h2 className="font-display text-lg font-semibold text-slate-900 dark:text-white">{t("Something wrong?")}</h2>
           <p className="mt-1 text-[15px] text-slate-700 dark:text-slate-300">{t("Write to support about this order; the ticket links to it, so there's nothing to explain twice.")}</p>
           <div className="mt-4 grid gap-2">
             <button type="button" onClick={() => go({ page: "support", id: -order.id })} className={`${secondary} !py-3`}><MessageCircle aria-hidden className="h-4 w-4" />{t("Get help with this order")}</button>
             <PrintInvoice order={order} store={demo} className={`${secondary} !py-3`} />
-            <Link href={buyAgainHref(order)} className={`${secondary} !py-3`}>{t("Buy again")}</Link>
+            {order.kind !== "custom" && <Link href={buyAgainHref(order)} className={`${secondary} !py-3`}>{t("Buy again")}</Link>}
           </div>
         </aside>
+        </div>
       </div>
     </div>
   );

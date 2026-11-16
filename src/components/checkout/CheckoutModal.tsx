@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { X, Wallet, CreditCard, Bitcoin, Check, AlertCircle, Lock, Loader2, Plus, ShoppingBag } from "lucide-react";
+import { X, Wallet, CreditCard, Bitcoin, Check, AlertCircle, Lock, Loader2, Plus, ShoppingBag, PhoneCall } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMoney } from "@/lib/money";
 import { useT } from "@/i18n/client";
@@ -27,11 +27,15 @@ const methods: { id: PayMethod; label: string; desc: string; icon: typeof Wallet
 // `topUpHref` links to topping up when the wallet is short. `fees` / `notes` override a method's fee (%) and
 // description; `busyLabels` the waiting text per method (default `busyLabel`). `onAddToCart` adds an "Add to cart"
 // button under Pay (guests too): it puts the same purchase in the cart (lib/cart.tsx), which then opens.
-export default function CheckoutModal({ open, onClose, summary, price, itemLabel = "Item", payLabel = "Pay", note, onPay, signIn = false, only, topUpHref, busyLabel = "Processing…", fees, notes, busyLabels, onAddToCart }: {
+// `askNightCall`: orders support delivers by hand ask «آیا از ساعت ۲۱ تا ۷ صبح برای تماس در دسترس هستید؟» (design
+// checkout-night-call A · Segmented); Pay and Add to cart wait for an answer, which reaches `onPay` / `onAddToCart`
+// as `extra` ({night_call: 1|0}) for the buy body (Laravel saves it on the order: orders.night_call).
+export type CheckoutExtra = { night_call?: 0 | 1 };
+export default function CheckoutModal({ open, onClose, summary, price, itemLabel = "Item", payLabel = "Pay", note, onPay, signIn = false, only, topUpHref, busyLabel = "Processing…", fees, notes, busyLabels, onAddToCart, askNightCall = false }: {
   open: boolean; onClose: () => void; summary?: ReactNode; price: number; itemLabel?: string; payLabel?: string; note?: string;
-  onPay: (method: PayMethod) => unknown; signIn?: boolean; only?: PayMethod[]; topUpHref?: string; busyLabel?: string;
+  onPay: (method: PayMethod, extra: CheckoutExtra) => unknown; signIn?: boolean; only?: PayMethod[]; topUpHref?: string; busyLabel?: string;
   fees?: Partial<Record<PayMethod, number>>; notes?: Partial<Record<PayMethod, string>>; busyLabels?: Partial<Record<PayMethod, string>>;
-  onAddToCart?: () => Promise<unknown>;
+  onAddToCart?: (extra: CheckoutExtra) => Promise<unknown>; askNightCall?: boolean;
 }) {
   const t = useT();
   itemLabel = t(itemLabel);
@@ -43,7 +47,11 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [night, setNight] = useState<boolean | null>(null);
   useEffect(() => { if (open) setError(null); }, [open, price]);
+  useEffect(() => { if (open) setNight(null); }, [open]);
+  const unanswered = askNightCall && night === null;
+  const extra: CheckoutExtra = askNightCall && night !== null ? { night_call: night ? 1 : 0 } : {};
   const needSignIn = signIn && account.status !== "user";
   const onlyKey = only?.join(",");
   const shown = useMemo(() => (onlyKey ? methods.filter((x) => onlyKey.split(",").includes(x.id)) : methods)
@@ -77,22 +85,39 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
   const total = price + fee;
   const short = m.id === "wallet" && money.wallet != null && total > money.wallet;
   const submit = async () => {
-    const r = onPay(m.id);
+    if (unanswered) return;
+    const r = onPay(m.id, extra);
     if (!(r instanceof Promise)) { onClose(); return; }
     setBusy(true); setError(null);
     try { await r; onClose(); } catch (e) { setError(errorText(e, t, usd)); } finally { setBusy(false); }
   };
 
   const addToCart = async () => {
-    if (!onAddToCart) return;
+    if (!onAddToCart || unanswered) return;
     setAdding(true); setError(null);
-    try { await onAddToCart(); onClose(); } catch (e) { setError(errorText(e, t, usd)); } finally { setAdding(false); }
+    try { await onAddToCart(extra); onClose(); } catch (e) { setError(errorText(e, t, usd)); } finally { setAdding(false); }
   };
   const cartButton = onAddToCart && (
-    <button type="button" onClick={addToCart} disabled={!price || busy || adding}
+    <button type="button" onClick={addToCart} disabled={!price || busy || adding || unanswered}
       className={`mt-2.5 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:ring-white/15 dark:hover:bg-white/5 ${focus}`}>
       {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}{t("Add to cart")}
     </button>
+  );
+
+  const nightQuestion = askNightCall && (
+          <fieldset className="mt-5 border-t border-slate-100 pt-4 dark:border-white/10">
+            <legend className="sr-only">{t("Can support call you between 9 pm and 7 am?")}</legend>
+            <p aria-hidden className="flex items-center gap-2 text-[15px] font-semibold text-slate-900 dark:text-white"><PhoneCall className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />{t("Can support call you between 9 pm and 7 am?")}</p>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t("If something about your order needs a quick answer.")}</p>
+            <div className="mt-3 grid grid-cols-2 rounded-2xl bg-slate-100 p-1 dark:bg-white/[.06]">
+              {([true, false] as const).map((v) => (
+                <label key={String(v)} className={`cursor-pointer rounded-xl px-4 py-2.5 text-center text-[15px] font-semibold transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-emerald-600 ${night === v ? "bg-white text-slate-900 shadow dark:bg-white/15 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}>
+                  <input type="radio" name="night-call" className="sr-only" checked={night === v} onChange={() => setNight(v)} />
+                  {v ? t("Yes, call me") : t("No, daytime only")}
+                </label>
+              ))}
+            </div>
+          </fieldset>
   );
 
   return (
@@ -113,7 +138,7 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
           <div className="mt-5 border-t border-slate-100 pt-5 dark:border-white/10">
             {account.status === "loading" ? <div className="h-40 animate-pulse rounded-2xl bg-slate-100 dark:bg-white/5" /> : <SignInForm />}
             <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">{t("Sign in to pay. Your choices stay as they are.")}</p>
-            {onAddToCart && <>{error && <p role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</p>}{cartButton}</>}
+            {onAddToCart && <>{nightQuestion}{error && <p role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</p>}{cartButton}</>}
           </div>
         ) : <>
         <div className="mt-5 text-xs font-semibold uppercase tracking-wide text-slate-400">{t("Pay with")}</div>
@@ -146,12 +171,14 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
             {topUpHref && <a href={topUpHref} className="flex shrink-0 items-center gap-1 font-semibold text-amber-900 underline-offset-2 hover:underline dark:text-amber-200"><Plus className="h-3.5 w-3.5" />{t("Top up wallet")}</a>}
           </div>
         )}
+        {nightQuestion}
         {error && <p role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</p>}
 
-        <button onClick={submit} disabled={!price || short || busy}
+        <button onClick={submit} disabled={!price || short || busy || unanswered}
           className={`mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-600/25 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}>
           {busy ? <><Loader2 className="h-4 w-4 animate-spin" />{t(busyLabels?.[m.id] ?? busyLabel)}</> : <><Lock className="h-4 w-4" />{payLabel} {usd(total)}</>}
         </button>
+        {unanswered && <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">{t("Answer the question to continue.")}</p>}
         {cartButton}
         </>}
         {note && <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">{note}</p>}

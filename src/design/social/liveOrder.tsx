@@ -3,7 +3,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "@/i18n/Link";
 import { Check, ShieldCheck, X } from "lucide-react";
-import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
+import CheckoutModal, { type CheckoutExtra, type PayMethod } from "@/components/checkout/CheckoutModal";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
 import { useCart } from "@/lib/cart";
 import { useMoney } from "@/lib/money";
@@ -143,15 +143,17 @@ export function useLiveOrder(d: LiveSocialOrder) {
 
   // The same purchase into the cart (lib/cart.tsx), which then opens.
   const cart = useCart();
-  const addToCart = cart && service ? () => cart.add("service", {
+  const addToCart = cart && service ? (extra: CheckoutExtra = {}) => cart.add("service", {
+    ...extra,
     service_id: service.id,
     ...(service.count ? { count: qty } : { plan_id: planId }),
     fields: Object.fromEntries(fields.map((f) => [f.name, value(f)])),
   }) : undefined;
 
-  const buy = async (m: PayMethod) => {
+  const buy = async (m: PayMethod, extra: CheckoutExtra = {}) => {
     if (!service) return;
     const body = {
+      ...extra,
       service_id: service.id,
       ...(service.count ? { count: qty } : { plan_id: planId }),
       fields: Object.fromEntries(fields.map((f) => [f.name, value(f)])),
@@ -418,7 +420,7 @@ export function LiveCheckout({ o }: { o: LiveOrder }) {
   const s = o.service;
   const to = o.target ? (o.values[o.target.name] ?? "").trim() : "";
   return (
-    <CheckoutModal open={o.payOpen} onClose={o.closePay} price={o.total} itemLabel={`${o.num(o.count)} · ${s?.name ?? ""}`} payLabel={tx("Pay")} onPay={o.buy} onAddToCart={o.addToCart}
+    <CheckoutModal open={o.payOpen} onClose={o.closePay} price={o.total} itemLabel={`${o.num(o.count)} · ${s?.name ?? ""}`} payLabel={tx("Pay")} onPay={o.buy} onAddToCart={o.addToCart} askNightCall
       signIn only={["wallet", "card"]} topUpHref={TOP_UP_HREF} fees={{ card: 0 }} notes={{ card: "Iranian bank cards, via ZarinPal" }}
       note={o.changedTo != null ? tx("The price just changed to {price}. Check it and pay again.", { price: money.format(o.changedTo) }) : tx("Delivery starts once we've checked the link. If it's private or wrong, the order is cancelled and refunded to your wallet.")}
       summary={<>

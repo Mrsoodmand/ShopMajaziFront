@@ -2,7 +2,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "@/i18n/Link";
 import { Bot, Briefcase, Check, LayoutGrid, ChevronRight, Clapperboard, Clock, Eye, EyeOff, KeyRound, LineChart, LogIn, MessageCircle, Music2, Palette, Shapes, UserCheck, X, type LucideIcon } from "lucide-react";
-import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
+import CheckoutModal, { type CheckoutExtra, type PayMethod } from "@/components/checkout/CheckoutModal";
 import { useMoney } from "@/lib/money";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
 import { useCart } from "@/lib/cart";
@@ -100,16 +100,16 @@ export function useSubs(initial?: string) {
   };
 
   const cart = useCart();
-  const addToCart = live && cart && product && plan ? () => cart.add("subscription", {
-    product_id: product.id, plan_id: Number(plan.id),
+  const addToCart = live && cart && product && plan ? (extra: CheckoutExtra = {}) => cart.add("subscription", {
+    ...extra, product_id: product.id, plan_id: Number(plan.id),
     fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
   }) : undefined;
 
-  const buy = async (m: PayMethod) => {
+  const buy = async (m: PayMethod, extra: CheckoutExtra = {}) => {
     if (!product || !plan) return;
     if (!live) { show(product, plan, values, m); return; }
     const body = {
-      product_id: product.id, plan_id: Number(plan.id), price: plan.price,
+      ...extra, product_id: product.id, plan_id: Number(plan.id), price: plan.price,
       fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
     };
     try {
@@ -446,7 +446,7 @@ export function SubsCheckout({ s }: { s: Subs }) {
     <>
       {s.notice && <SubsNoticeToast n={s.notice} onClose={s.dismissNotice} />}
       <CheckoutModal open={s.payOpen && !!p && !!pl} onClose={s.closePay} price={pl?.price ?? 0} itemLabel={pl ? `${p?.name} · ${pl.name}` : tx("Subscription")} payLabel={tx("Pay")}
-        note={note} onPay={s.buy} onAddToCart={s.addToCart}
+        note={note} onPay={s.buy} onAddToCart={s.addToCart} askNightCall
         {...(s.live ? { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } } : {})}
         summary={p && pl && <>
           <Tile p={p} />

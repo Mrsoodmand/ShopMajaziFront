@@ -2,8 +2,9 @@
 // prices and tickets are made up so every state shows (waiting for an SMS, delivering, paused and needing the
 // buyer, delivered, refunded, a top-up on hold). Replaced by the Laravel account API once a design is chosen.
 
-export type OrderState = "waiting" | "delivering" | "needs-you" | "delivered" | "refunded" | "cancelled";
-export type OrderKind = "number" | "social" | "telegram" | "google-voice" | "apple-id" | "subscription" | "static-ip";
+// "awaiting-payment": an order support made for the buyer (or that still asks for money) waits for them to pay.
+export type OrderState = "waiting" | "delivering" | "needs-you" | "delivered" | "refunded" | "cancelled" | "awaiting-payment";
+export type OrderKind = "number" | "social" | "telegram" | "google-voice" | "apple-id" | "subscription" | "static-ip" | "custom";
 
 // What the order hands over, by type of service.
 export type Delivery =
@@ -31,7 +32,14 @@ export type AccountOrder = {
   // Bought together with other services from the cart: one cart order #C-{id}, paid at once (`paidWith` of the cart).
   cart?: { id: number; paidWith: "wallet" | string; at: string };
   delivery: Delivery;
+  // Money the order asks for besides its price: its own price when support made it ("order"), tax, VAT… ("extra").
+  charges?: OrderCharge[];
+  due?: number; // Toman still to pay
+  cancellable?: boolean; // the buyer may cancel it themselves (pending, not started): everything paid goes back
+  nightCall?: boolean | null; // "available for a call 21:00–07:00?" at checkout; null = not asked
 };
+
+export type OrderCharge = { id: number; kind: "order" | "extra"; title: string; price: number; paid: boolean; at: string };
 
 export type BankCard = { id: string; bank: string; first6: string; last4: string };
 export type TopUp = { id: string; amount: number; card: string; at: string; state: "done" | "on-hold" };
