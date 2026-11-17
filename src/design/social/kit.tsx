@@ -303,7 +303,6 @@ export function SummaryActions({ s }: { s: Social }) {
     <>
       <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{s.qty && !s.qtyError ? `${tx("Continue")} · ${usd(s.total)}` : tx("Continue")}</button>
       {s.blocker && <p role="alert" className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />{s.blocker}</p>}
-      <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{tx("Pay with your wallet, card or crypto on the next step.")}</p>
     </>
   );
 }

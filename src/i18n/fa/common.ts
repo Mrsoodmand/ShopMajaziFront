@@ -198,6 +198,7 @@ export const common: Record<string, string> = {
   "Refill guarantee": "تضمین جبران ریزش",
   "Telegram": "تلگرام",
   "Social Media Services": "خدمات شبکه‌های اجتماعی",
+  "Social": "سوشال",
   "Social Growth": "خدمات شبکه‌های اجتماعی",
 
   // How to buy

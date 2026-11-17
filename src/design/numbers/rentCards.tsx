@@ -20,7 +20,7 @@ const ease = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 const enter = (i: number): CSSProperties => ({ animationDelay: `${Math.min(i, 12) * 30}ms` });
 const base = `group relative w-full animate-[card-in_.6s_cubic-bezier(0.22,1,0.36,1)_backwards] text-start transition-[border-color,background-color] duration-500 ${ease} ${ring}`;
 const edge = (on: boolean) => on
-  ? "border-emerald-700 bg-emerald-50 ring-1 ring-emerald-700 dark:border-emerald-400 dark:bg-emerald-400/10 dark:ring-emerald-400"
+  ? "border-emerald-600 bg-emerald-50 ring-1 ring-emerald-600 dark:border-emerald-400 dark:bg-emerald-400/15 dark:ring-emerald-400"
   : "border-slate-200 bg-white hover:border-emerald-600/40 hover:bg-emerald-50/50 dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-emerald-400/40 dark:hover:bg-emerald-400/5";
 const muted = "text-slate-600 dark:text-slate-400";
 const strong = "font-semibold text-slate-900 dark:text-white";

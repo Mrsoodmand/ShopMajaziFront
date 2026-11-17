@@ -8,6 +8,8 @@ import { BigNumber, Glossy, WhyHeading, card, pageBg, reason, stat, useInView, t
 // Offer F — "Glossy Bento": the first reference brought over. A bento of soft white cards: a 2 × 2 cluster of glossy
 // product icons, a "24" tile, overlapping circles for speed, big blue numbers, and a blue brand card with fine
 // wavy lines and the logo in the middle of the grid. Cards lift a little on hover.
+// Phones (two narrow columns): the order-* classes pair the two short title-only cards (24/7, no passwords) and give
+// the speed card, whose circles don't fit half a phone, a row of its own; from sm up the grid keeps the DOM order.
 export default function WhyF() {
   const t = useT();
   const [ref, seen] = useInView();
@@ -21,7 +23,7 @@ export default function WhyF() {
 
         <div className="mt-12 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:auto-rows-[200px]">
           {/* Everything in one place: four glossy product icons. */}
-          <div className={`${card} ${lift} col-span-2 flex flex-col items-center justify-center p-7 text-center sm:col-span-1 lg:row-span-2`}>
+          <div className={`${card} ${lift} order-1 col-span-2 flex flex-col items-center justify-center p-7 text-center sm:order-none sm:col-span-1 lg:row-span-2`}>
             <div className="grid grid-cols-2 gap-3">
               <Glossy icon={Smartphone} tone="green" size={64} className="animate-[why-bob_5s_ease-in-out_infinite]" />
               <Glossy icon={Gift} tone="amber" size={64} className="animate-[why-bob_5s_ease-in-out_.6s_infinite]" />
@@ -33,13 +35,13 @@ export default function WhyF() {
           </div>
 
           {/* 24/7 */}
-          <div className={`${card} ${lift} flex flex-col items-center justify-center gap-4 p-6 text-center`}>
+          <div className={`${card} ${lift} order-2 flex flex-col sm:order-none items-center justify-center gap-4 p-6 text-center`}>
             <Glossy tone="coral" size={60}>{t.num(24)}</Glossy>
             <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">{t(R("support").title)}</h3>
           </div>
 
           {/* Speed: two overlapping circles, the front one with a spark. */}
-          <div className={`${card} ${lift} flex flex-col items-center justify-center p-7 text-center lg:row-span-2`}>
+          <div className={`${card} ${lift} order-4 col-span-2 flex flex-col items-center justify-center p-7 text-center sm:order-none sm:col-span-1 lg:row-span-2`}>
             <div className="relative h-36 w-40">
               <span className="absolute end-0 top-0 h-24 w-24 rounded-full bg-blue-200 dark:bg-blue-400/30" />
               <span className="absolute bottom-0 start-2 grid h-28 w-28 place-items-center rounded-full bg-gradient-to-b from-blue-400 to-blue-600 shadow-[0_18px_30px_-12px_rgba(37,99,235,.8)] ring-[6px] ring-white dark:ring-[#0E1424]">
@@ -51,19 +53,19 @@ export default function WhyF() {
           </div>
 
           {/* Big number */}
-          <div className={`${card} ${lift} col-span-2 flex flex-col items-center justify-center p-6 text-center sm:col-span-1`}>
+          <div className={`${card} ${lift} order-5 col-span-2 flex flex-col items-center justify-center p-6 text-center sm:order-none sm:col-span-1`}>
             <BigNumber s={stat("orders")} run={seen} className="text-3xl text-blue-600 xl:text-4xl dark:text-blue-400" />
             <span className="mt-3 font-display text-base font-bold text-slate-900 dark:text-white">{t(stat("orders").label)}</span>
           </div>
 
           {/* No passwords */}
-          <div className={`${card} ${lift} flex flex-col items-center justify-center gap-4 p-6 text-center`}>
+          <div className={`${card} ${lift} order-3 flex flex-col sm:order-none items-center justify-center gap-4 p-6 text-center`}>
             <Glossy icon={R("private").icon} tone="violet" size={60} />
             <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">{t(R("private").title)}</h3>
           </div>
 
           {/* Pay: icon at the side, text next to it (like the "earn" card in the reference). */}
-          <div className={`${card} ${lift} col-span-2 flex items-center gap-5 p-6 sm:col-span-1`}>
+          <div className={`${card} ${lift} order-6 col-span-2 flex items-center gap-5 p-6 sm:order-none sm:col-span-1`}>
             <Glossy icon={R("pay").icon} tone="green" size={68} />
             <div>
               <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">{t(R("pay").title)}</h3>
@@ -72,7 +74,7 @@ export default function WhyF() {
           </div>
 
           {/* Brand card */}
-          <div className="relative col-span-2 flex min-h-[260px] items-center justify-center overflow-hidden rounded-[28px] bg-blue-600 text-white lg:row-span-2">
+          <div className="relative order-7 col-span-2 flex min-h-[260px] sm:order-none items-center justify-center overflow-hidden rounded-[28px] bg-blue-600 text-white lg:row-span-2">
             <svg aria-hidden viewBox="0 0 600 400" preserveAspectRatio="none" className="absolute inset-0 h-full w-full opacity-40">
               {Array.from({ length: 22 }, (_, i) => (
                 <path key={i} d={`M-20 ${330 - i * 6} C 140 ${120 + i * 9}, 300 ${470 - i * 10}, 620 ${60 + i * 7}`} fill="none" stroke="white" strokeWidth=".8" strokeOpacity={0.25 + (i % 4) * 0.12} />
@@ -88,19 +90,19 @@ export default function WhyF() {
           </div>
 
           {/* Refund */}
-          <div className={`${card} ${lift} flex flex-col items-center justify-center gap-4 p-6 text-center`}>
+          <div className={`${card} ${lift} order-8 flex flex-col sm:order-none items-center justify-center gap-4 p-6 text-center`}>
             <Glossy icon={R("refund").icon} tone="green" size={60} />
             <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white">{t(R("refund").title)}</h3>
           </div>
 
           {/* Seconds */}
-          <div className={`${card} ${lift} flex flex-col items-center justify-center p-6 text-center`}>
+          <div className={`${card} ${lift} order-9 flex flex-col sm:order-none items-center justify-center p-6 text-center`}>
             <BigNumber s={stat("speed")} run={seen} className={`text-5xl ${tone("blue").ink}`} />
             <span className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-300">{t(stat("speed").label)}</span>
           </div>
 
           {/* Years */}
-          <div className={`${card} ${lift} col-span-2 flex flex-col items-center justify-center p-6 text-center`}>
+          <div className={`${card} ${lift} order-10 col-span-2 flex flex-col sm:order-none items-center justify-center p-6 text-center`}>
             <BigNumber s={stat("years")} run={seen} className="text-6xl text-blue-600 dark:text-blue-400" />
             <span className="mt-3 font-display text-lg font-bold text-slate-900 dark:text-white">{t("Years of selling digital services")}</span>
           </div>

@@ -146,9 +146,10 @@ export function MethodSwitch({ f, variant = "tabs" }: { f: RentFlow; variant?: "
 // ---------- Choices ----------
 
 export const choice = (on: boolean, disabled = false) =>
-  `flex w-full items-center gap-3 rounded-2xl border-2 bg-white px-4 py-3 text-start transition-colors dark:bg-[#0E1424] ${ring} ${disabled
-    ? "cursor-not-allowed border-dashed border-slate-200 opacity-60 dark:border-white/10"
-    : on ? "border-emerald-700 dark:border-emerald-400" : "border-slate-200 hover:border-slate-400 dark:border-white/15 dark:hover:border-white/40"}`;
+  `flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors ${ring} ${disabled
+    ? "cursor-not-allowed border-dashed border-slate-200 bg-white opacity-60 dark:border-white/10 dark:bg-[#0E1424]"
+    // Chosen: the account plan picker's tone (subs-plan-select E), emerald outline on a soft tint.
+    : on ? "border-emerald-600 bg-emerald-50 text-emerald-950 dark:border-emerald-400 dark:bg-emerald-400/15 dark:text-white" : "border-slate-200 bg-white hover:border-slate-400 dark:border-white/15 dark:bg-[#0E1424] dark:hover:border-white/40"}`;
 
 export function Picked({ on }: { on: boolean }) {
   return on ? <Check aria-hidden className="h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-400" /> : null;

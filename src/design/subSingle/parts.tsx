@@ -1,6 +1,6 @@
 "use client";
 import Link from "@/i18n/Link";
-import { Check, ChevronRight, KeyRound, Lock, LogIn, RotateCcw, UserCheck, Zap } from "lucide-react";
+import { Check, ChevronRight, Lock, RotateCcw, Zap } from "lucide-react";
 import { useMoney } from "@/lib/money";
 import { fromPrice, monthly, perMonth, savePct, subCats, type SubProduct } from "@/content/subs-en";
 import { ring } from "../googleVoice/clean";
@@ -8,6 +8,7 @@ import { panels } from "../subs/panels";
 import { ActivationBadge, Tile, type Subs } from "../subs/parts";
 import { useSubsList } from "../subs/live";
 import { useT } from "@/i18n/client";
+import { HOW_STYLE, howStyles } from "./howDelivered";
 
 // Pieces shared by the single-subscription page offers (/accounts/{slug}): breadcrumb, buy box (uses the chosen
 // product panel), what you get, how it's delivered, plan table, related subscriptions.
@@ -55,32 +56,10 @@ export function WhatYouGet({ p }: { p: SubProduct }) {
   );
 }
 
-// How the plan reaches you, depending on "own account" or "ready account".
+// How the plan reaches you, depending on "own account" or "ready account". The style is picked in howDelivered.tsx.
 export function HowDelivered({ p }: { p: SubProduct }) {
-  const tx = useT();
-  const how = p.activation;
-  const field = p.fields.find((f) => !f.options && f.type !== "password");
-  const when = p.delivery || tx("After payment, by our team");
-  const steps = how === "own"
-    ? [{ t: tx("You tell us your account"), d: field ? field.label : tx("Your account email") }, { t: tx("We activate the plan"), d: when }, { t: tx("Open {0}", { 0: p.name }), d: tx("The plan is on your account") }]
-    : how === "login"
-      ? [{ t: tx("You give us your login"), d: tx("The email and password of your {0} account", { 0: p.name }) }, { t: tx("We activate the plan"), d: when }, { t: tx("Change your password"), d: tx("Once the plan is on your account") }]
-      : [{ t: tx("You pay"), d: tx("Wallet, card or crypto") }, { t: tx("We send the login"), d: when }, { t: tx("Sign in"), d: tx("Copy it from your order page") }];
-  const own = how !== "ready";
-  const Icon = how === "login" ? LogIn : own ? UserCheck : KeyRound;
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-white/15 dark:bg-[#0E1424]">
-      <p className="flex items-center gap-2 font-semibold text-slate-900 dark:text-white"><Icon aria-hidden className="h-5 w-5 text-violet-700 dark:text-violet-400" />{own ? tx("Activated on your own account") : tx("Delivered as a ready account")}</p>
-      <ol className="mt-5 grid gap-4 sm:grid-cols-3">
-        {steps.map((st, i) => (
-          <li key={st.t} className="flex gap-3">
-            <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-900 text-sm font-bold text-white dark:bg-white dark:text-slate-900">{i + 1}</span>
-            <span><span className="block font-semibold text-slate-900 dark:text-white">{st.t}</span><span className="text-sm text-slate-600 dark:text-slate-400">{st.d}</span></span>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
+  const Style = howStyles[HOW_STYLE] ?? howStyles.A;
+  return <Style p={p} />;
 }
 
 export function PlanTable({ p }: { p: SubProduct }) {

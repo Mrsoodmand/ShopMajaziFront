@@ -139,7 +139,6 @@ export default function StarsF() {
               <StarsSummary st={st} className={t.tr(panel)}>
                 <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{starsLabel(st, t("Continue"), usd)}</button>
                 <StarsBlocker st={st} />
-                <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{t("Pay with your wallet, card or crypto on the next step.")}</p>
               </StarsSummary>
             </div>
           </form>

@@ -52,7 +52,7 @@ export function NumberOption({ n, name, gv, size = "md", tight = false }: { n: G
   const t = useT();
   const on = gv.selected.id === n.id;
   return (
-    <label className={`relative flex cursor-pointer items-center gap-4 rounded-2xl border-2 bg-white transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-600 has-[:focus-visible]:ring-offset-2 dark:bg-[#0E1424] dark:has-[:focus-visible]:ring-emerald-400 dark:has-[:focus-visible]:ring-offset-[#070B14] ${size === "lg" ? "p-5" : "px-4 py-3.5"} ${on ? "border-emerald-700 dark:border-emerald-400" : "border-slate-200 hover:border-slate-400 dark:border-white/15 dark:hover:border-white/40"}`}>
+    <label className={`relative flex cursor-pointer items-center gap-4 rounded-2xl border-2 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-600 has-[:focus-visible]:ring-offset-2 dark:has-[:focus-visible]:ring-emerald-400 dark:has-[:focus-visible]:ring-offset-[#070B14] ${size === "lg" ? "p-5" : "px-4 py-3.5"} ${on ? "border-emerald-600 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-400/15" : "bg-white dark:bg-[#0E1424] border-slate-200 hover:border-slate-400 dark:border-white/15 dark:hover:border-white/40"}`}>
       <input type="radio" autoComplete="off" name={name} value={n.id} checked={on} onChange={() => gv.setSelected(n)} className="sr-only" />
       <span aria-hidden className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ${on ? "border-emerald-700 bg-emerald-700 dark:border-emerald-400 dark:bg-emerald-400" : "border-slate-400 dark:border-white/30"}`}>
         {on && <Check className="h-3.5 w-3.5 text-white dark:text-emerald-950" strokeWidth={3} />}

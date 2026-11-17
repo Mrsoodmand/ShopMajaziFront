@@ -335,4 +335,10 @@ export const subs: Record<string, string> = {
   "It depends on the queue; we start as soon as you pay": "به نوبت سفارش‌ها بستگی دارد؛ بلافاصله بعد از پرداخت شروع می‌کنیم",
   "Why do you need my {0} password?": "چرا رمز عبور {0} من لازم است؟",
   "{0} can only be upgraded from inside the account, so we sign in once to activate the plan. Change your password as soon as it's active.": "{0} فقط از داخل خود اکانت ارتقا پیدا می‌کند، برای همین یک بار وارد می‌شویم و پلن را فعال می‌کنیم. به‌محض فعال شدن، رمز عبور را عوض کنید.",
+  "You never share a password.": "هیچ‌وقت رمز عبور نمی‌دهید.",
+  "Change your password as soon as the plan is active.": "به‌محض فعال شدن پلن، رمز عبور را عوض کنید.",
+  "The login stays on your order page, so you can copy it again any time.": "اطلاعات ورود در صفحه سفارش می‌ماند و هر وقت خواستید دوباره کپی می‌کنید.",
+  "Online, in one step": "آنلاین، در یک مرحله",
+  "Delivery": "تحویل",
+  "Step {0}": "مرحله {0}",
 };

@@ -210,5 +210,13 @@
   "gv-preorder": {
     "offer": "A",
     "savedAt": "2026-11-17T10:26:09.000Z"
+  },
+  "sub-how-delivered": {
+    "offer": "E",
+    "savedAt": "2026-11-17T15:17:39.000Z"
+  },
+  "hero-catalog": {
+    "offer": "E",
+    "savedAt": "2026-11-17T18:53:52.000Z"
   }
 }

@@ -8,7 +8,7 @@ import { useT } from "@/i18n/client";
 
 // Five versions of the app card in the virtual number catalog (page P), chosen in /design/page-otp-card.
 // Every card is one button: picking it fills the panel. The app's own colour (appTint) carries the brand; the
-// chosen card gets the indigo outline and a check. "Popular" is a small mark, not a badge, so the name leads.
+// chosen card gets the emerald outline and a check. "Popular" is a small mark, not a badge, so the name leads.
 
 export type CardProps = { app: OtpApp; price: string; on: boolean; onPick: () => void; label: string; i: number };
 
@@ -17,7 +17,7 @@ const ring = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring
 const enter = (i: number): CSSProperties => ({ animationDelay: `${Math.min(i, 12) * 30}ms` });
 const base = `group relative w-full animate-[card-in_.6s_cubic-bezier(0.22,1,0.36,1)_backwards] text-start transition-[translate,box-shadow,border-color,background-color] duration-500 ${ease} ${ring}`;
 const edge = (on: boolean) => on
-  ? "border-indigo-600 ring-1 ring-indigo-600 dark:border-indigo-400 dark:ring-indigo-400"
+  ? "border-emerald-600 ring-1 ring-emerald-600 dark:border-emerald-400 dark:ring-emerald-400"
   : "border-slate-200 hover:border-slate-300 dark:border-white/10 dark:hover:border-white/25";
 const mix = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, transparent)`;
 
@@ -40,7 +40,7 @@ function PopularStar() {
 }
 
 function Picked() {
-  return <span aria-hidden className="absolute end-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-indigo-600 text-white dark:bg-indigo-400 dark:text-indigo-950"><Check className="h-3 w-3" strokeWidth={3} /></span>;
+  return <span aria-hidden className="absolute end-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-emerald-600 text-white dark:bg-emerald-400 dark:text-emerald-950"><Check className="h-3 w-3" strokeWidth={3} /></span>;
 }
 
 // ---------- A · Row ----------
@@ -49,13 +49,13 @@ function Row({ app, price, on, onPick, label, i }: CardProps) {
   const t = useT();
   return (
     <button type="button" onClick={onPick} aria-pressed={on} aria-label={label} style={enter(i)}
-      className={`${base} flex items-center gap-3 rounded-2xl border bg-white p-2.5 pe-3 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-16px_rgba(15,23,42,.35)] dark:bg-[#0E1424] ${edge(on)} ${on ? "bg-indigo-50/60 dark:bg-indigo-500/10" : ""}`}>
+      className={`${base} flex items-center gap-3 rounded-2xl border bg-white p-2.5 pe-3 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-16px_rgba(15,23,42,.35)] dark:bg-[#0E1424] ${edge(on)} ${on ? "bg-emerald-50 dark:bg-emerald-400/15" : ""}`}>
       <Logo app={app} tint />
       <span className="min-w-0 flex-1">
         <span className="flex items-start gap-1.5"><span className="line-clamp-2 font-semibold leading-snug text-slate-900 dark:text-white">{app.name}</span>{app.popular && <span className="mt-0.5"><PopularStar /></span>}</span>
         <span className="block text-sm text-slate-600 dark:text-slate-400">{t("from")}{" "}<b className="font-semibold tabular-nums text-slate-900 dark:text-white">{price}</b></span>
       </span>
-      {on && <Check aria-hidden className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-300" strokeWidth={3} />}
+      {on && <Check aria-hidden className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" strokeWidth={3} />}
     </button>
   );
 }
@@ -88,7 +88,7 @@ export function RingCard({ visual, name, popular = false, tint, price, on, onPic
   return (
     // Hover as in D: no lift; a wash of the tint fills the card in (and stays on the chosen card).
     <button type="button" onClick={onPick} aria-pressed={on} aria-label={label} style={{ ...enter(i), "--wash": mix(tint, 12) } as CSSProperties}
-      className={`${base} flex flex-col rounded-2xl border bg-white p-3.5 hover:bg-[var(--wash)] dark:bg-[#0E1424] dark:hover:bg-[var(--wash)] ${edge(on)} ${on ? "!bg-[var(--wash)]" : ""}`}>
+      className={`${base} flex flex-col rounded-2xl border bg-white p-3.5 hover:bg-[var(--wash)] dark:bg-[#0E1424] dark:hover:bg-[var(--wash)] ${edge(on)} ${on ? "!bg-emerald-50 dark:!bg-emerald-400/15" : ""}`}>
       {on && <Picked />}
       <span className="flex items-center gap-3">
         <span style={{ boxShadow: `0 0 0 3px ${mix(tint, 35)}` }} className="rounded-xl">{visual}</span>
@@ -125,7 +125,7 @@ function PriceFirst({ app, price, on, onPick, label, i }: CardProps) {
   const c = appTint(app);
   return (
     <button type="button" onClick={onPick} aria-pressed={on} aria-label={label} style={{ ...enter(i), "--wash": mix(c, 12) } as CSSProperties}
-      className={`${base} flex flex-col rounded-2xl border bg-white p-3.5 hover:bg-[var(--wash)] dark:bg-[#0E1424] dark:hover:bg-[var(--wash)] ${edge(on)} ${on ? "!bg-[var(--wash)]" : ""}`}>
+      className={`${base} flex flex-col rounded-2xl border bg-white p-3.5 hover:bg-[var(--wash)] dark:bg-[#0E1424] dark:hover:bg-[var(--wash)] ${edge(on)} ${on ? "!bg-emerald-50 dark:!bg-emerald-400/15" : ""}`}>
       {on && <Picked />}
       <span className="flex items-start gap-2 pe-6"><Logo app={app} size={28} /><span className="line-clamp-2 min-w-0 text-sm font-semibold leading-snug text-slate-800 dark:text-slate-100">{app.name}</span>{app.popular && <PopularStar />}</span>
       <span className="mt-3 text-xs text-slate-600 dark:text-slate-400">{t("from")}</span>
@@ -143,7 +143,7 @@ function StoreTile({ app, price, on, onPick, label, i }: CardProps) {
       <span className="flex w-full items-start justify-between gap-2"><Logo app={app} size={44} />{app.popular && <PopularStar />}</span>
       <span className="mt-2.5 w-full truncate font-semibold text-slate-900 dark:text-white">{app.name}</span>
       <span className={`mt-2.5 inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold tabular-nums transition-colors duration-300 ${on
-        ? "bg-indigo-600 text-white dark:bg-indigo-400 dark:text-indigo-950"
+        ? "bg-emerald-600 text-white dark:bg-emerald-400 dark:text-emerald-950"
         : "bg-indigo-50 text-indigo-800 group-hover:bg-indigo-600 group-hover:text-white dark:bg-indigo-500/15 dark:text-indigo-200 dark:group-hover:bg-indigo-400 dark:group-hover:text-indigo-950"}`}>
         {on && <Check aria-hidden className="h-3.5 w-3.5" strokeWidth={3} />}{price}
       </span>

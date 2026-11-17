@@ -237,7 +237,7 @@ function BestPicks({ f, byApp, items, value, pick, loading, listTitle, searchLab
                 return (
                   <li key={item.id}>
                     <button type="button" onClick={() => pick(item.id)} aria-pressed={on}
-                      className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 text-start transition-colors ${ring} ${on ? "border-indigo-600 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10" : "border-slate-200 hover:border-slate-400 dark:border-white/15 dark:hover:border-white/40"}`}>
+                      className={`flex w-full items-center gap-3 rounded-2xl border-2 p-3.5 text-start transition-colors ${ring} ${on ? "border-emerald-600 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-400/15" : "border-slate-200 hover:border-slate-400 dark:border-white/15 dark:hover:border-white/40"}`}>
                       {item.visual}
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300"><Icon aria-hidden className="h-3.5 w-3.5" />{label}</span>
@@ -263,7 +263,7 @@ function BestPicks({ f, byApp, items, value, pick, loading, listTitle, searchLab
                     return (
                       <li key={i.id}>
                         <button type="button" onClick={() => pick(i.id)} aria-pressed={on}
-                          className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-start text-sm transition-colors ${ring} ${on ? "bg-indigo-600 font-semibold text-white" : "text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"}`}>
+                          className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-start text-sm transition-colors ${ring} ${on ? "bg-emerald-50 font-semibold text-emerald-950 ring-1 ring-emerald-600 dark:bg-emerald-400/15 dark:text-white dark:ring-emerald-400" : "text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"}`}>
                           {i.visual}<span className="min-w-0 flex-1 truncate">{i.name}</span><span className="tabular-nums">{usd(i.price)}</span>
                         </button>
                       </li>
@@ -284,8 +284,8 @@ function BestPicks({ f, byApp, items, value, pick, loading, listTitle, searchLab
                 const on = f.operator?.id === o.id;
                 return (
                   <button key={o.id} type="button" role="radio" aria-checked={on} onClick={() => f.pickOperator(o.id)}
-                    className={`inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-semibold transition-colors ${ring} ${on ? "border-indigo-600 bg-indigo-600 text-white dark:border-indigo-400 dark:bg-indigo-500" : "border-slate-300 text-slate-800 hover:border-slate-500 dark:border-white/20 dark:text-slate-100"}`}>
-                    {o.recommended && <ShieldCheck aria-hidden className="h-4 w-4" />}{o.name}<span className={`font-normal tabular-nums ${on ? "text-indigo-100" : "text-slate-600 dark:text-slate-400"}`}>{usd(o.price)}</span>
+                    className={`inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-semibold transition-colors ${ring} ${on ? "border-emerald-600 bg-emerald-50 text-emerald-950 dark:border-emerald-400 dark:bg-emerald-400/15 dark:text-white" : "border-slate-300 text-slate-800 hover:border-slate-500 dark:border-white/20 dark:text-slate-100"}`}>
+                    {o.recommended && <ShieldCheck aria-hidden className="h-4 w-4" />}{o.name}<span className={`font-normal tabular-nums ${on ? "text-emerald-800 dark:text-emerald-200" : "text-slate-600 dark:text-slate-400"}`}>{usd(o.price)}</span>
                   </button>
                 );
               })}
@@ -326,7 +326,7 @@ function OneAtATime({ f, byApp, items, value, pick, loading, listTitle, searchLa
                 {s.list.map((i) => (
                   <li key={i.id}>
                     <button type="button" onClick={() => { pick(i.id); setEditing(false); }} aria-pressed={value === i.id}
-                      className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-start text-sm transition-colors ${ring} ${value === i.id ? "bg-indigo-600 font-semibold text-white" : "text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"}`}>
+                      className={`flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-start text-sm transition-colors ${ring} ${value === i.id ? "bg-emerald-50 font-semibold text-emerald-950 ring-1 ring-emerald-600 dark:bg-emerald-400/15 dark:text-white dark:ring-emerald-400" : "text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"}`}>
                       {i.visual}<span className="min-w-0 flex-1 truncate">{i.name}</span><span className="font-semibold tabular-nums">{usd(i.price)}</span>
                     </button>
                   </li>
@@ -404,14 +404,14 @@ function QuickBuy({ f, byApp, items, value, pick, loading, searchLabel, listTitl
             const on = value === i.id;
             const last = shown.current.get(i.id);
             return (
-              <li key={i.id} data-id={i.id} className={`rounded-2xl transition-[background-color,box-shadow] duration-300 ${on ? "bg-indigo-50 ring-2 ring-indigo-600 dark:bg-indigo-500/10 dark:ring-indigo-400" : ""}`}>
+              <li key={i.id} data-id={i.id} className={`rounded-2xl transition-[background-color,box-shadow] duration-300 ${on ? "bg-emerald-50 ring-2 ring-emerald-600 dark:bg-emerald-400/15 dark:ring-emerald-400" : ""}`}>
                 <button type="button" onClick={() => pick(i.id)} aria-expanded={on}
                   className={`${qb.row} group/row flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-start text-sm transition-colors ${ring} ${on ? "font-semibold text-slate-900 dark:text-white" : "text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"}`}>
                   {i.visual}
                   <span className="min-w-0 flex-1"><span className="block truncate">{i.name}</span>{i.success != null && <SuccessBar pct={i.success} />}</span>
                   <span className="text-xs text-slate-600 dark:text-slate-400">{t("from")}</span><span className="font-semibold tabular-nums">{usd(i.price)}</span>
                   <span aria-hidden style={{ "--i": idx } as CSSProperties}
-                    className={`${qb.chip} grid h-7 w-7 shrink-0 place-items-center rounded-full ${on ? "bg-indigo-600 text-white dark:bg-indigo-400 dark:text-indigo-950" : "bg-slate-100 text-slate-600 group-hover/row:bg-indigo-100 group-hover/row:text-indigo-700 dark:bg-white/10 dark:text-slate-300 dark:group-hover/row:bg-indigo-500/25 dark:group-hover/row:text-indigo-100"}`}>
+                    className={`${qb.chip} grid h-7 w-7 shrink-0 place-items-center rounded-full ${on ? "bg-emerald-600 text-white dark:bg-emerald-400 dark:text-emerald-950" : "bg-slate-100 text-slate-600 group-hover/row:bg-emerald-100 group-hover/row:text-emerald-700 dark:bg-white/10 dark:text-slate-300 dark:group-hover/row:bg-emerald-500/25 dark:group-hover/row:text-emerald-100"}`}>
                     <ChevronDown data-on={on ? "" : undefined} style={{ "--i": idx } as CSSProperties} className={`${qb.chev} h-4 w-4 ${on ? "rotate-180" : ""}`} />
                   </span>
                 </button>

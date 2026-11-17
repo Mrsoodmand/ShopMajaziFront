@@ -213,6 +213,8 @@ import AccountC from "./account/AccountC";
 import { OrdersA, OrdersB, OrdersC, OrdersD, OrdersE, OrdersNow } from "./account/orders";
 import { SignInA, SignInB, SignInC, SignInD, SignInF, SignInG, SignInH, SignInI, SignInNow } from "./signin/offers";
 import { InvoiceA, InvoiceB, InvoiceC, InvoiceD, InvoiceE } from "./account/invoice";
+import { DeliveredA, DeliveredB, DeliveredC, DeliveredD, DeliveredE } from "./subSingle/howDelivered";
+import { CatalogA, CatalogB, CatalogC, CatalogD, CatalogE } from "./hero/catalogWindows";
 
 // archived offers stay in the code but are hidden from the comparison page unless "Show archived" is on.
 // `overlay` (headers only): the header floats over the hero instead of sitting above it.
@@ -750,6 +752,28 @@ export const sections: Section[] = [
     ],
   },
   {
+    id: "hero-catalog",
+    title: "Home hero · Shop window",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Catalog Tabs (current)", summary: "A row of tabs with a sliding pill and the products as full cards. On phones the tabs run off both edges and the cards stack very long.", Component: CatalogA },
+      { id: "B", name: "Icon Tiles + List", summary: "Five equal tiles (icon over a short name) that always fit, and the products as slim rows: a whole category fits on one phone screen.", Component: CatalogB },
+      { id: "C", name: "Chips + Swipe", summary: "Category chips that wrap to a second line instead of scrolling; on phones the product cards sit side by side and swipe, the next one peeking in.", Component: CatalogC },
+      { id: "D", name: "Category Menu", summary: "On phones each category is a row with its count and opens its products right under it; on wider screens a menu beside the products.", Component: CatalogD },
+      { id: "E", name: "Segmented + Mini Cards", summary: "Five equal segments (icon over a short name) under one sliding pill; products as small cards two to a row, with the details on wider screens.", Component: CatalogE },
+    ],
+  },  {
+    id: "sub-how-delivered",
+    title: "Subscriptions · How it's delivered",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Numbered row (current)", summary: "Three numbered steps side by side under a one-line heading, as it is now.", Component: DeliveredA },
+      { id: "B", name: "Timeline", summary: "Icon stops joined by a line (down the side on phones, across on wide screens), the delivery time as a pill and a reassurance line under it.", Component: DeliveredB },
+      { id: "C", name: "Step cards", summary: "Each step is its own card with a big icon and «Step 1/2/3», arrows between them on wide screens.", Component: DeliveredC },
+      { id: "D", name: "Summary + checklist", summary: "A tinted panel says how it works and how long it takes; the steps sit beside it as a short checklist.", Component: DeliveredD },
+      { id: "E", name: "Order tracker", summary: "One progress bar with three stops, like tracking a parcel; the last stop turns green.", Component: DeliveredE },
+    ],
+  },  {
     id: "page-sub-single",
     title: "Page · Single subscription",
     kind: "page",

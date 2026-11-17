@@ -460,7 +460,6 @@ function OrderCard({ ad }: { ad: Ad }) {
       <div aria-live="polite" className="mt-1 flex items-baseline justify-between border-t border-slate-200 pt-3 dark:border-white/10"><span className="text-slate-600 dark:text-slate-400">{tx("Budget")}</span><span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{usd(ad.budget || 0)}</span></div>
       <button type="submit" className={`${primary} mt-4 w-full tabular-nums`}>{tx("Continue ·")}{" "}{usd(ad.budget || 0)}</button>
       <p role="status" className="mt-2.5 text-center text-sm font-semibold text-red-700 empty:hidden dark:text-red-400">{blocker}</p>
-      <p className="mt-2.5 text-center text-sm text-slate-600 dark:text-slate-400">{tx("Wallet, card or crypto next. Refunded if rejected.")}</p>
       {sample && <p className="mt-1 text-center text-xs text-slate-500 dark:text-slate-400">{tx("Sample prices and estimates (design preview)")}</p>}
     </section>
   );

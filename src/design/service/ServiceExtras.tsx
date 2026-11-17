@@ -132,7 +132,8 @@ function ContentArea({ service }: { service: string }) {
             </ol>
           </div>
         </nav>
-        <div>
+        {/* The article sits on a solid card so long reading isn't done over the page's patterned backdrop. */}
+        <div className={`${tx.tr(card)} p-5 shadow-sm sm:p-8 lg:p-10`}>
           {/* The whole article stays in the HTML; when folded it is clipped, not removed, so search engines read all of it.
               Folded, its last lines fade out through a mask (not a page-coloured overlay, so the page backdrop shows). */}
           <div id={bodyId} style={{ maxHeight: folded ? FOLD : full + 40, ...(folded ? { maskImage: fade, WebkitMaskImage: fade } : {}) }} className="relative overflow-hidden transition-[max-height] duration-500">
