@@ -5,7 +5,8 @@ import { AlertCircle, ArrowRight, CheckCircle2, MapPin, Phone } from "lucide-rea
 import { matches, type GvNumber } from "@/content/google-voice-en";
 import { PageShell } from "../otp/parts";
 import { useHasExtras } from "../service/slot";
-import { Faq, Features, GvCheckout, GvIcon, Guarantees, gvPrice, OrderView, SectionTitle, Steps, useGv } from "../googleVoice/parts";
+import { Faq, Features, GvCheckout, GvIcon, GvPreorderCheckout, Guarantees, gvPrice, OrderView, SectionTitle, Steps, useGv } from "../googleVoice/parts";
+import { preorderCards } from "../googleVoice/preorder";
 import { NumberRadios, primary } from "../googleVoice/clean";
 import { useLiveGv } from "../googleVoice/live";
 import { GreenMesh } from "../social/heroBackdrops";
@@ -92,7 +93,10 @@ export default function GvCatalog({ card }: { card?: string }) {
           </p>
         )}
 
-        {empty ? (
+        {empty && gv.preorder ? (
+          // Numberland is down or has nothing to sell: offer a pre-order (admin › Google Voice) instead of a dead end.
+          (() => { const Preorder = preorderCards[gv.preorderCard ?? "A"] ?? preorderCards.A; return <Preorder price={gv.preorder.price} reason={gv.error ?? t("All Google Voice numbers are sold right now.")} onStart={gv.openPreorder} />; })()
+        ) : empty ? (
           <p className="rounded-3xl border border-dashed border-slate-300 p-10 text-center text-slate-600 dark:border-white/15 dark:text-slate-400">{gv.error ?? t("All Google Voice numbers are sold right now. New ones are added often; check back soon.")}</p>
         ) : (
           <CatalogLayout label={t("Cities")}
@@ -152,6 +156,7 @@ export default function GvCatalog({ card }: { card?: string }) {
         {!extras && <section className="mt-20 max-w-3xl"><SectionTitle kicker="FAQ" title={t("Questions about Google Voice")} /><div className="mt-8"><Faq /></div></section>}
       </div>
       {!empty && <GvCheckout gv={gv} />}
+      <GvPreorderCheckout gv={gv} />
     </PageShell>
   );
 }

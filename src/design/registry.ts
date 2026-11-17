@@ -124,6 +124,7 @@ import OtpCatalog from "./numbers/OtpCatalog";
 import RentCatalog from "./numbers/RentCatalog";
 import GvCatalog from "./numbers/GvCatalog";
 import { GvCardA, GvCardB, GvCardC, GvCardD, GvCardE, GvCardNow } from "./numbers/gvCardOffers";
+import { PreorderPreviewA, PreorderPreviewB, PreorderPreviewC } from "./googleVoice/preorder";
 import { RentCardA, RentCardB, RentCardC, RentCardD, RentCardE, RentCardNow } from "./numbers/rentCardOffers";
 import { OtpPanelA, OtpPanelB, OtpPanelC, OtpPanelD, OtpPanelE, OtpCardA, OtpCardB, OtpCardC, OtpCardD, OtpCardE, OtpCardNow, OrderPreviewF, OrderPreviewG, OrderPreviewH, OrderPreviewI, OrderPreviewJ } from "./numbers/otpPanelOffers";
 import AppleA from "./appleId/AppleA";
@@ -652,6 +653,16 @@ export const sections: Section[] = [
       { id: "D", name: "Price First", summary: "The lowest price is the big figure; city small above it, area codes below, and a round go button that fills green on hover and turns into a check when chosen.", Component: GvCardD },
       { id: "E", name: "Directory", summary: "One bordered list like a phone directory: state tile, city and area codes, then count and price lined up in columns. Most cities on screen, prices compare down one column.", Component: GvCardE },
       { id: "F", name: "Current", summary: "The card as it is now, for comparison.", Component: GvCardNow },
+    ],
+  },
+  {
+    id: "gv-preorder",
+    title: "Google Voice · Pre-order card",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Steps Card", summary: "One calm card: why there are no numbers, the three steps (pay, we get your number, or your money back) in a row, then the price and Pre-order now.", Component: PreorderPreviewA },
+      { id: "B", name: "Reserved Line", summary: "The steps as a short list beside a phone-line strip with the number still blank and \"reserved for you\", the price and the button under it.", Component: PreorderPreviewB },
+      { id: "C", name: "Notice Bar", summary: "The page's unavailable message becomes one slim amber bar with the price in a sentence and the button at its end. Least space, least explanation.", Component: PreorderPreviewC },
     ],
   },
   {

@@ -28,7 +28,7 @@ async function loadLive(state?: string): Promise<LiveGv> {
   try {
     const data = await storefront<ApiGoogleVoice>("google-voice", 0);
     if (data.disabled) return { numbers: [], error: t("Google Voice sales are paused for a moment. Please try again a little later.") };
-    return { numbers: data.numbers.map(toGvNumber), initialState: state?.toUpperCase(), error: data.unavailable ? t("Numbers are unavailable right now. Please try again in a minute.") : undefined };
+    return { numbers: data.numbers.map(toGvNumber), initialState: state?.toUpperCase(), preorder: data.preorder ?? null, error: data.unavailable ? t("Numbers are unavailable right now. Please try again in a minute.") : undefined };
   } catch (e) {
     console.error("google-voice: backend unavailable", e);
     return { numbers: [], error: t("Numbers are unavailable right now. Please try again in a minute.") };
@@ -49,7 +49,7 @@ export default async function GoogleVoicePage({ searchParams }: { searchParams: 
   return (
     <PageHeadingProvider h1={seo.h1}>
       <MoneyProvider currency="toman">
-        <LiveGvProvider value={live}>
+        <LiveGvProvider value={{ ...live, preorderCard: decisions["gv-preorder"]?.offer }}>
           <ExtrasSlot extras={<LiveServiceExtras service="google-voice" />} glow="emerald"><Component card={offer.id === "K" ? decisions["page-google-voice-card"]?.offer : undefined} /></ExtrasSlot>
         </LiveGvProvider>
       </MoneyProvider>

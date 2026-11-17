@@ -10,20 +10,22 @@ import { useT } from "@/i18n/client";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
 import { useCart } from "@/lib/cart";
 import { useMoney } from "@/lib/money";
-import { toGvNumber, type ApiGvOrder } from "@/lib/google-voice";
+import { toGvNumber, type ApiGvOrder, type GvPreorder } from "@/lib/google-voice";
 import { useLiveGv } from "./live";
 
 // Pieces shared by the Google Voice page offers.
 
-// `login` is null while support finishes an order Numberland didn't answer clearly (status "review").
-export type GvOrder = { id?: number; number: GvNumber; paidWith: PayMethod; login: typeof gvSampleLogin | null };
+// `login` is null while support finishes an order Numberland didn't answer clearly (status "review"), and on a
+// pre-order (paid, waiting for a number), which has no number yet either.
+export type GvOrder = { id?: number; number: GvNumber | null; paidWith: PayMethod; login: typeof gvSampleLogin | null; preorder?: boolean };
 export type GvNotice = { good: boolean; text: string };
 
 const orderOf = (o: ApiGvOrder, fallback?: GvNumber): GvOrder => ({
   id: o.id,
-  number: o.number ? { ...toGvNumber({ id: 0, number: o.number, price: o.price, round: 0 }), ...(fallback && { id: fallback.id, easy: fallback.easy }) } : fallback!,
+  number: o.number ? { ...toGvNumber({ id: 0, number: o.number, price: o.price, round: 0 }), ...(fallback && { id: fallback.id, easy: fallback.easy }) } : o.status === "preorder" ? null : fallback ?? null,
   paidWith: o.paid_with,
   login: o.login,
+  preorder: o.status === "preorder",
 });
 
 // Selection → payment → delivered order. On the live page (LiveGvProvider) the numbers come from the backend and
@@ -40,7 +42,12 @@ export function useGv() {
   const [payOpen, setPayOpen] = useState(false);
   const [order, setOrder] = useState<GvOrder | null>(null);
   const [notice, setNotice] = useState<GvNotice | null>(null);
-  const show = (o: GvOrder) => { setOrder(o); setPayOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const show = (o: GvOrder) => { setOrder(o); setPayOpen(false); setPreorderOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  // Pre-order: offered by the page when Numberland is down or empty, or by a failed purchase (then `wanted` is the
+  // number the buyer had picked, passed on as a hint for support).
+  const [preorder, setPreorder] = useState<GvPreorder | null>(live ? live.preorder ?? null : { price: GV_PRICE });
+  const [preorderOpen, setPreorderOpen] = useState(false);
+  const [wanted, setWanted] = useState<GvNumber | null>(null);
 
   // The number left the stock: drop it and move the selection on.
   const drop = (n: GvNumber) => {
@@ -69,8 +76,43 @@ export function useGv() {
       if (e instanceof ApiError) {
         if (typeof e.data?.wallet === "number") setWallet(e.data.wallet);
         if (e.code === "sold" || e.code === "sold_refunded") drop(selected);
+        // Numberland can't sell right now: offer the pre-order in place of the error.
+        const offer = e.data?.preorder as GvPreorder | undefined;
+        if (offer?.price) {
+          setPreorder(offer);
+          setWanted(selected);
+          setNotice({ good: false, text: tx("The number provider isn't answering right now. You can pre-order instead: pay now and we deliver a number as soon as one is available.") });
+          setPreorderOpen(true);
+          return; // closes the payment window; the pre-order one opens
+        }
       }
       throw e; // the modal shows why
+    }
+  };
+
+  // Pays for a pre-order: wallet right away (the order shows as waiting), card via the bank (back with ?pay=preorder).
+  const placePreorder = async (m: PayMethod) => {
+    if (!preorder) return;
+    if (!live) return show({ number: null, paidWith: m, login: null, preorder: true });
+    const body = { pay: m, price: preorder.price, ...(wanted && { wanted: { id: wanted.pid, number: wanted.number } }) };
+    try {
+      if (m === "card") {
+        const r = await accountApi<{ url: string }>("google-voice/preorder", { ...body, return: window.location.pathname });
+        window.location.assign(r.url);
+        return new Promise<void>(() => {});
+      }
+      const r = await accountApi<{ order: ApiGvOrder; wallet: number }>("google-voice/preorder", body);
+      setWallet(r.wallet);
+      setNotice(null);
+      show(orderOf(r.order));
+    } catch (e) {
+      if (e instanceof ApiError) {
+        if (typeof e.data?.wallet === "number") setWallet(e.data.wallet);
+        const offer = e.data?.preorder as GvPreorder | undefined;
+        if (e.code === "price_changed" && offer) setPreorder(offer); // the modal shows the new price
+        if (e.code === "preorder_off") setPreorder(null);
+      }
+      throw e;
     }
   };
 
@@ -88,7 +130,7 @@ export function useGv() {
       cancelled: { good: false, text: tx("Payment cancelled. Nothing was charged.") },
       failed: { good: false, text: tx("The payment didn't go through. If money left your account, the bank returns it within 72 hours.") },
     };
-    if ((pay === "ok" || pay === "review") && id) {
+    if ((pay === "ok" || pay === "review" || pay === "preorder") && id) {
       accountApi<{ order: ApiGvOrder; wallet: number }>(`google-voice/orders/${id}`)
         .then((r) => { setWallet(r.wallet); show(orderOf(r.order)); })
         .catch(() => setNotice({ good: true, text: tx("Payment received. Your number is in your orders.") }));
@@ -101,6 +143,8 @@ export function useGv() {
   return {
     live: !!live, numbers, error: live?.error, notice, selected, setSelected, payOpen,
     openPay: () => setPayOpen(true), closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => setOrder(null),
+    preorder, preorderCard: live?.preorderCard, preorderOpen, wanted, placePreorder,
+    openPreorder: () => { setWanted(null); setPreorderOpen(true); }, closePreorder: () => setPreorderOpen(false),
   };
 }
 export type Gv = ReturnType<typeof useGv>;
@@ -119,6 +163,24 @@ export function GvCheckout({ gv }: { gv: Gv }) {
         <div className="min-w-0 flex-1">
           <div className="font-mono font-semibold text-slate-900 dark:text-white">{gv.selected.number}</div>
           <div className="text-xs text-slate-500 dark:text-slate-400">{gv.selected.city}, {gv.selected.state}{" "}{tx("· Google Voice")}</div>
+        </div>
+      </>} />
+  );
+}
+
+// Paying for a pre-order: the same payment window, at the pre-order price, with what happens next.
+export function GvPreorderCheckout({ gv }: { gv: Gv }) {
+  const tx = useT();
+  if (!gv.preorder) return null;
+  return (
+    <CheckoutModal open={gv.preorderOpen} onClose={gv.closePreorder} price={gv.preorder.price} itemLabel={tx("Google Voice pre-order")} payLabel={tx("Pay and pre-order")}
+      note={tx("We deliver the first number that comes in. If we can't, the full amount goes back to your wallet.")} onPay={gv.placePreorder}
+      {...(gv.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
+      summary={<>
+        <GvIcon />
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-slate-900 dark:text-white">{tx("Pre-order a US number")}</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">{gv.wanted ? tx("You picked {0}; we deliver it or the next one available.", { 0: gv.wanted.number }) : tx("Delivered to your orders as soon as one is available")}</div>
         </div>
       </>} />
   );
@@ -308,17 +370,24 @@ export function OrderView({ gv }: { gv: Gv }) {
   const o = gv.order!;
   return (
     <div className="mx-auto max-w-3xl animate-fade-up">
-      <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400"><span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-4 w-4" /></span><span className="font-semibold">{o.login ? tx("Payment received · delivered") : tx("Payment received")}</span></div>
-      <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">{o.login ? tx("Your Google Voice number is ready") : tx("We are finishing your order")}</h1>
+      <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400"><span className="grid h-8 w-8 place-items-center rounded-full bg-emerald-500 text-white"><Check className="h-4 w-4" /></span><span className="font-semibold">{o.login ? tx("Payment received · delivered") : o.preorder ? tx("Payment received · pre-order placed") : tx("Payment received")}</span></div>
+      <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">{o.login ? tx("Your Google Voice number is ready") : o.preorder ? tx("Your pre-order is in") : tx("We are finishing your order")}</h1>
 
       <div className="mt-8 rounded-3xl bg-white p-6 ring-1 ring-slate-200 sm:p-8 dark:bg-[#0E1424] dark:ring-white/10">
         <div className="flex flex-wrap items-center gap-4">
           <GvIcon size="lg" />
-          <div className="flex-1">
-            <div className="font-mono text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{o.number.number}</div>
-            <div className="text-sm text-slate-500 dark:text-slate-400">{o.number.city}, {o.number.state}{" "}{tx("· United States")}</div>
-          </div>
-          <CopyButton text={o.number.number} label={tx("Copy number")} />
+          {o.number ? (<>
+            <div className="flex-1">
+              <div className="font-mono text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{o.number.number}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">{o.number.city}, {o.number.state}{" "}{tx("· United States")}</div>
+            </div>
+            <CopyButton text={o.number.number} label={tx("Copy number")} />
+          </>) : (
+            <div className="flex-1">
+              <div dir="ltr" className="font-mono text-3xl font-bold tracking-tight text-slate-300 rtl:text-end dark:text-white/25">(···) ···-····</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">{tx("Your number appears here and in your orders once it is delivered")}</div>
+            </div>
+          )}
         </div>
         <div className="mt-8 text-xs font-semibold uppercase tracking-widest text-slate-400">{tx("Google account")}</div>
         {o.login ? (
@@ -331,7 +400,9 @@ export function OrderView({ gv }: { gv: Gv }) {
           </div>
         ) : (
           <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:ring-amber-400/25">
-            {tx("The number provider was slow to confirm. Our team is checking it now and will put the login in your orders shortly, or refund you in full.")}
+            {o.preorder
+              ? tx("We buy the first Google Voice number that comes in and put its login in your orders, usually within a few hours. If we can't, the full amount goes back to your wallet.")
+              : tx("The number provider was slow to confirm. Our team is checking it now and will put the login in your orders shortly, or refund you in full.")}
           </p>
         )}
       </div>

@@ -3,12 +3,14 @@ import type { GvNumber } from "@/content/google-voice-en";
 // Google Voice numbers from the backend (GET /api/v1/storefront/google-voice → Numberland special numbers).
 // Numberland sends only the number, so the city and state come from the US area code below.
 export type ApiGvNumber = { id: number; number: string; price: number; round: number };
-export type ApiGoogleVoice = { numbers: ApiGvNumber[]; unavailable: boolean; disabled?: boolean }; // disabled: switched off in admin
+// disabled: switched off in admin. preorder: the pre-order price when the buyer may pre-order (Numberland down or empty).
+export type GvPreorder = { price: number };
+export type ApiGoogleVoice = { numbers: ApiGvNumber[]; unavailable: boolean; disabled?: boolean; preorder?: GvPreorder | null };
 
 // A delivered (or pending) order, from POST google-voice/buy and GET google-voice/orders/{id}.
 export type ApiGvOrder = {
   id: number;
-  status: "delivered" | "refunded" | "unpaid" | "review";
+  status: "delivered" | "refunded" | "unpaid" | "review" | "preorder"; // preorder: paid, waiting for a number
   number: string | null;
   price: number;
   paid_with: "wallet" | "card";
