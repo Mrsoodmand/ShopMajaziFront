@@ -329,12 +329,20 @@ function Mini() {
 
 export const catalogStyles: Record<string, ComponentType> = { A: Tabs, B: Tiles, C: Swipe, D: Menu, E: Mini };
 
-// The style the live hero uses (design/decisions.json › hero-catalog).
-export const CATALOG_STYLE: keyof typeof catalogStyles = "E";
+// The styles the live hero uses (design/decisions.json › hero-catalog): E on phones, where the old tabs ran off the
+// screen, and the old tabs (A) from md up, as the owner asked. Both are in the page; CSS shows one.
+export const CATALOG_STYLE_PHONE: keyof typeof catalogStyles = "E";
+export const CATALOG_STYLE_WIDE: keyof typeof catalogStyles = "A";
 
 export function CatalogWindow() {
-  const Style = catalogStyles[CATALOG_STYLE] ?? Tabs;
-  return <Style />;
+  const Phone = catalogStyles[CATALOG_STYLE_PHONE] ?? Mini;
+  const Wide = catalogStyles[CATALOG_STYLE_WIDE] ?? Tabs;
+  return (
+    <>
+      <div className="md:hidden"><Phone /></div>
+      <div className="hidden md:block"><Wide /></div>
+    </>
+  );
 }
 
 // Gallery: the window alone, at the hero's width, in Persian (the site's main language and the one that has to fit
