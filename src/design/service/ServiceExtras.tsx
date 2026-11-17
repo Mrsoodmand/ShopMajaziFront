@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import Link from "@/i18n/Link";
-import { ArrowRight, BadgeCheck, ChevronDown, Mail, MessageCircle, MessageSquare, Plus, Send } from "lucide-react";
+import { ArrowRight, BadgeCheck, ChevronDown, Clock, Mail, MessageCircle, MessageSquare, Plus, Send } from "lucide-react";
 import { blogCats, type Post } from "@/content/blog-en";
 import { supportEmail } from "@/content/footer-en";
 import { archive } from "@/content/blog-list-en";
@@ -89,6 +89,30 @@ function ContentArea({ service }: { service: string }) {
   const folded = long && !open;
   const fade = "linear-gradient(to bottom, #000 calc(100% - 8rem), transparent)";
   const bodyId = useId();
+  // The "On this page" entry for the section being read: the last section whose top has passed a line just under the
+  // sticky header. Sections clipped away by the fold don't count.
+  const [active, setActive] = useState(s.content[0]?.id ?? "");
+  const ids = s.content.map((c) => c.id).join("|");
+  useEffect(() => {
+    const body = document.getElementById(bodyId);
+    if (!body || !ids) return;
+    const list = ids.split("|");
+    const LINE = 140;
+    // A handful of rect reads per scroll event; cheap enough to run directly.
+    const update = () => {
+      const bottom = body.getBoundingClientRect().bottom;
+      let cur = list[0];
+      for (const id of list) {
+        const top = document.getElementById(`${service}-${id}`)?.getBoundingClientRect().top;
+        if (top !== undefined && top <= LINE && top < bottom) cur = id;
+      }
+      setActive(cur);
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => { window.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
+  }, [bodyId, service, ids, open]);
   return (
     <section aria-labelledby="guide" className={wrap}>
       <p className={kicker}>{tx("Guide")}</p>
@@ -98,9 +122,13 @@ function ContentArea({ service }: { service: string }) {
           <div className="sticky top-24">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">{tx("On this page")}</p>
             <ol className="mt-3 space-y-1 border-s border-slate-200 dark:border-white/10">
-              {s.content.map((c) => (
-                <li key={c.id}><a href={`#${service}-${c.id}`} onClick={() => setOpen(true)} className={`-ms-px block border-s-2 border-transparent py-1.5 ps-4 text-sm text-slate-700 hover:border-slate-400 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white ${ring}`}>{c.title}</a></li>
-              ))}
+              {s.content.map((c) => {
+                const on = active === c.id;
+                return (
+                  <li key={c.id}><a href={`#${service}-${c.id}`} onClick={() => { setOpen(true); setActive(c.id); }} aria-current={on ? "location" : undefined}
+                    className={`-ms-px block border-s-2 py-1.5 ps-4 text-sm transition-colors ${on ? "border-emerald-700 font-semibold text-slate-900 dark:border-emerald-400 dark:text-white" : "border-transparent text-slate-600 hover:border-slate-400 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"} ${ring}`}>{c.title}</a></li>
+                );
+              })}
             </ol>
           </div>
         </nav>
@@ -212,7 +240,15 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
       <h2 id="comments" className={h2}>{total > 0 ? <>{total} {tx(total === 1 ? "comment" : "comments")}{" "}{tx("on")}{" "}{s.name}</> : tx("Comments on {0}", { 0: s.name })}</h2>
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div>
-          {total === 0 && <p className="text-[15px] leading-7 text-slate-600 dark:text-slate-400">{tx("No comments yet. Ask a question or share how your order went; our team replies here.")}</p>}
+          {/* Empty: an invitation card that fills the column beside the form instead of one lonely line. */}
+          {total === 0 && (
+            <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-300 px-6 py-10 text-center dark:border-white/15">
+              <span aria-hidden className="grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300"><MessageCircle className="h-6 w-6" /></span>
+              <p className="mt-2 font-display text-lg font-semibold text-slate-900 dark:text-white">{tx("Be the first to comment")}</p>
+              <p className="max-w-sm text-[15px] leading-7 text-slate-600 dark:text-slate-400">{tx("Ask a question or share how your order went; our team replies here.")}</p>
+              <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-emerald-800 dark:text-emerald-300"><Clock aria-hidden className="h-4 w-4" />{tx("We usually reply within a few hours")}</p>
+            </div>
+          )}
           <ul className="space-y-4">{list.slice(0, shown).map((c) => <CommentItem key={c.id} c={c} />)}</ul>
           {shown < total && <button onClick={() => setShown(shown + PAGE)} className={`${secondary} mt-5`}>{tx("Show more comments (")}{total - shown})</button>}
         </div>

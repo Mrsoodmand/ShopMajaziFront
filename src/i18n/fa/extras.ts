@@ -171,6 +171,7 @@ export const extras: Record<string, string> = {
 
   // Dynamic sentences built in service-extras-en.ts
   "Choose a {0} plan": "یک پلن {0} انتخاب کنید",
+  "See the plans in the buy box and pick one.": "پلن‌ها را در کادر خرید ببینید و یکی را انتخاب کنید.",
   "We activate {0} on your own account.": "{0} را روی اکانت خودتان فعال می‌کنیم.",
   "We deliver a ready {0} account.": "یک اکانت آماده {0} تحویل می‌دهیم.",
   "What you get with {0}": "با {0} چه چیزی می‌گیرید",
@@ -200,6 +201,9 @@ export const extras: Record<string, string> = {
   "Too many comments in a short time. Please try again in a minute.": "در مدت کوتاهی دیدگاه زیادی فرستادید. یک دقیقه دیگر دوباره امتحان کنید.",
   "Your comment couldn't be sent. Please try again.": "دیدگاه شما ارسال نشد. لطفاً دوباره امتحان کنید.",
   "Comments on {0}": "دیدگاه‌ها درباره {0}",
+  "Be the first to comment": "اولین دیدگاه را شما بنویسید",
+  "Ask a question or share how your order went; our team replies here.": "سؤال یا تجربه خریدتان را بنویسید؛ تیم ما همین‌جا پاسخ می‌دهد.",
+  "We usually reply within a few hours": "معمولاً در چند ساعت پاسخ می‌دهیم",
   "No comments yet. Ask a question or share how your order went; our team replies here.": "هنوز دیدگاهی ثبت نشده. سؤالتان را بپرسید یا تجربه خریدتان را بنویسید؛ تیم ما همین‌جا پاسخ می‌دهد.",
   "Sending…": "در حال ارسال…",
   "Comments our customers left on our product pages, shown as they wrote them. Every product page has its own comments and questions, with our team's answers.": "دیدگاه‌هایی که مشتریان در صفحه محصولات ما نوشته‌اند، همان‌طور که نوشته‌اند. هر صفحه محصول دیدگاه‌ها و پرسش‌های خودش را دارد، همراه با پاسخ تیم ما.",

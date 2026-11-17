@@ -8,3 +8,8 @@ export const SubsPanelB = () => <SubsA panel="B" />;
 export const SubsPanelC = () => <SubsA panel="C" />;
 export const SubsPanelD = () => <SubsA panel="D" />;
 export const SubsPanelE = () => <SubsA panel="E" />;
+export const SubsPanelF = () => <SubsA panel="F" />;
+export const SubsPanelG = () => <SubsA panel="G" />;
+export const SubsPanelH = () => <SubsA panel="H" />;
+export const SubsPanelI = () => <SubsA panel="I" />;
+export const SubsPanelJ = () => <SubsA panel="J" />;

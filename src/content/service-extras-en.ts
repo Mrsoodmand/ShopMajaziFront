@@ -324,7 +324,7 @@ function subsExtras(slug: string, t: T, live?: LiveSubsExtras): ServiceExtras | 
   const content = {
     name: p.name,
     howTo: [
-      { title: t("Choose a {0} plan", { 0: p.name }), text: p.plans.map((pl) => `${pl.name} ${money(pl.price)}`).join(" · ") },
+      { title: t("Choose a {0} plan", { 0: p.name }), text: t("See the plans in the buy box and pick one.") },
       how === "ready"
         ? { title: t("No details needed"), text: t("We deliver a ready {0} account.", { 0: p.name }) }
         : how === "login"

@@ -149,7 +149,7 @@ import SubsI from "./subs/SubsI";
 import SubsJ from "./subs/SubsJ";
 import { SinglePreviewA, SinglePreviewB, SinglePreviewC, SinglePreviewD, SinglePreviewE } from "./subSingle/offers";
 import { logoOffers } from "./logo/offers";
-import { SubsPanelA, SubsPanelB, SubsPanelC, SubsPanelD, SubsPanelE } from "./subs/panelOffers";
+import { SubsPanelA, SubsPanelB, SubsPanelC, SubsPanelD, SubsPanelE, SubsPanelF, SubsPanelG, SubsPanelH, SubsPanelI, SubsPanelJ } from "./subs/panelOffers";
 import StarsA from "./telegram/StarsA";
 import StarsB from "./telegram/StarsB";
 import StarsC from "./telegram/StarsC";
@@ -742,6 +742,11 @@ export const sections: Section[] = [
       { id: "C", name: "Three Steps", summary: "The panel reads as numbered steps: plan, your account, pay; each gets a check when done.", Component: SubsPanelC },
       { id: "D", name: "Big Price", summary: "A large price per month that changes with the period and shows the saving; included features fold away.", Component: SubsPanelD },
       { id: "E", name: "Detailed", summary: "Plan cards with Popular and Best value tags, an Included box, and secure payment / refund / delivery under Continue.", Component: SubsPanelE },
+      { id: "F", name: "Tight Rows", summary: "Smaller: one bordered list of short rows (dot, name, price at the end); price repeats inside Continue.", Component: SubsPanelF },
+      { id: "G", name: "Segmented", summary: "Smaller: plan names in a pill switch, the chosen price shown once and large under it, then the field and Continue.", Component: SubsPanelG },
+      { id: "H", name: "Dropdown", summary: "Smallest: the plan is a select (name — price), the field, and Continue with the price.", Component: SubsPanelH },
+      { id: "I", name: "Mini Tiles", summary: "Smaller: compact tiles in one row with name and price in small type and a check on the chosen one.", Component: SubsPanelI },
+      { id: "J", name: "Filled Rows", summary: "Smaller: short rows where the chosen plan fills violet; Continue carries the price.", Component: SubsPanelJ },
     ],
   },
   {
