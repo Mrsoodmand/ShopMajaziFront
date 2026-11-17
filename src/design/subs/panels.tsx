@@ -4,8 +4,9 @@ import { Check, Lock, RotateCcw, Zap } from "lucide-react";
 import { useMoney } from "@/lib/money";
 import { savePct, type SubPlan } from "@/content/subs-en";
 import { ring } from "../googleVoice/clean";
-import { ActivationBadge, BuyButton, FieldsForm, Notes, ProductPanel, Tile, type Subs } from "./parts";
+import { ActivationBadge, BuyButton, FieldsForm, Notes, PopularBadge, ProductPanel, Tile, type Subs } from "./parts";
 import { useT } from "@/i18n/client";
+import { PLAN_TONE, planTones } from "./planSelect";
 
 // Five versions of the product panel on the Subscriptions page (the box with plans, the account field and Buy).
 // All keep real radio buttons for plans, labelled fields with errors, and work for 1 to 4 plans, select fields
@@ -153,8 +154,8 @@ function PanelList({ s, focusable }: PanelProps) {
 function PanelSteps({ s, focusable }: PanelProps) {
   const t = useT();
   const p = s.product!;
-  const hasField = p.fields.length > 0;
-  const filled = p.fields.every((f) => f.optional || (s.values[f.id] ?? "").trim());
+  const hasField = true; // the call question is always asked
+  const filled = s.night !== null && p.fields.every((f) => f.optional || (s.values[f.id] ?? "").trim());
   const steps = [
     { n: 1, title: t("Choose a plan"), done: !!s.plan, body: <Segments s={s} show="price" /> },
     ...(hasField ? [{ n: 2, title: t("Your account"), done: filled, body: <FieldsForm s={s} /> }] : []),
@@ -402,6 +403,7 @@ function PanelSplit({ s, focusable }: PanelProps) {
   const t = useT();
   const name = useId();
   const plans = s.product!.plans;
+  const tone = planTones[PLAN_TONE]; // the chosen row's colour (gallery: subs-plan-select)
   return (
     <div className="space-y-4">
       <MiniHead s={s} focusable={focusable} />
@@ -411,10 +413,10 @@ function PanelSplit({ s, focusable }: PanelProps) {
           {plans.map((pl) => {
             const on = s.plan?.id === pl.id;
             return (
-              <label key={pl.id} className={`flex cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${focusRing} ${on ? "border-violet-600 bg-violet-600 text-white dark:border-violet-400 dark:bg-violet-400 dark:text-violet-950" : "border-slate-200 text-slate-700 hover:border-slate-400 dark:border-white/15 dark:text-slate-300 dark:hover:border-white/40"}`}>
+              <label key={pl.id} className={`flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${focusRing} ${on ? tone.row : "border-slate-200 text-slate-700 hover:border-slate-400 dark:border-white/15 dark:text-slate-300 dark:hover:border-white/40"}`}>
                 <input type="radio" autoComplete="off" name={name} checked={on} onChange={() => s.setPlan(pl)} className="sr-only" />
-                <span className="min-w-0 truncate font-semibold">{pl.name}</span>
-                <span className={`whitespace-nowrap tabular-nums ${on ? "font-bold" : "text-slate-500 dark:text-slate-400"}`}>{usd(pl.price)}</span>
+                <span className="flex min-w-0 items-center gap-2"><span className="truncate font-semibold">{pl.name}</span>{pl.popular && <PopularBadge on={on && tone.fill} />}</span>
+                <span className={`whitespace-nowrap tabular-nums ${on ? tone.price : "text-slate-500 dark:text-slate-400"}`}>{usd(pl.price)}</span>
               </label>
             );
           })}

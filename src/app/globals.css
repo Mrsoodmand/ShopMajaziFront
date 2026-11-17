@@ -319,6 +319,16 @@
   50% { transform: translateX(4px); }
 }
 
+/* Hero bridge (design/bridge): a dot running down the thread, and a light crossing the beam line. */
+@keyframes thread-drop {
+  0% { transform: translateY(0); opacity: 0; }
+  15%, 80% { opacity: 1; }
+  100% { transform: translateY(96px); opacity: 0; }
+}
+@keyframes bridge-sweep {
+  from { left: -12rem; }
+  to { left: 100%; }
+}
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -525,3 +535,21 @@ html[lang="en"] [lang="fa"], html[lang="en"] [lang="fa"] * { letter-spacing: 0 !
    the font, so English lines keep Latin digits on the Persian site and Persian lines keep IRANSans on the English one. */
 html body .mixed-lang [lang="en"], html body .mixed-lang[lang="en"], html body .mixed-lang[lang="en"] :is(.font-sans, .font-display), html body .mixed-lang [lang="en"] :is(.font-sans, .font-display) { font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif; }
 html body .mixed-lang [lang="fa"], html body .mixed-lang [lang="fa"] :is(.font-sans, .font-display) { font-family: var(--font-iransans), ui-sans-serif, system-ui, sans-serif; }
+
+/* Soft section edges (site-wide). A section that clips its own glows (overflow-hidden) used to cut them off flat at
+   its top and bottom, which shows up as a hard line against the next section. Its blur/radial glows are pushed
+   under a ::after that repeats the section's own background (background: inherit, so any colour works) and fades
+   in only at the two edges, so each glow dies out before the edge. Text and cards stay above it. */
+@layer components {
+  section.relative.overflow-hidden { isolation: isolate; }
+  section.relative.overflow-hidden > .absolute:is([class*="blur-"], [class*="radial-gradient"]):not([class*="backdrop-blur"]) {
+    z-index: -1;
+  }
+  section.relative.overflow-hidden::after {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: inherit;
+    --edge: min(6rem, 22%);
+    -webkit-mask-image: linear-gradient(to bottom, #000, transparent var(--edge), transparent calc(100% - var(--edge)), #000);
+    mask-image: linear-gradient(to bottom, #000, transparent var(--edge), transparent calc(100% - var(--edge)), #000);
+  }
+}

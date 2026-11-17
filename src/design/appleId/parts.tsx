@@ -208,7 +208,7 @@ export function useApple(initial: AppleMethod = "ready") {
     method, setMethod: chooseMethod, opening: navigating ? opening : null, qty, setQty, pack, setPack, count, total,
     form, set: (k: FormKey, v: string) => setForm((f) => ({ ...f, [k]: v })), touch: (k: keyof Errors) => setTouched((t) => ({ ...t, [k]: true })),
     errors, allErrors: all, submitted,
-    payOpen, proceed, closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => { setOrder(null); setSubmitted(0); setTouched({}); setNotice(null); },
+    inCart: !!addToCart, payOpen, proceed, closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => { setOrder(null); setSubmitted(0); setTouched({}); setNotice(null); },
   };
 }
 export type AppleState = ReturnType<typeof useApple>;
@@ -593,10 +593,10 @@ export function ContinueButton({ a, className = "", full = true, short = false }
   const money = useMoney();
   // Sales paused: the page says why, the button waits. (More than the stock is fine: it is a pre-order.)
   const off = a.paused;
-  if (short) return <button type="button" onClick={a.proceed} disabled={off} className={`${primary} disabled:cursor-not-allowed disabled:opacity-50 ${full ? "w-full" : ""} ${className}`}>{a.method === "ready" ? tx("Buy now") : tx("Continue")}</button>;
+  if (short) return <button type="button" onClick={a.proceed} disabled={off} className={`${primary} disabled:cursor-not-allowed disabled:opacity-50 ${full ? "w-full" : ""} ${className}`}>{a.inCart ? tx("Add to cart") : a.method === "ready" ? tx("Buy now") : tx("Continue")}</button>;
   return (
     <button type="button" onClick={a.proceed} disabled={off} className={`${primary} disabled:cursor-not-allowed disabled:opacity-50 ${full ? "w-full" : ""} ${className}`}>
-      {a.method === "ready" ? `${a.count === 1 ? tx("Buy now") : tx("Buy {0}", { 0: tx("{0} Apple IDs", { 0: a.count }) })} · ${money.format(a.total)}` : tx("Continue to payment · {0}", { 0: money.format(a.total) })}
+      {a.inCart ? `${tx("Add to cart")} · ${money.format(a.total)}` : a.method === "ready" ? `${a.count === 1 ? tx("Buy now") : tx("Buy {0}", { 0: tx("{0} Apple IDs", { 0: a.count }) })} · ${money.format(a.total)}` : tx("Continue to payment · {0}", { 0: money.format(a.total) })}
     </button>
   );
 }

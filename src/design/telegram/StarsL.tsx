@@ -80,9 +80,9 @@ export default function StarsL() {
             <aside aria-label={t("Your order")} className="relative z-10 lg:col-start-2 lg:row-start-1 lg:-mt-64">
               <div ref={summary} className="lg:sticky lg:top-24">
                 <StarsSummary st={st} className={`${panel} shadow-2xl shadow-amber-950/20`}>
-                  <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{starsLabel(st, t("Continue"), usd)}</button>
+                  <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{starsLabel(st, t(st.addToCart ? "Add to cart" : "Continue"), usd)}</button>
                   <StarsBlocker st={st} />
-                  <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{st.live ? t("Pay with your wallet or card on the next step.") : t("Pay with your wallet, card or crypto on the next step.")}</p>
+                  <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{st.addToCart ? t("You pay in your cart, with your wallet or card.") : t("Pay with your wallet or card on the next step.")}</p>
                 </StarsSummary>
               </div>
             </aside>

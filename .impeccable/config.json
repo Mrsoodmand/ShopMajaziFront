@@ -38,6 +38,15 @@
         ],
         "createdAt": "2026-10-27T22:10:30.286Z",
         "reason": "Claude triage: the indigo-to-fuchsia and violet-to-cyan bars reuse the site's existing palette (How to buy E progress bar in src/design/how/HowE.tsx, violet+cyan glow for virtual numbers in HeaderGlow.tsx); user asked for cards 'like site design'"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/app/globals.css"
+        ],
+        "createdAt": "2026-11-15T10:12:18.112Z",
+        "reason": "Claude triage: L394 is .article-html blockquote, a standard quote rule in blog content, not a card accent; predates this session"
       }
     ]
   }

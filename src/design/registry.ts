@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import HeroA from "./hero/HeroA";
+import { BridgeA, BridgeB, BridgeC, BridgeD, BridgeE } from "./bridge/offers";
 import { CartA, CartB, CartC, CartD, CartE } from "./cart/offers";
 import { CartOrderA, CartOrderB, CartOrderC, CartOrderD } from "./account/cartOrders";
 import { OrderPayA, OrderPayB, OrderPayC } from "./account/orderPay";
@@ -137,6 +138,9 @@ import AppleG from "./appleId/AppleG";
 import AppleH from "./appleId/AppleH";
 import AppleI from "./appleId/AppleI";
 import AppleJ from "./appleId/AppleJ";
+import { PlanSelectA, PlanSelectB, PlanSelectC, PlanSelectD, PlanSelectE, PlanSelectF } from "./subs/planSelect";
+import { DeliveredA, DeliveredB, DeliveredC, DeliveredD, DeliveredE } from "./subSingle/howDelivered";
+import { CatalogA, CatalogB, CatalogC, CatalogD, CatalogE } from "./hero/catalogWindows";
 import SubsA from "./subs/SubsA";
 import SubsB from "./subs/SubsB";
 import SubsC from "./subs/SubsC";
@@ -213,8 +217,6 @@ import AccountC from "./account/AccountC";
 import { OrdersA, OrdersB, OrdersC, OrdersD, OrdersE, OrdersNow } from "./account/orders";
 import { SignInA, SignInB, SignInC, SignInD, SignInF, SignInG, SignInH, SignInI, SignInNow } from "./signin/offers";
 import { InvoiceA, InvoiceB, InvoiceC, InvoiceD, InvoiceE } from "./account/invoice";
-import { DeliveredA, DeliveredB, DeliveredC, DeliveredD, DeliveredE } from "./subSingle/howDelivered";
-import { CatalogA, CatalogB, CatalogC, CatalogD, CatalogE } from "./hero/catalogWindows";
 
 // archived offers stay in the code but are hidden from the comparison page unless "Show archived" is on.
 // `overlay` (headers only): the header floats over the hero instead of sitting above it.
@@ -299,6 +301,19 @@ export const sections: Section[] = [
       { id: "C", name: "Display Line (current)", summary: "The line in the headline's font, a size bigger; the promises in the headline's indigo-to-pink gradient with a light sheen passing through them once. The ending is quieter.", Component: HeroSubGradient },
       { id: "D", name: "Icon Row", summary: "The promises as one row, each with a coloured icon (shield, lightning, headset); \"everything just as you'd expect\" on its own quieter line under it.", Component: HeroSubIcons },
       { id: "E", name: "Word by word", summary: "One grey line that writes itself in word by word (before C was chosen).", Component: HeroSubPlain },
+    ],
+  },
+  {
+    // A small moving element for the empty band between the home hero and the section under it.
+    id: "hero-bridge",
+    title: "Hero · Bridge to the next section",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Scroll Thread", summary: "A hairline drops from the hero card; a bright dot runs down it to a gently bobbing arrow. Says \"keep scrolling\" and ties the two sections together.", Component: BridgeA },
+      { id: "B", name: "Service Marquee", summary: "The catalog's names (virtual numbers, Apple ID, Telegram Stars…) as chips drifting slowly across, fading at both edges; pauses on hover.", Component: BridgeB },
+      { id: "C", name: "Beam Line", summary: "A hairline across the page with a pink light running along it and the logo glowing softly in the middle.", Component: BridgeC },
+      { id: "D", name: "Soft Wave", summary: "Two thin indigo-to-pink waves rolling across at different speeds. The calmest moving option.", Component: BridgeD },
+      { id: "E", name: "Twinkle Field", summary: "A quiet scatter of small dots that light up and dim, densest in the middle. Pure atmosphere, no shape.", Component: BridgeE },
     ],
   },
   {
@@ -752,6 +767,19 @@ export const sections: Section[] = [
     ],
   },
   {
+    id: "subs-plan-select",
+    title: "Subscriptions · Chosen plan colour",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Violet", summary: "The chosen plan fills violet (as it was before E was chosen).", Component: PlanSelectA },
+      { id: "B", name: "Emerald", summary: "Fills with the site's own green, the same family as the main buttons.", Component: PlanSelectB },
+      { id: "C", name: "Indigo", summary: "Fills indigo, the colour of the pay buttons; deeper and calmer than violet.", Component: PlanSelectC },
+      { id: "D", name: "Violet outline", summary: "A violet border on a soft violet tint instead of a full fill; quieter, so the gold «محبوب‌ترین» badge leads.", Component: PlanSelectD },
+      { id: "E", name: "Emerald outline (current)", summary: "A green border on a soft green tint; quiet, and in the site's own colour.", Component: PlanSelectE },
+      { id: "F", name: "Ink", summary: "No colour: white in dark theme, black in light. The strongest contrast; the gold badge is the only accent.", Component: PlanSelectF },
+    ],
+  },
+  {
     id: "hero-catalog",
     title: "Home hero · Shop window",
     kind: "part",
@@ -762,7 +790,8 @@ export const sections: Section[] = [
       { id: "D", name: "Category Menu", summary: "On phones each category is a row with its count and opens its products right under it; on wider screens a menu beside the products.", Component: CatalogD },
       { id: "E", name: "Segmented + Mini Cards", summary: "Five equal segments (icon over a short name) under one sliding pill; products as small cards two to a row, with the details on wider screens.", Component: CatalogE },
     ],
-  },  {
+  },
+  {
     id: "sub-how-delivered",
     title: "Subscriptions · How it's delivered",
     kind: "part",
@@ -773,7 +802,8 @@ export const sections: Section[] = [
       { id: "D", name: "Summary + checklist", summary: "A tinted panel says how it works and how long it takes; the steps sit beside it as a short checklist.", Component: DeliveredD },
       { id: "E", name: "Order tracker", summary: "One progress bar with three stops, like tracking a parcel; the last stop turns green.", Component: DeliveredE },
     ],
-  },  {
+  },
+  {
     id: "page-sub-single",
     title: "Page · Single subscription",
     kind: "page",

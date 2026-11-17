@@ -15,7 +15,8 @@ export const subCats: { id: SubCat; label: string }[] = [
 ];
 
 // months 0 = unknown (a live plan the admin didn't give a length): no price per month is shown for it.
-export type SubPlan = { id: string; name: string; months: number; price: number; was?: number };
+// `popular`: the plan the admin marked «محبوب‌ترین» (one per product at most).
+export type SubPlan = { id: string; name: string; months: number; price: number; was?: number; popular?: boolean };
 // A field the buyer fills in. `options` makes it a select.
 export type SubField = { id: string; label: string; hint?: string; type: "email" | "text" | "password" | "select"; options?: string[]; optional?: boolean };
 // "own": activated on the buyer's own account (we need its email). "login": activated on the buyer's account, which

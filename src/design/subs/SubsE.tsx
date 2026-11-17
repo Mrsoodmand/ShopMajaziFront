@@ -26,7 +26,7 @@ export default function SubsE({ slug }: { slug?: string }) {
         <div ref={top} key={p.slug} className="scroll-mt-24 animate-fade-up [animation-duration:300ms]">
           <ProductHeader p={p} as="h1" focusable />
           <div className="mt-6 max-w-2xl"><Notes p={p} /></div>
-          {p.fields.length > 0 && <div className="mt-8 max-w-md"><FieldsForm s={s} /></div>}
+          <div className="mt-8 max-w-md"><FieldsForm s={s} /></div>
 
           <h2 className="mt-10 text-base font-semibold text-slate-900 dark:text-white">Choose a plan</h2>
           <ul className={`mt-3 grid gap-4 ${p.plans.length >= 3 ? "md:grid-cols-3" : "md:grid-cols-2"} ${p.plans.length === 4 ? "lg:grid-cols-4" : ""}`}>

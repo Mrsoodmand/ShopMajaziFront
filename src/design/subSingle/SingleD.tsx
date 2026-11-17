@@ -2,7 +2,7 @@
 import { useMoney } from "@/lib/money";
 import { PageShell } from "../otp/parts";
 import { ActivationBadge, brand, SubsCheckout, SubsOrderView, Tile, useSubs } from "../subs/parts";
-import { BuyBox, Crumbs, DEFAULT_SLUG, FromLine, H2, HowDelivered, PlanTable, Related, Trust, WhatYouGet } from "./parts";
+import { BuyBox, Crumbs, DEFAULT_SLUG, FromLine, H2, HowDelivered, PlanTable, QuickFacts, Related, Trust, WhatYouGet } from "./parts";
 import { useT } from "@/i18n/client";
 import { SpotlightBand, spotTone, useSpotlight } from "@/design/service/spotlight";
 
@@ -35,8 +35,9 @@ export default function SingleD({ slug, panel }: { slug?: string; panel?: string
       <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_380px]">
           <aside className="relative z-10 -mt-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:-mt-80"><div className="lg:sticky lg:top-24"><BuyBox s={s} panel={panel} className="shadow-2xl shadow-slate-900/20" /></div></aside>
-          <div className="space-y-12 lg:col-start-1 lg:row-start-1 lg:pt-10">
-            <Trust p={p} />
+          <div className="space-y-12 lg:col-start-1 lg:row-start-1">
+            {/* On desktop the facts sit in the hero's faded foot, which is otherwise empty beside the buy box. */}
+            <div className="relative z-10 space-y-5 lg:-mt-28"><QuickFacts p={p} /><Trust p={p} /></div>
             <section aria-labelledby="get"><H2 id="get">{t("What you get")}</H2><div className="mt-5"><WhatYouGet p={p} /></div></section>
             <section aria-labelledby="how"><H2 id="how">{t("How it's delivered")}</H2><div className="mt-5"><HowDelivered p={p} /></div></section>
             <section aria-labelledby="plans"><H2 id="plans">{t("Plans compared")}</H2><div className="mt-5"><PlanTable p={p} /></div></section>

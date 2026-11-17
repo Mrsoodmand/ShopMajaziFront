@@ -5,7 +5,7 @@ import { useMoney } from "@/lib/money";
 import { fromPrice, monthly, perMonth, savePct, subCats, type SubProduct } from "@/content/subs-en";
 import { ring } from "../googleVoice/clean";
 import { panels } from "../subs/panels";
-import { ActivationBadge, Tile, type Subs } from "../subs/parts";
+import { ActivationBadge, PopularBadge, Tile, type Subs } from "../subs/parts";
 import { useSubsList } from "../subs/live";
 import { useT } from "@/i18n/client";
 import { HOW_STYLE, howStyles } from "./howDelivered";
@@ -75,7 +75,7 @@ export function PlanTable({ p }: { p: SubProduct }) {
         <tbody className="divide-y divide-slate-200 dark:divide-white/10">
           {p.plans.map((pl) => (
             <tr key={pl.id}>
-              <th scope="row" className="px-4 py-3 text-start font-medium text-slate-900 dark:text-white">{pl.name}</th>
+              <th scope="row" className="px-4 py-3 text-start font-medium text-slate-900 dark:text-white"><span className="flex flex-wrap items-center gap-2">{pl.name}{pl.popular && <PopularBadge />}</span></th>
               <td className="px-4 py-3 text-slate-800 dark:text-slate-200">{pl.months > 0 ? usd(perMonth(pl)) : <span className="text-slate-500">—</span>}</td>
               <td className="px-4 py-3 text-slate-800 dark:text-slate-200">{usd(pl.price)}{pl.was && <span className="ms-2 text-sm text-slate-500 line-through"><span className="sr-only">{tx("was")}{" "}</span>{usd(pl.was)}</span>}</td>
               <td className="px-4 py-3">{savePct(pl) > 0 ? <span className="font-semibold text-amber-800 dark:text-amber-300">{savePct(pl)}%</span> : <span className="text-slate-500">—</span>}</td>
@@ -84,6 +84,32 @@ export function PlanTable({ p }: { p: SubProduct }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+// Short facts about the product, as a strip of small cells: the periods on offer, the lowest monthly price, the
+// best saving, what the buyer has to give, and the delivery time. Cells without data are left out.
+export function QuickFacts({ p, className = "" }: { p: SubProduct; className?: string }) {
+  const tx = useT();
+  const usd = useMoney().format;
+  const save = Math.max(0, ...p.plans.map(savePct));
+  const needs = p.fields.filter((f) => !f.optional).map((f) => f.label);
+  const facts: [string, string][] = [
+    [tx("Periods"), p.plans.map((x) => x.name).join(tx.locale === "fa" ? "، " : ", ")],
+    ...(monthly(p) && p.plans.length > 1 ? [[tx("Lowest per month"), usd(fromPrice(p))] as [string, string]] : []),
+    ...(save > 0 ? [[tx("Save up to"), `${tx.locale === "fa" ? save.toLocaleString("fa-IR") : save}%`] as [string, string]] : []),
+    [tx("What we need"), p.activation === "ready" || !needs.length ? tx("Nothing from you") : needs.join(tx.locale === "fa" ? "، " : ", ")],
+    ...(p.delivery ? [[tx("Delivery"), p.delivery] as [string, string]] : []),
+  ].slice(0, 4) as [string, string][];
+  return (
+    <dl className={`grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 sm:grid-flow-col sm:auto-cols-fr sm:grid-cols-none dark:border-white/15 dark:bg-white/15 ${className}`}>
+      {facts.map(([k, v]) => (
+        <div key={k} className="bg-white px-4 py-3.5 dark:bg-[#0E1424]">
+          <dt className="text-sm text-slate-600 dark:text-slate-400">{k}</dt>
+          <dd className="mt-1 text-[15px] font-semibold leading-snug text-slate-900 dark:text-white">{v}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 

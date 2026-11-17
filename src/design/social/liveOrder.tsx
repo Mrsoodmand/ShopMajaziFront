@@ -2,8 +2,9 @@
 
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "@/i18n/Link";
-import { Check, ShieldCheck, X } from "lucide-react";
-import CheckoutModal, { type CheckoutExtra, type PayMethod } from "@/components/checkout/CheckoutModal";
+import { Check, ShieldCheck, ShoppingBag, X } from "lucide-react";
+import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
+import NightCallQuestion, { nightCallBody } from "@/components/checkout/NightCall";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
 import { useCart } from "@/lib/cart";
 import { useMoney } from "@/lib/money";
@@ -83,6 +84,8 @@ export function useLiveOrder(d: LiveSocialOrder) {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [tried, setTried] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  // "Available for a call 21:00–07:00?", asked in the form (components/checkout/NightCall.tsx). null = no answer yet.
+  const [night, setNight] = useState<boolean | null>(null);
   const [order, setOrder] = useState<ApiServiceOrder | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   // Prices the backend corrected at payment (rates moved since the page loaded), per choice.
@@ -122,12 +125,13 @@ export function useLiveOrder(d: LiveSocialOrder) {
   };
   const fields = service?.fields ?? [];
   const firstBadField = fields.find((f) => fieldError(f));
-  const problem = qtyError ? "qty" : firstBadField ? firstBadField.name : null;
-  const blocker = tried && problem ? (problem === "qty" ? tx("Check the amount above") : tx("Fill in {0} above", { 0: firstBadField!.title })) : undefined;
+  const NIGHT = "\u0000night";
+  const problem = qtyError ? "qty" : firstBadField ? firstBadField.name : night === null ? NIGHT : null;
+  const blocker = tried && problem ? (problem === "qty" ? tx("Check the amount above") : problem === NIGHT ? tx("Answer the call question above") : tx("Fill in {0} above", { 0: firstBadField!.title })) : undefined;
   const target = fields.find((f) => f.link && value(f) && !fieldError(f));
 
   const focusProblem = () => {
-    const el = document.getElementById(problem === "qty" ? "social-qty" : `social-f-${problem}`);
+    const el = document.getElementById(problem === "qty" ? "social-qty" : problem === NIGHT ? "night-call" : `social-f-${problem}`);
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
     el?.focus({ preventScroll: true });
   };
@@ -143,17 +147,17 @@ export function useLiveOrder(d: LiveSocialOrder) {
 
   // The same purchase into the cart (lib/cart.tsx), which then opens.
   const cart = useCart();
-  const addToCart = cart && service ? (extra: CheckoutExtra = {}) => cart.add("service", {
-    ...extra,
+  const addToCart = cart && service ? () => cart.add("service", {
+    ...nightCallBody(night),
     service_id: service.id,
     ...(service.count ? { count: qty } : { plan_id: planId }),
     fields: Object.fromEntries(fields.map((f) => [f.name, value(f)])),
   }) : undefined;
 
-  const buy = async (m: PayMethod, extra: CheckoutExtra = {}) => {
+  const buy = async (m: PayMethod) => {
     if (!service) return;
     const body = {
-      ...extra,
+      ...nightCallBody(night),
       service_id: service.id,
       ...(service.count ? { count: qty } : { plan_id: planId }),
       fields: Object.fromEntries(fields.map((f) => [f.name, value(f)])),
@@ -220,7 +224,7 @@ export function useLiveOrder(d: LiveSocialOrder) {
     touch: (name: string) => setTouched((t) => ({ ...t, [name]: true })),
     errorOf: (f: LiveField) => (tried || touched[f.name] ? fieldError(f) : undefined),
     qtyError: tried || touched.qty ? qtyError : undefined,
-    target, problem, blocker, proceed, num,
+    target, problem, blocker, proceed, num, night, setNight, nightMissing: tried && night === null, inCart: !!addToCart,
     payOpen, closePay: () => setPayOpen(false), buy, addToCart, order, notice,
     reset: () => { setOrder(null); setTried(false); setTouched({}); setNotice(null); },
   };
@@ -360,6 +364,7 @@ export function LiveFields({ o }: { o: LiveOrder }) {
           </div>
         );
       })}
+      <NightCallQuestion value={o.night} onChange={o.setNight} error={o.nightMissing ? tx("Answer the question to continue.") : undefined} />
     </div>
   );
 }
@@ -388,9 +393,9 @@ export function LiveSummary({ o, className = card }: { o: LiveOrder; className?:
         <span className="font-semibold text-slate-900 dark:text-white">{tx("Total")}</span>
         <span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{o.total && !o.qtyError ? money.format(o.total) : "—"}</span>
       </div>
-      <button type="submit" disabled={!s || !!o.d.error} className={`${primary} mt-5 w-full tabular-nums disabled:cursor-not-allowed disabled:opacity-50`}>{o.total && !o.qtyError ? `${tx("Continue")} · ${money.format(o.total)}` : tx("Continue")}</button>
+      <button type="submit" disabled={!s || !!o.d.error} className={`${primary} mt-5 w-full tabular-nums disabled:cursor-not-allowed disabled:opacity-50`}>{o.inCart && <ShoppingBag aria-hidden className="h-5 w-5" />}{o.total && !o.qtyError ? `${tx(o.inCart ? "Add to cart" : "Continue")} · ${money.format(o.total)}` : tx(o.inCart ? "Add to cart" : "Continue")}</button>
       {o.blocker && <p role="alert" className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />{o.blocker}</p>}
-      <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{tx("Pay with your wallet or card on the next step.")}</p>
+      <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{tx(o.inCart ? "You pay in your cart, with your wallet or card." : "Pay with your wallet or card on the next step.")}</p>
     </div>
   );
 }
@@ -420,7 +425,7 @@ export function LiveCheckout({ o }: { o: LiveOrder }) {
   const s = o.service;
   const to = o.target ? (o.values[o.target.name] ?? "").trim() : "";
   return (
-    <CheckoutModal open={o.payOpen} onClose={o.closePay} price={o.total} itemLabel={`${o.num(o.count)} · ${s?.name ?? ""}`} payLabel={tx("Pay")} onPay={o.buy} onAddToCart={o.addToCart} askNightCall
+    <CheckoutModal open={o.payOpen} onClose={o.closePay} price={o.total} itemLabel={`${o.num(o.count)} · ${s?.name ?? ""}`} payLabel={tx("Pay")} onPay={o.buy} onAddToCart={o.addToCart}
       signIn only={["wallet", "card"]} topUpHref={TOP_UP_HREF} fees={{ card: 0 }} notes={{ card: "Iranian bank cards, via ZarinPal" }}
       note={o.changedTo != null ? tx("The price just changed to {price}. Check it and pay again.", { price: money.format(o.changedTo) }) : tx("Delivery starts once we've checked the link. If it's private or wrong, the order is cancelled and refunded to your wallet.")}
       summary={<>

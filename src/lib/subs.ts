@@ -3,7 +3,7 @@
 // the chosen /accounts designs render live products unchanged.
 import type { SubCat, SubField, SubPlan, SubProduct } from "@/content/subs-en";
 
-export type ApiSubPlan = { id: number; name: string; en_name: string | null; tier: string | null; months: number | null; price: number; was: number | null };
+export type ApiSubPlan = { id: number; name: string; en_name: string | null; tier: string | null; months: number | null; price: number; was: number | null; popular?: boolean };
 export type ApiSubField = { name: string; title: string; type: "text" | "email" | "password" | "select"; options: string[] };
 export type ApiSub = {
   id: number;
@@ -69,7 +69,7 @@ function fieldLabel(f: ApiSubField, product: string, locale: "en" | "fa") {
 export function toSubProduct(a: ApiSub, locale: "en" | "fa"): SubProduct {
   const name = locale === "fa" ? a.name : a.en_name || nameFromSlug(a.slug);
   const plans: SubPlan[] = a.plans.map((p, i) => ({
-    id: String(p.id), name: planName(p, i, locale), months: p.months ?? 0, price: p.price, was: p.was ?? undefined,
+    id: String(p.id), name: planName(p, i, locale), months: p.months ?? 0, price: p.price, was: p.was ?? undefined, popular: !!p.popular,
   }));
   const fields: SubField[] = a.fields.map((f) => ({
     id: f.name, label: fieldLabel(f, name, locale), type: f.type, options: f.type === "select" ? f.options : undefined,

@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "@/i18n/Link";
-import { Bot, Briefcase, Check, LayoutGrid, ChevronRight, Clapperboard, Clock, Eye, EyeOff, KeyRound, LineChart, LogIn, MessageCircle, Music2, Palette, Shapes, UserCheck, X, type LucideIcon } from "lucide-react";
-import CheckoutModal, { type CheckoutExtra, type PayMethod } from "@/components/checkout/CheckoutModal";
+import { Bot, Briefcase, Check, LayoutGrid, ChevronRight, Clapperboard, Clock, Eye, EyeOff, KeyRound, LineChart, LogIn, MessageCircle, Music2, Palette, Shapes, ShoppingBag, Star, UserCheck, X, type LucideIcon } from "lucide-react";
+import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
+import NightCallQuestion, { nightCallBody } from "@/components/checkout/NightCall";
 import { useMoney } from "@/lib/money";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
 import { useCart } from "@/lib/cart";
@@ -32,24 +33,36 @@ export type SubsNotice = { good: boolean; text: string };
 // Selects start on their first option.
 const selectDefaults = (p: SubProduct | null) => Object.fromEntries((p?.fields ?? []).filter((f) => f.options).map((f) => [f.id, f.options![0]]));
 
+// The plan a product opens on: the admin's «محبوب‌ترین» one, else the first.
+const firstPlan = (p: SubProduct) => p.plans.find((x) => x.popular) ?? p.plans[0];
+
+// «محبوب‌ترین» on the plan the admin marked (admin › اکانت‌های خارجی › پلن‌ها). `on`: sits on a filled (chosen) row.
+export function PopularBadge({ on = false, className = "" }: { on?: boolean; className?: string }) {
+  const tx = useT();
+  // Gold on every ground (white, dark, or the chosen row's violet), so it reads as a mark of its own, not as part of the row.
+  return <span className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-l from-amber-300 to-yellow-200 py-0.5 pe-2.5 ps-1.5 text-[11px] font-bold leading-4 text-amber-950 ring-1 ring-inset ring-amber-500/50 ${on ? "shadow-md shadow-violet-950/30" : "shadow-sm shadow-amber-500/20"} ${className}`}><Star aria-hidden className="h-3 w-3 fill-amber-600 text-amber-600" />{tx("Most popular plan")}</span>;
+}
+
 export function useSubs(initial?: string) {
   const tx = useT();
   const list = useSubsList();
   const live = useLiveSubs();
   const { setWallet } = useAccount();
   const [product, setProduct] = useState<SubProduct | null>(list.find((s) => s.slug === initial) ?? null);
-  const [plan, setPlan] = useState<SubPlan | null>(product ? product.plans[0] : null);
+  const [plan, setPlan] = useState<SubPlan | null>(product ? firstPlan(product) : null);
   const [values, setValues] = useState<Record<string, string>>(() => selectDefaults(product));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  // "Available for a call 21:00–07:00?", asked in the form (components/checkout/NightCall.tsx). null = no answer yet.
+  const [night, setNight] = useState<boolean | null>(null);
   const [order, setOrder] = useState<SubOrder | null>(null);
   const [notice, setNotice] = useState<SubsNotice | null>(null);
   const [changedTo, setChangedTo] = useState<number | null>(null);
 
   const select = (p: SubProduct | null) => {
     setProduct(p);
-    setPlan(p ? p.plans[0] : null);
+    setPlan(p ? firstPlan(p) : null);
     setValues(selectDefaults(p));
     setTouched({}); setSubmitted(false); setChangedTo(null);
   };
@@ -71,6 +84,7 @@ export function useSubs(initial?: string) {
     setSubmitted(true);
     const bad = product?.fields.find((f) => all[f.id]);
     if (bad) { document.getElementById(`sub-${bad.id}`)?.focus(); return false; }
+    if (night === null) { const el = document.getElementById("night-call"); el?.scrollIntoView({ behavior: "smooth", block: "center" }); el?.focus({ preventScroll: true }); return false; }
     if (live?.error) { setNotice({ good: false, text: live.error }); return false; }
     if (product && plan) setPayOpen(true);
     return true;
@@ -80,7 +94,7 @@ export function useSubs(initial?: string) {
   const quickBuy = (p: SubProduct, pl: SubPlan) => {
     select(p);
     setPlan(pl);
-    const needs = p.fields.some((f) => !f.options && !f.optional);
+    const needs = night === null || p.fields.some((f) => !f.options && !f.optional);
     if (!needs) setPayOpen(true);
     return needs;
   };
@@ -100,16 +114,16 @@ export function useSubs(initial?: string) {
   };
 
   const cart = useCart();
-  const addToCart = live && cart && product && plan ? (extra: CheckoutExtra = {}) => cart.add("subscription", {
-    ...extra, product_id: product.id, plan_id: Number(plan.id),
+  const addToCart = live && cart && product && plan ? () => cart.add("subscription", {
+    ...nightCallBody(night), product_id: product.id, plan_id: Number(plan.id),
     fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
   }) : undefined;
 
-  const buy = async (m: PayMethod, extra: CheckoutExtra = {}) => {
+  const buy = async (m: PayMethod) => {
     if (!product || !plan) return;
     if (!live) { show(product, plan, values, m); return; }
     const body = {
-      ...extra, product_id: product.id, plan_id: Number(plan.id), price: plan.price,
+      ...nightCallBody(night), product_id: product.id, plan_id: Number(plan.id), price: plan.price,
       fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
     };
     try {
@@ -172,7 +186,7 @@ export function useSubs(initial?: string) {
 
   return {
     product, select, plan, setPlan, values, set: (k: string, v: string) => setValues((x) => ({ ...x, [k]: v })),
-    touch: (k: string) => setTouched((t) => ({ ...t, [k]: true })), errors, proceed, quickBuy,
+    touch: (k: string) => setTouched((t) => ({ ...t, [k]: true })), errors, proceed, quickBuy, night, setNight, nightMissing: submitted && night === null, inCart: !!addToCart,
     // Buying another opens the page's own product again (a product page has nothing to show without one).
     payOpen, closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => { setOrder(null); select(list.find((x) => x.slug === initial) ?? null); },
     live: !!live, notice, dismissNotice: () => setNotice(null), changedTo,
@@ -347,7 +361,7 @@ export function PlanRadios({ s, cols = 2 }: { s: Subs; cols?: 1 | 2 | 3 }) {
               <input type="radio" autoComplete="off" name={name} checked={on} onChange={() => s.setPlan(pl)} className="sr-only" />
               <span aria-hidden className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ${on ? "border-violet-700 bg-violet-700 dark:border-violet-400 dark:bg-violet-400" : "border-slate-400 dark:border-white/30"}`}>{on && <Check className="h-3.5 w-3.5 text-white dark:text-violet-950" strokeWidth={3} />}</span>
               <span className="min-w-0 flex-1">
-                <span className="block font-semibold text-slate-900 dark:text-white">{pl.name}</span>
+                <span className="flex flex-wrap items-center gap-2 font-semibold text-slate-900 dark:text-white">{pl.name}{pl.popular && <PopularBadge />}</span>
                 <span className="text-sm text-slate-600 dark:text-slate-400">{pl.months > 0 && <>{usd(perMonth(pl))}{tx("/mo")}</>}{save > 0 && <span className="font-semibold text-amber-800 dark:text-amber-300">{" "}{tx("· save")}{" "}{save}%</span>}</span>
               </span>
               <span className="text-end">
@@ -365,7 +379,6 @@ export function PlanRadios({ s, cols = 2 }: { s: Subs; cols?: 1 | 2 | 3 }) {
 export function FieldsForm({ s }: { s: Subs }) {
   const tx = useT();
   const p = s.product!;
-  if (!p.fields.length) return null;
   return (
     <div className="space-y-5">
       {p.fields.map((given) => {
@@ -392,6 +405,7 @@ export function FieldsForm({ s }: { s: Subs }) {
           </div>
         );
       })}
+      <NightCallQuestion value={s.night} onChange={s.setNight} error={s.nightMissing ? tx("Answer the question to continue.") : undefined} />
     </div>
   );
 }
@@ -408,7 +422,7 @@ export function Notes({ p }: { p: SubProduct }) {
 export function BuyButton({ s, className = "", label, onBuy }: { s: Subs; className?: string; label?: string; onBuy?: () => void }) {
   const usd = useMoney().format;
   const tx = useT();
-  return <button type="button" onClick={onBuy ?? s.proceed} className={`${primary} w-full ${className}`}>{label ?? tx("Continue · {0}", { 0: s.plan ? usd(s.plan.price) : "" })}</button>;
+  return <button type="button" onClick={onBuy ?? s.proceed} className={`${primary} w-full ${className}`}>{s.inCart ? <span className="inline-flex items-center justify-center gap-2"><ShoppingBag aria-hidden className="h-5 w-5" />{tx("Add to cart · {0}", { 0: s.plan ? usd(s.plan.price) : "" })}</span> : label ?? tx("Continue · {0}", { 0: s.plan ? usd(s.plan.price) : "" })}</button>;
 }
 
 // Plans, fields, notes and buy for the chosen product, in one block.
@@ -446,7 +460,7 @@ export function SubsCheckout({ s }: { s: Subs }) {
     <>
       {s.notice && <SubsNoticeToast n={s.notice} onClose={s.dismissNotice} />}
       <CheckoutModal open={s.payOpen && !!p && !!pl} onClose={s.closePay} price={pl?.price ?? 0} itemLabel={pl ? `${p?.name} · ${pl.name}` : tx("Subscription")} payLabel={tx("Pay")}
-        note={note} onPay={s.buy} onAddToCart={s.addToCart} askNightCall
+        note={note} onPay={s.buy} onAddToCart={s.addToCart}
         {...(s.live ? { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } } : {})}
         summary={p && pl && <>
           <Tile p={p} />

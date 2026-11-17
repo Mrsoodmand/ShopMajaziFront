@@ -18,7 +18,9 @@ const pairs: Record<GlowTone | "brand", [string, string]> = {
 export default function PageBackdrop({ tone }: { tone?: GlowTone }) {
   const [a, b] = pairs[tone ?? "brand"];
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 overflow-hidden" style={{ "--a": a, "--b": b } as CSSProperties}>
+    // will-change keeps the backdrop on its own GPU layer, painted once: without it the big gradients were repainted
+    // on every scroll frame, which made long pages (blog posts) stutter on phones.
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 overflow-hidden [will-change:transform]" style={{ "--a": a, "--b": b } as CSSProperties}>
       <div className={s.fields} />
       <div className={s.dots} />
       <div className={s.grain} />

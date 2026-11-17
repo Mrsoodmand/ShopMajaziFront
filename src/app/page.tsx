@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { sections } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
@@ -7,6 +8,10 @@ import { loadBlog } from "@/lib/blog";
 import { commentDate, loadTestimonials } from "@/lib/comments";
 import { LiveTestimonialsProvider, type LiveTestimonial } from "@/design/testimonials/live";
 import { getT } from "@/i18n/server";
+import { BridgeBeam, BridgeMarquee, BridgeThread, BridgeTwinkle, BridgeWave } from "@/design/bridge/offers";
+
+// The moving element in the band under the hero, by its offer in gallery section "hero-bridge".
+const bridges: Record<string, typeof BridgeWave> = { A: BridgeThread, B: BridgeMarquee, C: BridgeBeam, D: BridgeWave, E: BridgeTwinkle };
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +26,7 @@ export default async function Home() {
   const decisions = await readDecisions();
   const pick = (id: string) => sections.find((s) => s.id === id)?.offers.find((o) => o.id === decisions[id]?.offer);
   const header = pick("header");
+  const Bridge = bridges[decisions["hero-bridge"]?.offer ?? ""];
   const locale = await getLocale();
   const posts = pick("blog") ? ((await loadBlog(locale)) ?? []).slice(0, HOME_POSTS) : [];
   // Real, approved customer comments for the testimonials section (it is left out when there are none).
@@ -39,6 +45,10 @@ export default async function Home() {
       const variant = sections.find((v) => v.variantOf === s.id && pick(v.id));
       return { key: s.id, Component: (variant ? pick(variant.id) : pick(s.id))!.Component };
     });
+  // On the home page, Why ShopMajazi comes before How to buy (the registry keeps the gallery order).
+  const why = chosen.findIndex((c) => c.key === "why");
+  const how = chosen.findIndex((c) => c.key === "how-to-buy");
+  if (why > how && how !== -1) chosen.splice(how, 0, ...chosen.splice(why, 1));
 
   if (chosen.length === 0)
     return (
@@ -54,9 +64,13 @@ export default async function Home() {
     <LiveBlogProvider value={{ posts }}>
       <LiveTestimonialsProvider value={testimonials}>
       <main>
-        {chosen.map(({ key, Component }) =>
-          key === "hero" && header ? <Component key={key} bare={header.overlay ? "overlay" : "flow"} /> : <Component key={key} />,
-        )}
+        {chosen.map(({ key, Component }) => (
+          <Fragment key={key}>
+            {key === "hero" && header ? <Component bare={header.overlay ? "overlay" : "flow"} /> : <Component />}
+            {/* Pulled over the next section's top padding, so the band keeps its height. */}
+            {key === "hero" && Bridge && <div className="relative z-10 -mb-12"><Bridge /></div>}
+          </Fragment>
+        ))}
       </main>
       </LiveTestimonialsProvider>
     </LiveBlogProvider>
