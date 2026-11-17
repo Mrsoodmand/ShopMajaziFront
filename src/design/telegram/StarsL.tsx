@@ -82,7 +82,6 @@ export default function StarsL() {
                 <StarsSummary st={st} className={`${panel} shadow-2xl shadow-amber-950/20`}>
                   <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{starsLabel(st, t(st.addToCart ? "Add to cart" : "Continue"), usd)}</button>
                   <StarsBlocker st={st} />
-                  <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{st.addToCart ? t("You pay in your cart, with your wallet or card.") : t("Pay with your wallet or card on the next step.")}</p>
                 </StarsSummary>
               </div>
             </aside>

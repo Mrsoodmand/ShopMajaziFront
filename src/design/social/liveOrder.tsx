@@ -395,7 +395,6 @@ export function LiveSummary({ o, className = card }: { o: LiveOrder; className?:
       </div>
       <button type="submit" disabled={!s || !!o.d.error} className={`${primary} mt-5 w-full tabular-nums disabled:cursor-not-allowed disabled:opacity-50`}>{o.inCart && <ShoppingBag aria-hidden className="h-5 w-5" />}{o.total && !o.qtyError ? `${tx(o.inCart ? "Add to cart" : "Continue")} · ${money.format(o.total)}` : tx(o.inCart ? "Add to cart" : "Continue")}</button>
       {o.blocker && <p role="alert" className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />{o.blocker}</p>}
-      <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{tx(o.inCart ? "You pay in your cart, with your wallet or card." : "Pay with your wallet or card on the next step.")}</p>
     </div>
   );
 }
