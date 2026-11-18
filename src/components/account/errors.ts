@@ -1,5 +1,6 @@
 import { ApiError } from "@/lib/account";
 import type { T } from "@/i18n/translate";
+import { CAPTCHA_MESSAGES } from "@/lib/captcha";
 
 // What to tell people for each backend error code (Api\StorefrontAccountController). English here, Persian in
 // i18n/fa/account.ts. Unknown codes fall back to the backend's own (Persian) message, or a generic line in English.
@@ -37,6 +38,7 @@ const MESSAGES: Record<string, string> = {
   count_invalid: "Choose an amount within the limits shown, in the steps shown.",
   plan_invalid: "That package isn't offered any more. Pick another one.",
   fields_invalid: "Some answers aren't valid. Check the fields and try again.",
+  ...CAPTCHA_MESSAGES,
 };
 
 export function errorText(e: unknown, t: T, format: (n: number) => string = String): string {

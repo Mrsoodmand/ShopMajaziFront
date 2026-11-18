@@ -1,0 +1,48 @@
+/* The glow seam along FooterF's top edge, where the page backdrop has faded out (pageBackdrop.module.css .root).
+   - seam: a 10rem band centred on the footer's top edge, so the light reaches up into the page as well as down into
+     the footer; it clips sideways so the moving highlight never makes the page scroll horizontally;
+   - halo: a soft, wide indigo→fuchsia light on both sides of the edge, slowly breathing and drifting up and down;
+   - line: a 1px light line, brightest in the middle and faded at both ends, with a highlight that sweeps along it in
+     the reading direction (left→right on English pages, right→left on Persian ones) and glows above and below.
+   Under prefers-reduced-motion everything stays still and the highlight is hidden. */
+.seam {
+  position: absolute; inset-inline: 0; top: -5rem; height: 10rem;
+  overflow: hidden; pointer-events: none;
+}
+
+.halo {
+  position: absolute; inset-inline: 8%; top: 1rem; height: 8rem;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(99 102 241 / 0.16), rgb(217 70 239 / 0.06) 55%, transparent 75%);
+  filter: blur(24px);
+  animation: breathe 9s ease-in-out infinite;
+}
+:global(.dark) .halo { background: radial-gradient(50% 50% at 50% 50%, rgb(99 102 241 / 0.30), rgb(217 70 239 / 0.10) 55%, transparent 75%); }
+
+.line {
+  position: absolute; inset-inline: 0; top: 5rem; height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(99 102 241 / 0.45) 25%, rgb(217 70 239 / 0.45) 75%, transparent);
+}
+:global(.dark) .line { background: linear-gradient(90deg, transparent, rgb(129 140 248 / 0.6) 25%, rgb(232 121 249 / 0.6) 75%, transparent); }
+
+/* The moving highlight: a short bright stretch that crosses the line, then rests before the next pass. */
+.line::after {
+  content: ""; position: absolute; inset-block: 0; width: 30%; inset-inline-start: -30%;
+  background: linear-gradient(90deg, transparent, rgb(129 140 248), rgb(232 121 249), transparent);
+  box-shadow: 0 0 18px 3px rgb(168 85 247 / 0.45), 0 0 48px 10px rgb(99 102 241 / 0.18);
+  border-radius: 9999px;
+  animation: sweep 7s cubic-bezier(.45, 0, .25, 1) infinite;
+}
+:global([dir="rtl"]) .line::after { animation-name: sweep-rtl; }
+
+@keyframes sweep { 0% { transform: translateX(0); } 60%, 100% { transform: translateX(433%); } }
+@keyframes sweep-rtl { 0% { transform: translateX(0); } 60%, 100% { transform: translateX(-433%); } }
+/* The halo swells and rises a little above the line, then settles back over it. */
+@keyframes breathe {
+  0%, 100% { opacity: .7; transform: translateY(0) scaleX(1); }
+  50% { opacity: 1; transform: translateY(-0.75rem) scale(1.06, 1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .halo { animation: none; opacity: .9; }
+  .line::after { animation: none; display: none; }
+}

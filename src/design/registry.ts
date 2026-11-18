@@ -70,6 +70,7 @@ import TestiB from "./testimonials/TestiB";
 import TestiC from "./testimonials/TestiC";
 import TestiD from "./testimonials/TestiD";
 import TestiE from "./testimonials/TestiE";
+import { TestiF, TestiG, TestiH, TestiI, TestiJ } from "./testimonials/mobile";
 import OtpA from "./otp/OtpA";
 import OtpB from "./otp/OtpB";
 import OtpC from "./otp/OtpC";
@@ -208,6 +209,10 @@ import SocialB from "./social/SocialB";
 import SocialC from "./social/SocialC";
 import SocialD from "./social/SocialD";
 import SocialE from "./social/SocialE";
+import { SocialServiceA, SocialServiceB, SocialServiceC, SocialServiceD, SocialServiceE } from "./socialService/offers";
+import { SocialPlatformF, SocialPlatformG, SocialPlatformH, SocialPlatformI, SocialPlatformJ } from "./socialPlatform/offers";
+import { SocialPlatformK } from "./socialPlatform/bandChecklist";
+import { SocialPlatformL } from "./socialPlatform/bandShelf";
 import { FooterDefault, LinksUnderline, LinksArrow, LinksPill, LinksSweep, LinksDot } from "./footer/variants";
 import { OrderPreviewA, OrderPreviewB, OrderPreviewC, OrderPreviewD, OrderPreviewE } from "./otp/order-screen";
 import { MotionA, MotionB, MotionC, MotionD, MotionE, MotionF, MotionG, MotionH, MotionI, MotionJ, DetailFill, DetailRelay, DetailWalk, DetailRoll, DetailSheen, DetailJourney } from "./service/stepsMotionOffers";
@@ -387,6 +392,11 @@ export const sections: Section[] = [
       { id: "C", name: "Masonry Grid", summary: "Reviews of different lengths packed into tidy columns under a one-line rating summary.", Component: TestiC },
       { id: "D", name: "Score + Filter", summary: "Overall score with a star breakdown, beside reviews filtered by service with FAQ F-style tabs.", Component: TestiD },
       { id: "E", name: "Chat Thread", summary: "Reviews arrive one by one as messages in a support-chat window when scrolled into view.", Component: TestiE },
+      { id: "F", name: "Swipe Row", summary: "Phone-first: one review card and a peek of the next, swiped like the blog row, with dots; three across with arrows on wide screens. Real comments only, no stars.", Component: TestiF },
+      { id: "G", name: "Card Stack", summary: "A deck of review cards: swipe the top one away and it goes to the back; the next two peek out behind it. Counter and arrows.", Component: TestiG },
+      { id: "H", name: "Stories", summary: "Like phone stories: a row of ringed avatars and one story card with progress bars that moves on by itself; tap the sides to go back or on, hold to pause.", Component: TestiH },
+      { id: "I", name: "Focus Carousel", summary: "One card centred in full, neighbours smaller and faded either side; swipe or let it move on by itself. Dots below.", Component: TestiI },
+      { id: "J", name: "Fold List", summary: "The calm one: three compact cards folded to three lines on phones, Read more on each and a Show more button; masonry columns on wide screens.", Component: TestiJ },
     ],
   },
   {
@@ -972,10 +982,29 @@ export const sections: Section[] = [
     kind: "page",
     offers: [
       { id: "A", name: "Platform Band", summary: "Stars L's layout: a band in the chosen platform's colours with the title and platform pills; it cross-fades when you switch. Service, quality, amount and link in a card over its edge; the summary rises into the band.", Component: SocialA },
-      { id: "B", name: "Order Checklist", summary: "Four folding rows (platform, service, amount, link), one open at a time; closed rows show their answer and a tick, or the problem after Continue. Plain site theme.", Component: SocialB },
-      { id: "C", name: "Live Preview", summary: "The order card opens with a sketch of what you're growing in the platform's style, named from your link, and the number being added counts up. Platform as a compact icon row.", Component: SocialC },
-      { id: "D", name: "Price Board", summary: "Every service on one list with platform filters and search; rows show price per 1,000, start time and refill. Pick a row, then quality, amount and link below it.", Component: SocialD },
-      { id: "E", name: "Delivery Timeline", summary: "Platform and service as two dropdowns, a big amount with − / + and a slider, and a timeline of when it starts, when it's done and how long the refill covers.", Component: SocialE },
+      { id: "B", name: "Order Checklist", summary: "Four folding rows (platform, service, amount, link), one open at a time; closed rows show their answer and a tick, or the problem after Continue. Plain site theme.", Component: SocialB, archived: true },
+      { id: "C", name: "Live Preview", summary: "The order card opens with a sketch of what you're growing in the platform's style, named from your link, and the number being added counts up. Platform as a compact icon row.", Component: SocialC, archived: true },
+      { id: "D", name: "Price Board", summary: "Every service on one list with platform filters and search; rows show price per 1,000, start time and refill. Pick a row, then quality, amount and link below it.", Component: SocialD, archived: true },
+      { id: "E", name: "Delivery Timeline", summary: "Platform and service as two dropdowns, a big amount with − / + and a slider, and a timeline of when it starts, when it's done and how long the refill covers.", Component: SocialE, archived: true },
+      { id: "F", name: "Service Shelf", summary: "Light header with the platform switch, then every service as a card on one shelf (swipe row on phones). The chosen card lifts in the platform colour; amount, link and a sticky summary follow. Phones: a pay bar with the total.", Component: SocialPlatformF },
+      { id: "G", name: "Compare", summary: "The platform's services side by side, one column each, with price, delivery, feature and amounts as rows. Pick a column; the order follows. Phones scroll the columns with the labels pinned.", Component: SocialPlatformG },
+      { id: "H", name: "Catalog + Panel", summary: "Like /accounts and /virtual-numbers: a band in the platform's colours with title and platform switch; services as colour-washed cards, the chosen one's amount, link, total and Pay in a panel beside them (below on phones).", Component: SocialPlatformH },
+      { id: "I", name: "Spec Tabs", summary: "The Spec Sheet you picked for a single service, with the platform's services as tabs under the title. Tabs stick under the header while you fill the form; fact tiles, form and summary follow the tab.", Component: SocialPlatformI },
+      { id: "J", name: "Order Console", summary: "The whole order (service, amount, link, total, Pay) in one compact card in the hero, so a returning buyer is done without scrolling. Below, every service with its facts and an Order this button.", Component: SocialPlatformJ },
+      { id: "K", name: "Band + Checklist", summary: "A's top as it is live (title, icon and platform switch on the band; the summary rises into it on desktop) with B's selection under it: service (as F's cards), amount and link as folding rows, one open at a time. Closed rows show the answer and a tick, or what to fix after Continue.", Component: SocialPlatformK, archived: true },
+      { id: "L", name: "Band + Shelf", summary: "Live now. A's top as it is live (title, icon and platform switch on the band) with F's order under it: Pick a service as cards on one shelf over the band's edge (swipe row on phones), then amount and link beside a sticky summary. Phones: a pay bar with the total.", Component: SocialPlatformL },
+    ],
+  },
+  {
+    id: "page-social-service",
+    title: "Page · Social Media Services · Single service",
+    kind: "page",
+    offers: [
+      { id: "A", name: "Spec Sheet", summary: "Light header with the service's facts (start, speed, refill, feature) as four tiles right under the title, two by two on phones. Form, sticky summary, then promises, what happens after you pay, comments, FAQ. Phones: a pay bar with the total.", Component: SocialServiceA },
+      { id: "B", name: "Step by Step", summary: "The order as three short steps (amount → link → check and pay) in one card, with Back / Next fixed to the bottom on phones. Each step shows the promise that fits it; promises stay beside the card on desktop.", Component: SocialServiceB },
+      { id: "C", name: "Trust First", summary: "The platform's colour band holds the title, the four promises (swipeable on phones) and the newest real comment. One single-column order card overlaps it, with total and pay at its foot.", Component: SocialServiceC },
+      { id: "D", name: "Receipt", summary: "The summary is a receipt that fills in as you choose, the facts as its lines and the promises stamped on it. On phones it's a bottom sheet: the total shows, tap to unfold and pay.", Component: SocialServiceD },
+      { id: "E", name: "Tabs", summary: "Compact header with fact chips, then a tab bar that sticks under the site header (Order · Details · Comments · Questions) and follows where you are. Short stops on a phone.", Component: SocialServiceE },
     ],
   },
   {

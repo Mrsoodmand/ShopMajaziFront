@@ -7,6 +7,8 @@ import { useT } from "@/i18n/client";
 import { useGlow } from "./slot";
 import type { GlowTone } from "./HeaderGlow";
 import s from "./stepsMotion.module.css";
+import { useSwipeRow } from "@/components/ui/useSwipeRow";
+import SwipeDots from "@/components/ui/SwipeDots";
 
 // The "How to use" steps every service page shows (see ServiceExtras), with an optional entrance motion.
 // `motion` picks one of the motions in stepsMotion.module.css ("a" … "j"); without it the steps are static.
@@ -18,6 +20,8 @@ import s from "./stepsMotion.module.css";
 // process each step is, chevrons between them on wide screens, and a lift on hover, all in the page's own colour
 // (its header glow, see slot.tsx; brand indigo where a page has none). `look="classic"` keeps the earlier plain card
 // with a round badge, which motions B, C, H and I were drawn for.
+// On phones (below sm) the tone cards are a swipe row instead of a stack: one card and a bit of the next, with dots
+// underneath; during the journey the row follows the lit step.
 
 export type StepsMotion = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j";
 type State = "armed" | "play" | undefined;
@@ -153,6 +157,16 @@ export default function HowToSteps({ service, motion, preview, replay = 0, look 
   }, [journeyOn, inView, pinned, active, n, state]);
   useEffect(() => { if (journeyOn && !inView && active >= n) setActive(-1); }, [journeyOn, inView, active, n]);
 
+  // Phones: the swipe row, and during the journey / walk it brings the lit step into view.
+  const row = useSwipeRow<HTMLOListElement>();
+  const { go: goStep } = row;
+  useEffect(() => {
+    if (!(journeyOn || (cycling && state === "play")) || !inView || pinned || active < 0 || active >= n) return;
+    if (matchMedia("(min-width: 640px)").matches) return;
+    goStep(active);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
   const pin = useCallback((i: number) => { if ((cycling && state === "play") || journeyOn) { setPinned(true); setActive(i); } }, [cycling, state, journeyOn]);
 
   const hid = preview ? `howto-${motion}${detail ?? ""}` : "howto"; // previews share a page, so each needs its own id
@@ -168,13 +182,15 @@ export default function HowToSteps({ service, motion, preview, replay = 0, look 
         data-paused={((loops(motion, d) && state === "play") || loop) && !inView ? "" : undefined} style={vars}>
         {motion === "i" && <div aria-hidden className={s.track}><div className={s.walker}><span className={s.dot} /></div></div>}
         {look === "tone" ? (
-        <ol className={`${s.list} grid gap-4 sm:grid-cols-2 lg:gap-11 ${n === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`} onMouseLeave={() => setPinned(false)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPinned(false); }}>
+        <>
+        <ol ref={row.track} {...row.handlers}
+          className={`${s.list} -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-6 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:p-0 lg:gap-11 ${n === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`} onMouseLeave={() => setPinned(false)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPinned(false); }}>
           {x.howTo.map((step, i) => (
             <li key={step.title} style={{ "--i": i, zIndex: n - i } as CSSProperties}
               data-on={(d === "walk" || journeyOn) && active === i ? "" : undefined}
               data-done={journeyOn && (active >= n || i < active) ? "" : undefined}
               onMouseEnter={() => pin(i)} onFocus={() => pin(i)} tabIndex={d === "walk" ? 0 : undefined}
-              className={`${s.card} group relative flex flex-col rounded-3xl bg-white p-7 shadow-sm ring-1 ring-slate-200/70 transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-xl dark:bg-[#0E1424] dark:ring-white/10 ${tone.card}`}>
+              className={`${s.card} group relative flex w-[82%] shrink-0 snap-start flex-col rounded-3xl sm:w-auto bg-white p-7 shadow-sm ring-1 ring-slate-200/70 transition-[transform,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-xl dark:bg-[#0E1424] dark:ring-white/10 ${tone.card}`}>
               {d === "sheen" && <span aria-hidden className={s.sheen} />}
               {d === "journey" && <span aria-hidden className={s.glow} />}
               {d === "journey" && (
@@ -202,6 +218,8 @@ export default function HowToSteps({ service, motion, preview, replay = 0, look 
             </li>
           ))}
         </ol>
+        <SwipeDots count={row.count} index={row.index} go={row.go} label={tx("Steps")} className="-mt-2 sm:hidden" />
+        </>
         ) : (
         <ol className={`${s.list} grid gap-4 sm:grid-cols-2 ${n === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`} onMouseLeave={() => setPinned(false)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPinned(false); }}>
           {x.howTo.map((step, i) => (

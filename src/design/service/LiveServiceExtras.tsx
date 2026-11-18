@@ -5,7 +5,7 @@ import { commentKey, loadComments } from "@/lib/comments";
 import { storefront } from "@/lib/backend";
 import ServiceExtras from "./ServiceExtras";
 
-// ServiceExtras for the live service pages: its blog section shows the three newest real posts on the service's
+// ServiceExtras for the live service pages: its blog section shows the eight newest real posts on the service's
 // topic, topped up with guides (left out with no posts or the backend down), and its comments are the page's real,
 // approved comments from the backend (none rather than placeholders when it is down).
 export default async function LiveServiceExtras({ service }: { service: string }) {
@@ -20,6 +20,6 @@ export default async function LiveServiceExtras({ service }: { service: string }
   const [all, comments] = await Promise.all([loadBlog(locale).then((p) => p ?? []), loadComments(key, locale, t("ShopMajazi support"))]);
   const topic = extrasFor(service).blogCat;
   const onTopic = all.filter((p) => p.cat === topic);
-  const posts = [...onTopic, ...all.filter((p) => p.cat === "guides" && !onTopic.includes(p))].slice(0, 3);
+  const posts = [...onTopic, ...all.filter((p) => p.cat === "guides" && !onTopic.includes(p))].slice(0, 8);
   return <ServiceExtras service={service} posts={posts} comments={{ key, list: comments }} />;
 }

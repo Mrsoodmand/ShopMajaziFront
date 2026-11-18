@@ -150,4 +150,15 @@ export const account: Record<string, string> = {
   "Reserved for you once you pay": "پس از پرداخت برای شما رزرو می‌شود",
   "All Google Voice numbers are sold right now.": "همه شماره‌های گوگل ویس فعلاً فروخته شده‌اند.",
   "Pre-order for {0}: we deliver the first number that comes in, or refund you in full.": "پیش‌سفارش با {0}: اولین شماره‌ای که برسد را تحویل می‌دهیم یا کل مبلغ را برمی‌گردانیم.",
+  // Captcha (lib/captcha.tsx), on the sign-in and comment forms
+  "Type the numbers in the picture.": "اعداد داخل تصویر را وارد کنید.",
+  "The numbers didn't match, or the picture expired. Type the new ones.": "اعداد درست نبود یا تصویر منقضی شده. اعداد تصویر جدید را وارد کنید.",
+  "To continue, type the numbers in the picture.": "برای ادامه، اعداد داخل تصویر را وارد کنید.",
+  "The security check didn't pass. Refresh the page and try again.": "تأیید امنیتی انجام نشد. صفحه را تازه کنید و دوباره تلاش کنید.",
+  "Type the numbers in the picture": "اعداد داخل تصویر را وارد کنید",
+  "Security code picture": "تصویر کد امنیتی",
+  "Picture unavailable": "تصویر در دسترس نیست",
+  "New picture": "تصویر جدید",
+  "Protected by Google reCAPTCHA.": "این فرم با reCAPTCHA گوگل محافظت می‌شود.",
+  "Terms": "شرایط",
 };

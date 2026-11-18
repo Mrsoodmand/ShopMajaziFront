@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import Link from "@/i18n/Link";
-import { ArrowRight, BadgeCheck, ChevronDown, Clock, Mail, MessageCircle, MessageSquare, Plus, Send } from "lucide-react";
+import { ArrowRight, BadgeCheck, ChevronDown, ChevronLeft, ChevronRight, Clock, Mail, MessageCircle, MessageSquare, Plus, Send } from "lucide-react";
 import { blogCats, type Post } from "@/content/blog-en";
 import { supportEmail } from "@/content/footer-en";
 import { archive } from "@/content/blog-list-en";
@@ -11,7 +11,10 @@ import { useServiceExtras } from "../subs/live";
 import { field, primary, ring, secondary } from "../googleVoice/clean";
 import { PostCard } from "../blogList/parts";
 import { useT } from "@/i18n/client";
+import { CAPTCHA_MESSAGES, CaptchaField, useCaptcha } from "@/lib/captcha";
 import HowToSteps from "./HowToSteps";
+import { useSwipeRow } from "@/components/ui/useSwipeRow";
+import SwipeDots from "@/components/ui/SwipeDots";
 import { useGlow } from "./slot";
 import type { GlowTone } from "./HeaderGlow";
 import fq from "./faq.module.css";
@@ -207,6 +210,7 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
   const [sending, setSending] = useState(false);
   const [failed, setFailed] = useState("");
   const [website, setWebsite] = useState(""); // honeypot: hidden from people, bots fill it in
+  const captcha = useCaptcha("comment"); // admin › Captcha; checked by the backend
   const nId = useId(), tId = useId();
   const errName = tried && !name.trim() ? tx("Enter your name") : "";
   const errText = tried && text.trim().length < 10 ? (text.trim() ? tx("Write at least 10 characters") : tx("Write your comment")) : "";
@@ -219,15 +223,20 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
     if (!live.key) return;
     setSending(true); setFailed("");
     // Saved as pending in the backend; it appears here once the admin approves it.
-    fetch("/api/v1/storefront/comments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ key: live.key, name: name.trim(), text: text.trim(), website }),
-    })
+    captcha.fields()
+      .then((extra) => fetch("/api/v1/storefront/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ key: live.key, name: name.trim(), text: text.trim(), website, ...extra }),
+      }))
       .then(async (r) => {
-        const body = await r.json().catch(() => null) as { success?: boolean; message?: string } | null;
-        if (r.ok && body?.success) { setSent(true); setName(""); setText(""); setTried(false); }
-        else setFailed(r.status === 429 ? tx("Too many comments in a short time. Please try again in a minute.") : body?.message || tx("Your comment couldn't be sent. Please try again."));
+        const body = await r.json().catch(() => null) as { success?: boolean; message?: string; code?: string; data?: Record<string, unknown> | null } | null;
+        if (r.ok && body?.success) { setSent(true); setName(""); setText(""); setTried(false); captcha.used(); }
+        else if (captcha.handle(body?.code, body?.data)) setFailed(tx(CAPTCHA_MESSAGES[body!.code!]));
+        else {
+          captcha.used(); // a number picture is good for one try
+          setFailed(r.status === 429 ? tx("Too many comments in a short time. Please try again in a minute.") : body?.message || tx("Your comment couldn't be sent. Please try again."));
+        }
       })
       .catch(() => setFailed(tx("Your comment couldn't be sent. Please try again.")))
       .finally(() => setSending(false));
@@ -272,6 +281,7 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
                 aria-describedby={[`${tId}-h`, errText && `${tId}-e`, `${tId}-c`].filter(Boolean).join(" ")} className={`${field} mt-2 resize-y ${errText ? "!border-red-700 dark:!border-red-400" : ""}`} />
               <p id={`${tId}-c`} className="mt-1 text-end text-sm text-slate-600 dark:text-slate-400">{text.length} / 1000</p>
             </div>
+            <CaptchaField captcha={captcha} />
             <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden value={website} onChange={(e) => setWebsite(e.target.value)} className="pointer-events-none absolute start-0 top-0 h-px w-px overflow-hidden opacity-0 [clip-path:inset(50%)]" />
             <button type="submit" disabled={sending} className={`${primary} w-full disabled:opacity-60`}><Send aria-hidden className="h-4 w-4" />{tx(sending ? "Sending…" : "Post comment")}</button>
           </form>
@@ -334,20 +344,40 @@ export function ServiceFaq({ service }: { service: string }) {
 }
 
 // ---------- 5 · Blog ----------
+// A swipe row like the home page's blog carousel (blog offer C): about three cards across on wide screens, one and a
+// bit on phones (so the next card peeks in), arrows beside "All articles" and dots under the row on phones. Mouse
+// drag, touch swipe and keyboard (the cards are links) all move it.
+
+const RELATED = 8;
 
 function RelatedPosts({ service, live }: { service: string; live?: Post[] }) {
   const tx = useT();
   const s = useServiceExtras(service);
-  const posts = live ?? [...tx.tr(archive).filter((p) => p.cat === s.blogCat), ...tx.tr(archive).filter((p) => p.cat === "guides")].slice(0, 3);
+  const posts = live ?? [...tx.tr(archive).filter((p) => p.cat === s.blogCat), ...tx.tr(archive).filter((p) => p.cat === "guides" && p.cat !== s.blogCat)].slice(0, RELATED);
   const topic = tx.tr(blogCats).find((c) => c.id === s.blogCat)!.label;
+  const { track, handlers, dragging, edges, index, count, nudge, go } = useSwipeRow();
   if (!posts.length) return null;
+  const arrow = `grid h-11 w-11 place-items-center rounded-full ring-1 ring-slate-300 text-slate-700 transition hover:bg-slate-900 hover:text-white hover:ring-slate-900 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-inherit disabled:hover:ring-slate-300 dark:ring-white/15 dark:text-slate-200 dark:hover:bg-white dark:hover:text-slate-900 ${ring}`;
+  const scrolls = !(edges.start && edges.end);
   return (
-    <section aria-labelledby="svc-blog" className={wrap}>
+    <section aria-labelledby="svc-blog" className={`${wrap} overflow-x-clip`}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div><p className={kicker}>{tx("Blog")}</p><h2 id="svc-blog" className={h2}>{tx("Read more about")}{" "}{s.name}</h2></div>
-        <Link href={`/blog?topic=${s.blogCat}`} className={`${secondary} py-2.5`}>{tx("All {0} articles", { 0: topic })}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></Link>
+        <div className="flex items-center gap-2">
+          {scrolls && <>
+            <button type="button" onClick={() => nudge(-1)} disabled={edges.start} aria-label={tx("Previous articles")} className={`${arrow} hidden sm:grid`}><ChevronLeft aria-hidden className="h-5 w-5 rtl:rotate-180" /></button>
+            <button type="button" onClick={() => nudge(1)} disabled={edges.end} aria-label={tx("Next articles")} className={`${arrow} hidden sm:grid`}><ChevronRight aria-hidden className="h-5 w-5 rtl:rotate-180" /></button>
+          </>}
+          <Link href={`/blog?topic=${s.blogCat}`} className={`${secondary} py-2.5 sm:ms-2`}>{tx("All {0} articles", { 0: topic })}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></Link>
+        </div>
       </div>
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <PostCard key={p.slug} p={p} />)}</div>
+      <div ref={track} {...handlers}
+        className={`-mx-4 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-8 pt-2 select-none [scrollbar-width:none] sm:-mx-6 sm:gap-5 sm:scroll-px-6 sm:px-6 [&::-webkit-scrollbar]:hidden ${scrolls ? (dragging ? "cursor-grabbing [&_a]:cursor-grabbing" : "cursor-grab") : ""}`}>
+        {posts.map((p) => (
+          <div key={p.slug} className="w-[84%] shrink-0 snap-start sm:w-[46%] lg:w-[calc((100%-2.5rem)/3)]"><PostCard p={p} /></div>
+        ))}
+      </div>
+      <SwipeDots count={count} index={index} go={go} label={tx("Articles")} className="-mt-3 sm:hidden" />
     </section>
   );
 }

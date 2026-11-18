@@ -20,7 +20,9 @@ export default function PageBackdrop({ tone }: { tone?: GlowTone }) {
   return (
     // will-change keeps the backdrop on its own GPU layer, painted once: without it the big gradients were repainted
     // on every scroll frame, which made long pages (blog posts) stutter on phones.
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 overflow-hidden [will-change:transform]" style={{ "--a": a, "--b": b } as CSSProperties}>
+    // s.root fades the whole backdrop out over its last stretch, so it dissolves into the footer's plain ground
+    // instead of stopping on a hard edge (FooterF's glow seam picks up from there).
+    <div aria-hidden className={`pointer-events-none absolute inset-0 -z-20 overflow-hidden [will-change:transform] ${s.root}`} style={{ "--a": a, "--b": b } as CSSProperties}>
       <div className={s.fields} />
       <div className={s.dots} />
       <div className={s.grain} />

@@ -3,6 +3,7 @@
 import { Gift, Smartphone, Apple, Send, Sparkles } from "lucide-react";
 import { useT } from "@/i18n/client";
 import { BrandMark, Wordmark } from "@/components/brand/Brand";
+import bc from "./brandCard.module.css";
 import { BigNumber, Glossy, WhyHeading, card, pageBg, reason, stat, useInView, tone } from "./parts";
 
 // Offer F — "Glossy Bento": the first reference brought over. A bento of soft white cards: a 2 × 2 cluster of glossy
@@ -74,7 +75,12 @@ export default function WhyF() {
           </div>
 
           {/* Brand card */}
-          <div className="relative order-7 col-span-2 flex min-h-[260px] sm:order-none items-center justify-center overflow-hidden rounded-[28px] bg-blue-600 text-white lg:row-span-2">
+          <div className="relative isolate order-7 col-span-2 flex min-h-[260px] sm:order-none items-center justify-center overflow-hidden rounded-[28px] bg-blue-600 text-white lg:row-span-2">
+            {/* Living background: soft pools of light drifting across the blue (brandCard.module.css). */}
+            <div aria-hidden className={`${bc.bg} -z-10`}>
+              <span className={`${bc.mesh} ${bc.one}`} />
+              <span className={`${bc.mesh} ${bc.two}`} />
+            </div>
             <svg aria-hidden viewBox="0 0 600 400" preserveAspectRatio="none" className="absolute inset-0 h-full w-full opacity-40">
               {Array.from({ length: 22 }, (_, i) => (
                 <path key={i} d={`M-20 ${330 - i * 6} C 140 ${120 + i * 9}, 300 ${470 - i * 10}, 620 ${60 + i * 7}`} fill="none" stroke="white" strokeWidth=".8" strokeOpacity={0.25 + (i % 4) * 0.12} />

@@ -1,0 +1,38 @@
+/* WhyF's blue brand card: a living background under the wavy lines and the logo. Two oversized layers of soft light
+   pools (sky and cyan on one, indigo and light blue on the other) turn and drift slowly in opposite directions on
+   loops of different lengths, so the card's light keeps shifting without an obvious repeat.
+   Two big layers rather than one element per pool: several separately moving, overlapping pools showed hard,
+   rectangular clipping edges in Chrome. Decorative only; still under prefers-reduced-motion. */
+.bg {
+  position: absolute; inset: 0; overflow: hidden;
+  background: linear-gradient(135deg, #3b82f6, #2563eb 45%, #1d4ed8);
+}
+
+.mesh {
+  position: absolute; inset: -50%;
+}
+.one {
+  background:
+    radial-gradient(22% 22% at 30% 32%, rgb(125 211 252 / 0.7), transparent),
+    radial-gradient(18% 18% at 66% 62%, rgb(34 211 238 / 0.45), transparent);
+  animation: turn-one 24s linear infinite;
+}
+.two {
+  background:
+    radial-gradient(24% 24% at 68% 30%, rgb(79 70 229 / 0.7), transparent),
+    radial-gradient(20% 20% at 34% 70%, rgb(147 197 253 / 0.45), transparent);
+  animation: turn-two 32s linear infinite;
+}
+
+@keyframes turn-one {
+  from { transform: rotate(0deg) translateX(4%); }
+  to { transform: rotate(360deg) translateX(4%); }
+}
+@keyframes turn-two {
+  from { transform: rotate(0deg) translateY(5%); }
+  to { transform: rotate(-360deg) translateY(5%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh { animation: none; }
+}

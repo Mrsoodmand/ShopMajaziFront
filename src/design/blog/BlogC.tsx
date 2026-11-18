@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useSwipeRow } from "@/components/ui/useSwipeRow";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { posts as placeholder } from "@/content/blog-en";
 import { ViewAll } from "./parts";
@@ -14,125 +14,7 @@ import { useT } from "@/i18n/client";
 export default function BlogC() {
   const tx = useT();
   const posts = useBlogPosts(placeholder);
-  const track = useRef<HTMLDivElement>(null);
-  const [edges, setEdges] = useState({ start: true, end: false });
-
-  useEffect(() => {
-    const el = track.current;
-    if (!el) return;
-    const on = () => {
-      const max = el.scrollWidth - el.clientWidth;
-      const x = Math.abs(el.scrollLeft);
-      setEdges({ start: x < 4, end: x > max - 4 });
-    };
-    on();
-    el.addEventListener("scroll", on, { passive: true });
-    window.addEventListener("resize", on);
-    return () => { el.removeEventListener("scroll", on); window.removeEventListener("resize", on); };
-  }, []);
-
-  // Click-and-drag with a mouse (touch already swipes natively). While dragging, the row follows the pointer 1:1
-  // (written once per frame). On release it eases, with the drag's momentum, onto the card the throw would land on.
-  // Snapping is paused meanwhile so it doesn't fight the motion. A drag that moved more than a few pixels doesn't
-  // count as a click on the card.
-  const drag = useRef({ down: false, startX: 0, startLeft: 0, moved: false, lastX: 0, lastT: 0, v: 0, frame: 0, target: 0 });
-  const [dragging, setDragging] = useState(false);
-
-  useEffect(() => () => cancelAnimationFrame(drag.current.frame), []);
-
-  const restoreSnap = (el: HTMLDivElement) => { el.style.scrollBehavior = ""; el.style.scrollSnapType = ""; };
-
-  // Scroll positions where each card lines up with the snap line (the row's inner padding).
-  const snapPoints = (el: HTMLDivElement) => {
-    const pad = parseFloat(getComputedStyle(el).scrollPaddingInlineStart) || 0;
-    const box = el.getBoundingClientRect();
-    const rtl = getComputedStyle(el).direction === "rtl";
-    const max = el.scrollWidth - el.clientWidth;
-    return (Array.from(el.children) as HTMLElement[]).map((card) => {
-      const r = card.getBoundingClientRect();
-      const p = el.scrollLeft + (rtl ? r.right - (box.right - pad) : r.left - (box.left + pad));
-      return rtl ? Math.max(-max, Math.min(0, p)) : Math.max(0, Math.min(max, p));
-    });
-  };
-
-  // One eased motion from the release point to the card where the throw would have come to rest
-  // (so it never overshoots and slides back). Then CSS snapping takes over again.
-  const glide = (el: HTMLDivElement) => {
-    const d = drag.current;
-    const from = el.scrollLeft;
-    const projected = from - d.v * 16 * (0.94 / 0.06); // distance a 0.94-per-frame friction would cover
-    const points = snapPoints(el);
-    if (!points.length) { restoreSnap(el); return; }
-    const to = points.reduce((best, p) => (Math.abs(p - projected) < Math.abs(best - projected) ? p : best));
-    const dist = Math.abs(to - from);
-    if (dist < 1) { restoreSnap(el); return; }
-    const duration = Math.min(750, 280 + dist * 0.6);
-    const t0 = performance.now();
-    const ease = (t: number) => 1 - Math.pow(1 - t, 3); // ease-out cubic
-    const step = (now: number) => {
-      const t = Math.min(1, (now - t0) / duration);
-      el.scrollLeft = from + (to - from) * ease(t);
-      if (t < 1) d.frame = requestAnimationFrame(step);
-      else { d.frame = 0; restoreSnap(el); }
-    };
-    d.frame = requestAnimationFrame(step);
-  };
-
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== "mouse" || e.button !== 0) return;
-    const el = e.currentTarget;
-    cancelAnimationFrame(drag.current.frame); // grabbing stops any glide in progress
-    drag.current = { down: true, startX: e.clientX, startLeft: el.scrollLeft, moved: false, lastX: e.clientX, lastT: performance.now(), v: 0, frame: 0, target: el.scrollLeft };
-    el.style.scrollSnapType = "none";
-    el.style.scrollBehavior = "auto";
-  };
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const d = drag.current;
-    if (!d.down) return;
-    const dx = e.clientX - d.startX;
-    if (!d.moved && Math.abs(dx) > 5) {
-      d.moved = true;
-      setDragging(true);
-      try { e.currentTarget.setPointerCapture(e.pointerId); } catch {} // keeps the drag going if the mouse leaves the row
-    }
-    if (!d.moved) return;
-    // Velocity in px per ms, smoothed so one jittery event doesn't throw the glide.
-    const now = performance.now(), dt = Math.max(1, now - d.lastT);
-    d.v = 0.8 * ((e.clientX - d.lastX) / dt) + 0.2 * d.v;
-    d.lastX = e.clientX; d.lastT = now;
-    d.target = d.startLeft - dx;
-    if (!d.frame) {
-      const el = e.currentTarget;
-      d.frame = requestAnimationFrame(() => { el.scrollLeft = drag.current.target; drag.current.frame = 0; });
-    }
-  };
-  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    const d = drag.current;
-    if (!d.down) return;
-    d.down = false;
-    setDragging(false);
-    const el = e.currentTarget;
-    cancelAnimationFrame(d.frame);
-    d.frame = 0;
-    if (!d.moved) { restoreSnap(el); return; }
-    el.scrollLeft = d.target;
-    // A pause before letting go means no throw.
-    if (performance.now() - d.lastT > 80) d.v = 0;
-    glide(el);
-  };
-  const onClickCapture = (e: React.MouseEvent) => {
-    if (drag.current.moved) { e.preventDefault(); e.stopPropagation(); drag.current.moved = false; }
-  };
-
-  // Move by one card; flips direction for RTL pages.
-  const nudge = (dir: 1 | -1) => {
-    const el = track.current;
-    if (!el) return;
-    const card = el.querySelector("a");
-    const step = (card?.clientWidth ?? 320) + 20;
-    const rtl = getComputedStyle(el).direction === "rtl";
-    el.scrollBy({ left: dir * step * (rtl ? -1 : 1), behavior: "smooth" });
-  };
+  const { track, handlers, dragging, edges, nudge } = useSwipeRow();
 
   if (!posts.length) return null;
 
@@ -153,9 +35,7 @@ export default function BlogC() {
           </div>
         </div>
 
-        <div ref={track}
-          onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onPointerLeave={endDrag}
-          onClickCapture={onClickCapture} onDragStart={(e) => e.preventDefault()}
+        <div ref={track} {...handlers}
           className={`-mx-6 -mb-8 mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-6 px-6 pb-10 pt-2 select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${dragging ? "cursor-grabbing [&_a]:cursor-grabbing" : "cursor-grab"}`}>
           {posts.map((p) => (
             <div key={p.slug} className="w-[82%] shrink-0 snap-start sm:w-[46%] lg:w-[31.5%]"><PostCard p={p} /></div>

@@ -7,6 +7,7 @@ import { Logo } from "../header/shared";
 import { Columns, Socials } from "./parts";
 import { FooterLink, type LinkStyle } from "./links";
 import { useT } from "@/i18n/client";
+import seam from "./footerSeam.module.css";
 
 const channels = [
   { icon: MessageCircle, title: "Live chat", desc: "Average reply in 2 minutes", href: "/contact-us", tint: "bg-indigo-600 text-white" },
@@ -20,10 +21,16 @@ const channels = [
 export default function FooterF({ linkStyle = "arrow" }: { linkStyle?: LinkStyle }) {
   const t = useT();
   return (
-    <footer className="relative overflow-hidden bg-[#F5F6FB] dark:bg-[#070B14]">
-      <div aria-hidden className="pointer-events-none absolute inset-0">
+    <footer className="relative bg-[#F5F6FB] dark:bg-[#070B14]">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-24 start-[12%] h-80 w-80 rounded-full bg-indigo-300/30 blur-[110px] dark:bg-indigo-600/15" />
         <div className="absolute -top-16 end-[10%] h-72 w-72 rounded-full bg-fuchsia-300/25 blur-[110px] dark:bg-fuchsia-600/10" />
+      </div>
+      {/* Glow seam: where the page above fades out, a soft light line marks the footer's edge, glowing both above and
+          below it (footerSeam.module.css). The footer itself doesn't clip, so the upper half reaches into the page. */}
+      <div aria-hidden className={seam.seam}>
+        <div className={seam.halo} />
+        <div className={seam.line} />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-6">

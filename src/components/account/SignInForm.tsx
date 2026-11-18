@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, Loader2, KeyRound, MessageSquareText, Pencil } from "lucide-react";
-import { accountApi, useAccount, type AccountUser } from "@/lib/account";
+import { accountApi, ApiError, useAccount, type AccountUser } from "@/lib/account";
+import { CaptchaField, useCaptcha } from "@/lib/captcha";
 import { useT } from "@/i18n/client";
 import { errorText } from "./errors";
 import WordReveal from "@/components/ui/WordReveal";
@@ -32,24 +33,29 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
   const [devCode, setDevCode] = useState<string | null>(null);
   const [resendAt, setResendAt] = useState(0);
   const focusRef = useRef<HTMLInputElement>(null);
+  // Captcha (admin › Captcha): asked once; the backend's session lets the next steps through without it.
+  const captcha = useCaptcha("login", { session: true });
   useEffect(() => { focusRef.current?.focus(); }, [step]);
 
   const run = async (work: () => Promise<void>) => {
     setBusy(true); setError(null);
-    try { await work(); } catch (e) { setError(errorText(e, t)); } finally { setBusy(false); }
+    try { await work(); captcha.used(); } catch (e) {
+      if (e instanceof ApiError) captcha.handle(e.code, e.data);
+      setError(errorText(e, t));
+    } finally { setBusy(false); }
   };
   const codeSent = (r: Started) => { setDevCode(r.dev_code ?? null); setResendAt(Date.now() + (r.resend_in ?? 120) * 1000); setCode(""); };
   const finish = (me: Me) => { account.signedIn(me); onDone?.(); };
 
   const submitMobile = (e: FormEvent) => { e.preventDefault(); run(async () => {
-    const r = await accountApi<Started>("start", { mobile: latin(mobile) });
+    const r = await accountApi<Started>("start", { mobile: latin(mobile), ...(await captcha.fields()) });
     setMobile(r.mobile);
     if (r.exists) setStep("password"); else { codeSent(r); setStep("register"); }
   }); };
-  const sendCode = () => run(async () => { codeSent(await accountApi<Started>("code", { mobile })); if (step === "password") setStep("code"); });
-  const submitPassword = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, password }))); };
-  const submitCode = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, code: latin(code) }))); };
-  const submitRegister = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("register", { mobile, code: latin(code), name, password, email }))); };
+  const sendCode = () => run(async () => { codeSent(await accountApi<Started>("code", { mobile, ...(await captcha.fields()) })); if (step === "password") setStep("code"); });
+  const submitPassword = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, password, ...(await captcha.fields()) }))); };
+  const submitCode = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, code: latin(code), ...(await captcha.fields()) }))); };
+  const submitRegister = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("register", { mobile, code: latin(code), name, password, email, ...(await captcha.fields()) }))); };
   const changeNumber = () => { setStep("mobile"); setError(null); setPassword(""); setCode(""); setDevCode(null); };
 
   const titles: Record<Step, [string, string]> = {
@@ -80,6 +86,7 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
           <Label text={t("Mobile number")}>
             <input ref={focusRef} type="tel" inputMode="numeric" autoComplete="tel" dir="ltr" required maxLength={14} value={mobile} onChange={(e) => setMobile(digitsOnly(e.target.value))} placeholder="09123456789" className={`${field} text-start font-mono`} />
           </Label>
+          <CaptchaField captcha={captcha} />
           <Submit busy={busy} label={t("Continue")} />
         </form>
       )}
@@ -89,6 +96,7 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
           <Label text={t("Password")}>
             <input ref={focusRef} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
           </Label>
+          <CaptchaField captcha={captcha} />
           <Submit busy={busy} label={t("Sign in")} icon={KeyRound} />
           <button type="button" onClick={sendCode} disabled={busy} className={`mx-auto flex items-center gap-1.5 ${link}`}><MessageSquareText className="h-4 w-4" />{t("Sign in with a code by SMS instead")}</button>
         </form>
@@ -98,6 +106,7 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
         <form onSubmit={submitCode} className="space-y-3">
           <CodeInput inputRef={focusRef} value={code} onChange={setCode} label={t("Code from the SMS")} />
           <DevCode code={devCode} />
+          <CaptchaField captcha={captcha} />
           <Submit busy={busy} label={t("Sign in")} />
           <Resend at={resendAt} onResend={sendCode} busy={busy} />
         </form>
@@ -110,6 +119,7 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
           <Label text={t("Full name")}><input type="text" autoComplete="name" required minLength={3} maxLength={40} value={name} onChange={(e) => setName(e.target.value)} className={field} /></Label>
           <Label text={t("Password")} hint={t("6 to 30 characters")}><input type="password" autoComplete="new-password" required minLength={6} maxLength={30} value={password} onChange={(e) => setPassword(e.target.value)} className={field} /></Label>
           <Label text={t("Email")} hint={t("Optional")}><input type="email" autoComplete="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} className={`${field} text-start`} /></Label>
+          <CaptchaField captcha={captcha} />
           <Submit busy={busy} label={t("Create account")} />
           <Resend at={resendAt} onResend={sendCode} busy={busy} />
         </form>

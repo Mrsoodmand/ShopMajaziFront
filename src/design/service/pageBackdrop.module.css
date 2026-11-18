@@ -5,6 +5,14 @@
    - dots: the hero glow's dot grid carried down the page edges, fading out towards the content column;
    - grain: a fine noise that gives the dark ground some tooth and stops the soft gradients from banding.
    --a / --b: the two colours, set inline. */
+
+/* The backdrop's bottom edge: everything fades to the bare ground (the footer's colour) over the last 18rem, so the
+   page dissolves into the footer instead of stopping on a hard line. */
+.root {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 18rem), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 18rem), transparent);
+}
+
 .fields {
   position: absolute; inset: 0;
   --pa: 16%; --pb: 13%; --pc: 7%;

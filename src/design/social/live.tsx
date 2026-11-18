@@ -3,6 +3,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { SocialCategory } from "@/content/social-categories-en";
 import type { LiveService } from "@/lib/social";
+import type { ServiceComment } from "@/content/service-extras-en";
 
 // The live Social media services pages get their platforms from the backend through these providers. Without them
 // (the /design previews) the pages fall back to the placeholder data in content/social-*.ts.
@@ -32,6 +33,8 @@ export type LiveSocialOrder = {
   // Below the order: the platform's (or service's) own article and FAQ from the admin, when it has them.
   article?: { title: string; blocks: { kind: "h" | "p"; text: string }[] };
   faq?: { q: string; a: string }[];
+  // A single service's approved comments (its own page only).
+  comments?: ServiceComment[];
   error?: string;
 };
 

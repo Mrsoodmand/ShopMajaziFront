@@ -77,9 +77,11 @@ export async function SocialOrderPage({ platform, service }: { platform: string;
     faq: locale === "fa" ? detail?.service.faq : undefined,
     error,
   };
-  // The page design chosen in /design/page-social (A). Only A reads the live data so far.
-  const section = getSection("page-social")!;
-  const offer = section.offers.find((o) => o.id === decisions["page-social"]?.offer) ?? section.offers.find((o) => o.id === "A")!;
+  // The platform page uses the design chosen in /design/page-social (L · Band + Shelf); a service's own page uses the
+  // one chosen in /design/page-social-service (A · Spec Sheet). Both sections' offers read the live data.
+  const id = service ? "page-social-service" : "page-social";
+  const section = getSection(id)!;
+  const offer = section.offers.find((o) => o.id === decisions[id]?.offer) ?? section.offers.find((o) => o.id === "A")!;
   const { Component } = offer;
   return (
     <MoneyProvider currency="toman">
