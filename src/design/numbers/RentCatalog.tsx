@@ -149,7 +149,7 @@ export default function RentCatalog({ card }: { card?: string }) {
                   )}
                 </div>
                 <button type="button" onClick={() => setPayOpen(true)} disabled={!ready} className={`${primary} mt-6 w-full disabled:cursor-not-allowed disabled:opacity-40`}>
-                  {ready ? <>{t("Continue to payment ·")}{" "}{usd(price)}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></> : method === "app" && period ? t("Pick an app") : t("Pick how long")}
+                  {ready ? <>{t("Continue to payment")}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></> : method === "app" && period ? t("Pick an app") : t("Pick how long")}
                 </button>
                 {period && <p className="mt-3 text-center text-sm text-slate-600 dark:text-slate-400">{t("Until")}{" "}{t(endDate(period.days))}{t(" · extend any time")}</p>}
               </div>

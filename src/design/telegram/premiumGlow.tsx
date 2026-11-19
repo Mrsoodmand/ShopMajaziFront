@@ -132,7 +132,7 @@ export function OrderCardGlow({ pm, who, className = "" }: { pm: PremiumState; w
           ))}
         </dl>
         <div aria-live="polite" className="mt-2 flex items-baseline justify-between border-t border-slate-200 pt-4 dark:border-white/10"><span className="text-slate-600 dark:text-slate-400">{t("Total")}</span><span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{usd(pm.total)}</span></div>
-        <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{t("Continue ·")}{" "}{usd(pm.total)}</button>
+        <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{t("Continue")}</button>
         <p role="status" className="mt-2.5 text-center text-sm font-semibold text-red-700 empty:hidden dark:text-red-400">{pm.blocker ?? ""}</p>
         {sample && <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">{t("Sample prices and account lookup (design preview)")}</p>}
       </div>

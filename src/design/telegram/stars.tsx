@@ -119,7 +119,7 @@ export function TierNudge({ st }: { st: StarsState }) {
   return (
     <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:bg-emerald-400/10 dark:text-emerald-200">
       <span>{cheaper > 0 ? <>{tx("Add")}{" "}<strong>{fmt(more)}</strong>{" "}{tx("more")}{" "}{more === 1 ? tx("Star") : tx("Stars")}{" "}{tx("and pay")}{" "}<strong>{usd(cheaper)}{" "}{tx("less")}</strong>.</> : <>{tx("Add")}{" "}<strong>{fmt(more)}</strong>{" "}{tx("more")}{" "}{more === 1 ? tx("Star") : tx("Stars")}{" "}{tx("to save")}{" "}{savePct(next.from)}{tx("% per Star.")}</>}</span>
-      <button type="button" onClick={() => st.setAmount(next.from)} className="rounded-lg bg-emerald-700 px-3 py-1.5 font-semibold text-white hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 dark:bg-emerald-500 dark:text-emerald-950">{tx("Make it")}{" "}{fmt(next.from)}</button>
+      <button type="button" onClick={() => st.setAmount(next.from)} className="rounded-lg bg-emerald-700 px-3 py-1.5 font-semibold text-white hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 dark:bg-emerald-600 dark:text-white">{tx("Make it")}{" "}{fmt(next.from)}</button>
     </div>
   );
 }

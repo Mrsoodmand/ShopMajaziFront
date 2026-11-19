@@ -117,6 +117,6 @@ export const BuyPremium = ({ pm, className = "", label }: { pm: PremiumState; cl
   const usd = useMoney().format;
   const t = useT();
   return (
-  <button type="button" onClick={pm.proceed} className={`${t.tr(accent).premium.btn} w-full ${className}`}>{label ?? t("Get Premium for {0}", { 0: pm.plan.label })} · {usd(pm.total)}</button>
+  <button type="button" onClick={pm.proceed} className={`${t.tr(accent).premium.btn} w-full ${className}`}>{label ?? t("Get Premium for {0}", { 0: pm.plan.label })}</button>
 );
 };

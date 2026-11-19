@@ -23,6 +23,7 @@ type ApiOrder = {
   charges?: { id: number; kind: "order" | "extra"; title: string; price: number; paid: boolean; at: string | null }[];
   due?: number; cancellable?: boolean; night_call?: boolean | null;
   fields?: { label: string; value: string; secret?: boolean; raw?: boolean }[];
+  product_id?: number | null; review?: { state: "open" | "sent" } | null;
 };
 type ApiLine = { id: number; kind: Line["kind"]; amount: number; balance: number | null; held: boolean; order_id: number | null; card: ApiCard; at: string };
 type ApiMessage = { from: "you" | "support"; name: string | null; at: string; text: string; file: string | null };
@@ -261,7 +262,7 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
   const deliveredAt = o.state === "delivered" ? o.updated_at ?? undefined : undefined;
   const cart = o.cart ? { id: o.cart.id, at: o.cart.at, paidWith: o.cart.paid_with === "card" && o.cart.card ? cardKey(o.cart.card) : o.cart.paid_with === "card" ? "m:000000:····" : "wallet" } : undefined;
   const charges = (o.charges ?? []).map((c) => ({ ...c, at: c.at ?? o.at }));
-  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart, charges, due: o.due ?? 0, cancellable: !!o.cancellable, nightCall: o.night_call ?? null };
+  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart, charges, due: o.due ?? 0, cancellable: !!o.cancellable, nightCall: o.night_call ?? null, review: o.review ?? null };
 
   if (o.kind === "number") {
     return {

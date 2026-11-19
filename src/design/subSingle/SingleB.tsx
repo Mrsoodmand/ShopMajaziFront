@@ -45,7 +45,7 @@ export default function SingleB({ slug }: { slug?: string; panel?: string }) {
 
         <section id="buy-box" aria-label={t("Your order")} className="mx-auto mt-8 max-w-md space-y-5 rounded-3xl border border-slate-200 bg-white p-6 dark:border-white/15 dark:bg-[#0E1424]">
           <FieldsForm s={s} />
-          <BuyButton s={s} label={t("Continue · {0} · {1}", { 0: s.plan?.name ?? "", 1: s.plan ? usd(s.plan.price) : "" })} />
+          <BuyButton s={s} label={t("Continue · {0}", { 0: s.plan?.name ?? "" })} />
         </section>
 
         <div className="mt-16 space-y-12">

@@ -50,7 +50,7 @@ export default function SubsC({ slug }: { slug?: string }) {
                           <PlanRadios s={s} />
                           <FieldsForm s={s} />
                           <Notes p={p} />
-                          <BuyButton s={s} label={`Buy ${s.plan?.name ?? ""} · ${s.plan ? usd(s.plan.price) : ""}`} />
+                          <BuyButton s={s} label={`Buy ${s.plan?.name ?? ""}`} />
                         </div>
                       )}
                     </li>

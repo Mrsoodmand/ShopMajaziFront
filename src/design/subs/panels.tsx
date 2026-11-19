@@ -197,7 +197,7 @@ function PanelPrice({ s, focusable }: PanelProps) {
       </div>
       <Segments s={s} show="month" />
       <FieldsForm s={s} />
-      <BuyButton s={s} label={pl ? t("Continue · {0}", { 0: usd(pl.price) }) : t("Continue")} />
+      <BuyButton s={s} label={t("Continue")} />
       <details className="group rounded-xl border border-slate-200 px-4 py-3 dark:border-white/15 [&_summary::-webkit-details-marker]:hidden">
         <summary className={`cursor-pointer list-none rounded-lg font-semibold text-slate-900 dark:text-white ${ring}`}>{t("What's included")}</summary>
         <div className="mt-3"><Notes p={p} /></div>

@@ -18,7 +18,7 @@ function useHow(p: SubProduct): How {
   const when = p.delivery || tx("After payment, by our team");
   if (how === "own") return {
     own: true, title: tx("Activated on your own account"), Icon: UserCheck, when,
-    note: tx("You never share a password."),
+    note: "", // no note on own-account delivery (removed at the owner's request)
     steps: [
       { t: tx("You tell us your account"), d: field ? field.label : tx("Your account email"), Icon: UserCheck },
       { t: tx("We activate the plan"), d: when, Icon: Zap },
@@ -50,6 +50,7 @@ const title = "font-semibold text-slate-900 dark:text-white";
 const muted = "text-sm text-slate-600 dark:text-slate-400";
 
 function Note({ h, className = "" }: { h: How; className?: string }) {
+  if (!h.note) return null;
   return <p className={`flex items-start gap-2 ${muted} ${className}`}><ShieldCheck aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />{h.note}</p>;
 }
 

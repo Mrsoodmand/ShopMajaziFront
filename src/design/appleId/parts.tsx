@@ -596,7 +596,7 @@ export function ContinueButton({ a, className = "", full = true, short = false }
   if (short) return <button type="button" onClick={a.proceed} disabled={off} className={`${primary} disabled:cursor-not-allowed disabled:opacity-50 ${full ? "w-full" : ""} ${className}`}>{a.inCart ? tx("Add to cart") : a.method === "ready" ? tx("Buy now") : tx("Continue")}</button>;
   return (
     <button type="button" onClick={a.proceed} disabled={off} className={`${primary} disabled:cursor-not-allowed disabled:opacity-50 ${full ? "w-full" : ""} ${className}`}>
-      {a.inCart ? `${tx("Add to cart")} · ${money.format(a.total)}` : a.method === "ready" ? `${a.count === 1 ? tx("Buy now") : tx("Buy {0}", { 0: tx("{0} Apple IDs", { 0: a.count }) })} · ${money.format(a.total)}` : tx("Continue to payment · {0}", { 0: money.format(a.total) })}
+      {a.inCart ? tx("Add to cart") : a.method === "ready" ? (a.count === 1 ? tx("Buy now") : tx("Buy {0}", { 0: tx("{0} Apple IDs", { 0: a.count }) })) : tx("Continue to payment")}
     </button>
   );
 }

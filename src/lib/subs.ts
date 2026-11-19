@@ -37,6 +37,8 @@ export type ApiSubOrder = {
   price: number;
   paid_with: "wallet" | "card";
   created_at: string;
+  // Done: may the buyer comment on the product (design/account/ReviewCard), or did they already.
+  review?: { state: "open" | "sent" } | null;
 };
 
 const PERSIAN = /[؀-ۿ]/;

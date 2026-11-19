@@ -6,6 +6,7 @@ import { readDecisions } from "@/components/design/decisions";
 import { LiveSocialOrderProvider, type LiveSocialOrder } from "@/design/social/live";
 import { MoneyProvider } from "@/lib/money";
 import { isNotFound, storefront } from "@/lib/backend";
+import { loadBlog } from "@/lib/blog";
 // The admin's HTML article as plain headings and paragraphs (no markup from the database reaches the page).
 import { articleBlocks } from "@/lib/article";
 import { display, toLiveServices, toSocialCategories, type ApiServiceDetail, type ApiServicePlatform, type ApiVirtualServices } from "@/lib/social";
@@ -60,7 +61,7 @@ export async function socialOrderMetadata(platform: string, service?: string): P
 export async function SocialOrderPage({ platform, service }: { platform: string; service?: string }) {
   const locale: Locale = (await getLocale()) === "fa" ? "fa" : "en";
   const t = await getT();
-  const [decisions, loaded] = await Promise.all([readDecisions(), load(platform, service, locale)]);
+  const [decisions, loaded, blog] = await Promise.all([readDecisions(), load(platform, service, locale), loadBlog(locale).then((b) => b ?? []).catch(() => [])]);
   const { platform: p, platforms, page, detail, error } = loaded;
   const services = page ? toLiveServices(page.services, locale) : [];
   const own = detail && services.find((s) => s.id === detail.service.id);
@@ -75,6 +76,12 @@ export async function SocialOrderPage({ platform, service }: { platform: string;
       return blocks.length ? { title: own ? t("More about {0}", { 0: own.name }) : t("About {0} services", { 0: p.name }), blocks } : undefined;
     })() : undefined,
     faq: locale === "fa" ? detail?.service.faq : undefined,
+    // Telegram has its own blog topic; other platforms read the social media posts, then guides.
+    posts: (() => {
+      const topic = platform === "telegram" ? "telegram" : "social";
+      const order = [topic, ...(topic === "telegram" ? ["social"] : []), "guides"];
+      return order.flatMap((c) => blog.filter((b) => b.cat === c)).slice(0, 8);
+    })(),
     error,
   };
   // The platform page uses the design chosen in /design/page-social (L · Band + Shelf); a service's own page uses the

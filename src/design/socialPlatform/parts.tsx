@@ -12,6 +12,8 @@ import { LiveSocialOrderProvider, useLiveSocialOrder, type LiveSocialOrder } fro
 import { LiveMark, LiveOrderView, useLiveOrder, type LiveOrder } from "../social/liveOrder";
 import { icons } from "../social/listKit";
 import { AfterPay, Article, PromiseGrid, Questions, ring, Section } from "../socialService/parts";
+import { PostRow } from "../service/ServiceExtras";
+import BackToTop from "@/components/ui/BackToTop";
 
 // Shared by the platform page offers F–J (/design/page-social, live at /virtual-service/{platform}). Every offer runs
 // on the live order logic (social/liveOrder.tsx), so the one picked works with the admin's platforms, services,
@@ -166,10 +168,13 @@ export function PlatformBelow({ d }: { d: LiveSocialOrder }) {
     <Section className="space-y-14 pb-32 pt-16 sm:space-y-16">
       <section aria-labelledby="pf-promise"><h2 id="pf-promise" className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{tx("Why it's safe to order")}</h2><PromiseGrid className="mt-5" /></section>
       <section aria-labelledby="pf-after"><h2 id="pf-after" className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{tx("What happens after you pay")}</h2><AfterPay className="mt-6" /></section>
-      <div className="grid gap-14 lg:grid-cols-2 lg:gap-10">
-        <Questions d={d} />
+      {/* The FAQ stays in view beside the (usually longer) article on wide screens. */}
+      <div className="grid gap-14 lg:grid-cols-2 lg:items-start lg:gap-10">
+        <Questions d={d} className="lg:sticky lg:top-24" />
         <Article d={d} />
       </div>
+      {!!d.posts?.length && <PostRow posts={d.posts} cat={d.platform.slug === "telegram" ? "telegram" : "social"} name={d.platform.name} className="!px-0" />}
+      <BackToTop raised />
     </Section>
   );
 }

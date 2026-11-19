@@ -5,7 +5,8 @@ import { makeT, toman } from "@/i18n/translate";
 import { getSection } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
 import { ExtrasSlot } from "@/design/service/slot";
-import LiveServiceExtras from "@/design/service/LiveServiceExtras";
+import LiveServiceExtras, { loadLiveComments } from "@/design/service/LiveServiceExtras";
+import type { LiveComments } from "@/design/service/ServiceExtras";
 import { LiveSubsProvider, type LiveSubs } from "@/design/subs/live";
 import SingleA from "@/design/subSingle/SingleA";
 import SingleB from "@/design/subSingle/SingleB";
@@ -25,7 +26,7 @@ import { pageSeo, seoMetadata } from "@/lib/seo";
 // backend (React admin › accounts; see lib/subs.ts), and buying goes through it (design/subs/parts.tsx useSubs).
 
 // Single-subscription designs by offer id (the registry holds previews of these for the comparison page).
-const singles: Record<string, ComponentType<{ slug?: string; panel?: string }>> = { A: SingleA, B: SingleB, C: SingleC, D: SingleD, E: SingleE };
+const singles: Record<string, ComponentType<{ slug?: string; panel?: string; comments?: LiveComments }>> = { A: SingleA, B: SingleB, C: SingleC, D: SingleD, E: SingleE };
 
 const localeOf = async () => ((await getLocale()) === "fa" ? "fa" : "en") as "en" | "fa";
 
@@ -103,9 +104,14 @@ export async function AccountsPage({ slug }: { slug?: string }) {
   const panel = decisions["page-subs-panel"]?.offer;
 
   let page;
+  // Single D shows the FAQ and comments in its own tabs, so they are loaded here once and left out of the extras.
+  let tabbed = false;
+  let comments: LiveComments | undefined;
   if (p) {
     const Single = singles[decisions["page-sub-single"]?.offer ?? "A"] ?? SingleA;
-    page = <Single slug={p.slug} panel={panel} />;
+    tabbed = Single === SingleD;
+    if (tabbed) comments = await loadLiveComments(`subs:${p.slug}`);
+    page = <Single slug={p.slug} panel={panel} comments={comments} />;
   } else {
     const section = getSection("page-subs")!;
     const { Component } = section.offers.find((o) => o.id === decisions["page-subs"]?.offer) ?? section.offers.find((o) => o.id === "A")!;
@@ -124,7 +130,7 @@ export async function AccountsPage({ slug }: { slug?: string }) {
     <MoneyProvider currency="toman">
       <LiveSubsProvider value={live}>
         {ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />}
-        <ExtrasSlot extras={<LiveServiceExtras service={p ? `subs:${p.slug}` : "subscriptions"} />} glow="rose">{page}</ExtrasSlot>
+        <ExtrasSlot extras={<LiveServiceExtras service={p ? `subs:${p.slug}` : "subscriptions"} omit={tabbed} comments={comments} />} glow="rose">{page}</ExtrasSlot>
       </LiveSubsProvider>
     </MoneyProvider>
   );

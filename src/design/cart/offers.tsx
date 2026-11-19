@@ -139,7 +139,7 @@ function PayBlock({ c, compact = false }: { c: Cart; compact?: boolean }) {
       </div>
       {short && <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">{t("Not enough in your wallet. You need {amount} more.", { amount: m(c.total - WALLET) })}</p>}
       <button type="button" disabled={!c.lines.length || short} onClick={() => c.setPaid(how)} className={`${primary} mt-3 w-full`}>
-        <Lock className="h-4 w-4" />{t("Pay {0}", { 0: m(c.total) })}
+        <Lock className="h-4 w-4" />{t("Pay")}
       </button>
       <p className="mt-2 text-center text-[11px] text-slate-500 dark:text-slate-400">{t("One payment for everything. Anything we can't deliver goes back to your wallet.")}</p>
     </div>

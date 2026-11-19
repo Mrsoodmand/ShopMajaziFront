@@ -79,6 +79,14 @@ function View({ orderView, panel: panelId, card: cardId, previewOrder = false, s
     if (waiting) f.showOrder(waiting.id);
   }, [store?.loaded, store?.orders, f]);
 
+  // The order screen replaces the catalog, but the page stays scrolled down where the panel was. Bring the number
+  // into view whenever an order opens (just bought, "same again", or picked from the recent numbers).
+  const orderId = f.step === "order" ? f.order?.id : undefined;
+  useEffect(() => {
+    if (orderId === undefined) return;
+    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }, [orderId]);
+
   const byApp = f.first === "app";
   const needle = q.trim().toLowerCase();
   // The grid: every app with its "from" price (admin's order), or every country cheapest first.

@@ -147,7 +147,7 @@ export function PremiumSide({ pm, who, green = false }: { pm: PremiumState; who:
         <div aria-live="polite" className="flex items-baseline justify-between border-t border-white/10 pt-4"><span className="text-white/60">{t("Total")}</span><span className="font-display text-2xl font-bold tabular-nums"><Tweened value={pm.total} /></span></div>
         {green ? (
           <>
-            <button type="button" onClick={pm.proceed} className={`${primary} mt-2 w-full tabular-nums`}>{t("Continue ·")}{" "}{usd(pm.total)}</button>
+            <button type="button" onClick={pm.proceed} className={`${primary} mt-2 w-full tabular-nums`}>{t("Continue")}</button>
             <p role="status" className="text-center text-sm font-semibold text-red-300 empty:hidden">{pm.blocker ?? ""}</p>
           </>
         ) : <BuyPremiumShine pm={pm} label={who === "gift" ? t("Gift Premium") : t("Get Premium")} />}

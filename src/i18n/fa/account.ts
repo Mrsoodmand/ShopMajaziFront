@@ -161,4 +161,13 @@ export const account: Record<string, string> = {
   "New picture": "تصویر جدید",
   "Protected by Google reCAPTCHA.": "این فرم با reCAPTCHA گوگل محافظت می‌شود.",
   "Terms": "شرایط",
+  // Review request on a delivered order (design/account/ReviewCard).
+  "Your order arrived. How did it go?": "سفارش‌تان رسید؛ تجربه‌تان چطور بود؟",
+  "Your comment helps others buying {0}. It shows on its page as from a verified buyer.": "دیدگاه شما به خریداران بعدی «{0}» کمک می‌کند و با نشان «خریدار تأییدشده» در صفحه محصول نمایش داده می‌شود.",
+  "Your comment helps other buyers. It shows on the product page as from a verified buyer.": "دیدگاه شما به خریداران دیگر کمک می‌کند و با نشان «خریدار تأییدشده» در صفحه محصول نمایش داده می‌شود.",
+  "Name shown": "نام نمایشی",
+  "Your comment": "دیدگاه شما",
+  "How fast was it, did it work as expected…": "چقدر سریع تحویل شد، همان‌طور که انتظار داشتید کار کرد…",
+  "Thanks for your comment": "ممنون از دیدگاه‌تان",
+  "It will appear on the product page after a quick review, marked as from a verified buyer.": "پس از بررسی کوتاه، با نشان «خریدار تأییدشده» در صفحه محصول نمایش داده می‌شود.",
 };

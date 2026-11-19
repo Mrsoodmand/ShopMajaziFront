@@ -95,7 +95,7 @@ export default function PremiumF() {
                   <div className="flex justify-between gap-4"><span className="text-white/60">{who === "gift" ? "From" : "For"}</span><span className="font-semibold">{who === "gift" ? "You" : "Your account"}</span></div>
                   <div className="flex justify-between gap-4"><span className="text-white/60">Activation</span><span className="font-semibold">A few minutes</span></div>
                   <div aria-live="polite" className="flex items-baseline justify-between border-t border-white/10 pt-4"><span className="text-white/60">Total</span><span className="font-display text-2xl font-bold tabular-nums"><Tweened value={pm.total} /></span></div>
-                  <button type="button" onClick={pm.proceed} className={`${accent.premium.btn} relative mt-2 w-full animate-glow overflow-hidden [--glow:rgba(192,38,211,.55)]`}><Shine /><span className="relative">{who === "gift" ? "Gift Premium" : "Get Premium"} · {usd(pm.total)}</span></button>
+                  <button type="button" onClick={pm.proceed} className={`${accent.premium.btn} relative mt-2 w-full animate-glow overflow-hidden [--glow:rgba(192,38,211,.55)]`}><Shine /><span className="relative">{who === "gift" ? "Gift Premium" : "Get Premium"}</span></button>
                 </div>
               </div>
             </aside>

@@ -217,7 +217,7 @@ export function BuyButton({ gv, className = "", children }: { gv: Gv; className?
   const money = useMoney();
   return (
     <button onClick={gv.openPay} className={`flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:bg-emerald-700 ${className}`}>
-      {children ?? <>{tx("Buy")}{" "}{gv.selected.number} · {money.format(gvPrice(gv.selected))}</>}
+      {children ?? <>{tx("Buy")}{" "}{gv.selected.number}</>}
     </button>
   );
 }

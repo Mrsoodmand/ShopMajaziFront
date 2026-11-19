@@ -27,6 +27,8 @@ export type AccountOrder = {
   paidWith: "wallet" | string; // "wallet" or a card id
   at: string; // ISO, when it was paid
   deliveredAt?: string;
+  // Delivered: may the buyer comment on what they bought (design/account/ReviewCard), or did they already.
+  review?: { state: "open" | "sent" } | null;
   refund?: { amount: number; reason: string; at: string };
   unpaid?: boolean; // the bank payment never went through (the account lists paid orders only, so not set today)
   // Bought together with other services from the cart: one cart order #C-{id}, paid at once (`paidWith` of the cart).

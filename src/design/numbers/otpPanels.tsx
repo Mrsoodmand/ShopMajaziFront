@@ -132,7 +132,7 @@ function PayButton({ f, onPay, className = "" }: { f: OtpFlow; onPay: () => void
   const usd = useMoney().format;
   return (
     <button type="button" onClick={onPay} disabled={!f.operator} className={`${cta} ${className}`}>
-      {f.operator ? <>{t("Continue to payment ·")}{" "}{usd(f.operator.price)}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></> : t("Pick an operator")}
+      {f.operator ? <>{t("Continue to payment")}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></> : t("Pick an operator")}
     </button>
   );
 }
@@ -382,7 +382,7 @@ function QuickBuy({ f, byApp, items, value, pick, loading, searchLabel, listTitl
           </span>
           <button type="button" onClick={() => { f.pickOperator(o.id); onPay(); }}
             className={`shrink-0 rounded-xl bg-indigo-600 px-3.5 py-2 text-sm font-semibold tabular-nums text-white transition hover:bg-indigo-700 active:scale-[.97] ${ring}`}>
-            {t("Buy ·")}{" "}{usd(o.price)}<span className="sr-only">{" "}{o.name}</span>
+            {t("Buy")}<span className="sr-only">{" "}{o.name}</span>
           </button>
         </li>
       ))}

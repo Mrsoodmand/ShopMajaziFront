@@ -36,16 +36,18 @@ const card = "rounded-3xl border border-slate-200 bg-white dark:border-white/15 
 // /design previews) the placeholder comments are shown and the form only pretends to send.
 export type LiveComments = { key: string | null; list: ServiceComment[] };
 
-export default function ServiceExtras({ service, posts, comments }: { service: string; posts?: Post[]; comments?: LiveComments }) {
+// `omit`: the page design shows the comments and FAQ itself (subscription pages put them in tabs, subSingle/tabs.tsx),
+// so they are left out here; the FAQ structured data stays.
+export default function ServiceExtras({ service, posts, comments, omit = false }: { service: string; posts?: Post[]; comments?: LiveComments; omit?: boolean }) {
   const tx = useT();
   const s = useServiceExtras(service);
   return (
     <div className="space-y-24 border-t border-slate-200 pb-24 pt-20 dark:border-white/10">
       <HowToUse service={service} />
       <ContentArea service={service} />
-      <Comments key={service} service={service} live={comments} />
+      {!omit && <Comments key={service} service={service} live={comments} />}
       {/* FAQ: offer C "Index & Answer" (chosen at /design/service-faq); ServiceFaq below is the earlier design. */}
-      <FaqC service={service} />
+      {!omit && <FaqC service={service} />}
       <RelatedPosts service={service} live={posts} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org", "@type": "FAQPage",
@@ -176,7 +178,13 @@ function CommentItem({ c }: { c: ServiceComment }) {
       <article aria-label={tx("Comment by {0}", { 0: c.name })}>
         <div className="flex items-center gap-3">
           <Initials name={c.name} />
-          <div><p className="font-semibold text-slate-900 dark:text-white">{c.name}</p><p className="text-sm text-slate-600 dark:text-slate-400">{c.date}</p></div>
+          <div>
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-semibold text-slate-900 dark:text-white">{c.name}
+              {/* Written from the buyer's own delivered order, so shown as from someone who really bought it. */}
+              {c.verified && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-300"><BadgeCheck aria-hidden className="h-3.5 w-3.5" />{tx("Verified buyer")}</span>}
+            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{c.date}</p>
+          </div>
         </div>
         <p className="mt-3 text-[15px] leading-7 text-slate-800 dark:text-slate-200">{c.text}</p>
       </article>
@@ -199,7 +207,8 @@ function CommentItem({ c }: { c: ServiceComment }) {
   );
 }
 
-function Comments({ service, live }: { service: string; live?: LiveComments }) {
+// `embedded`: inside a page's tabs, without its own heading, the form under the list instead of beside it.
+export function Comments({ service, live, embedded = false }: { service: string; live?: LiveComments; embedded?: boolean }) {
   const tx = useT();
   const s = useServiceExtras(service);
   const [shown, setShown] = useState(PAGE);
@@ -244,11 +253,8 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
   const list = live ? live.list : s.comments;
   const total = list.length;
 
-  return (
-    <section aria-labelledby="comments" className={wrap}>
-      <p className={kicker}>{tx("Comments")}</p>
-      <h2 id="comments" className={h2}>{total > 0 ? <>{total} {tx(total === 1 ? "comment" : "comments")}{" "}{tx("on")}{" "}{s.name}</> : tx("Comments on {0}", { 0: s.name })}</h2>
-      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
+  const body = (
+      <div className={embedded ? "space-y-8" : "mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]"}>
         <div>
           {/* Empty: an invitation card that fills the column beside the form instead of one lonely line. */}
           {total === 0 && (
@@ -263,7 +269,7 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
           {shown < total && <button onClick={() => setShown(shown + PAGE)} className={`${secondary} mt-5`}>{tx("Show more comments (")}{total - shown})</button>}
         </div>
 
-        <div className={`${tx.tr(card)} h-fit p-6 lg:sticky lg:top-24`}>
+        <div className={`${tx.tr(card)} h-fit p-6 ${embedded ? "" : "lg:sticky lg:top-24"}`}>
           <h3 className="flex items-center gap-2 font-display text-lg font-semibold text-slate-900 dark:text-white"><MessageSquare aria-hidden className="h-5 w-5" />{tx("Leave a comment")}</h3>
           <p aria-live="polite" className="mt-2 text-[15px] text-emerald-800 dark:text-emerald-300">{sent && tx("Thanks! Your comment will appear after a quick review.")}</p>
           {failed && <p role="alert" className="mt-2 text-[15px] font-semibold text-red-700 dark:text-red-400">{failed}</p>}
@@ -287,6 +293,13 @@ function Comments({ service, live }: { service: string; live?: LiveComments }) {
           </form>
         </div>
       </div>
+  );
+  if (embedded) return body;
+  return (
+    <section aria-labelledby="comments" className={wrap}>
+      <p className={kicker}>{tx("Comments")}</p>
+      <h2 id="comments" className={h2}>{total > 0 ? <>{total} {tx(total === 1 ? "comment" : "comments")}{" "}{tx("on")}{" "}{s.name}</> : tx("Comments on {0}", { 0: s.name })}</h2>
+      {body}
     </section>
   );
 }
@@ -354,21 +367,27 @@ function RelatedPosts({ service, live }: { service: string; live?: Post[] }) {
   const tx = useT();
   const s = useServiceExtras(service);
   const posts = live ?? [...tx.tr(archive).filter((p) => p.cat === s.blogCat), ...tx.tr(archive).filter((p) => p.cat === "guides" && p.cat !== s.blogCat)].slice(0, RELATED);
-  const topic = tx.tr(blogCats).find((c) => c.id === s.blogCat)!.label;
+  return <PostRow posts={posts} cat={s.blogCat} name={s.name} />;
+}
+
+// The swipe row itself, also used by the social platform pages (socialPlatform/parts.tsx › PlatformBelow).
+export function PostRow({ posts, cat, name, className = "" }: { posts: Post[]; cat: Post["cat"]; name: string; className?: string }) {
+  const tx = useT();
+  const topic = tx.tr(blogCats).find((c) => c.id === cat)!.label;
   const { track, handlers, dragging, edges, index, count, nudge, go } = useSwipeRow();
   if (!posts.length) return null;
   const arrow = `grid h-11 w-11 place-items-center rounded-full ring-1 ring-slate-300 text-slate-700 transition hover:bg-slate-900 hover:text-white hover:ring-slate-900 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-inherit disabled:hover:ring-slate-300 dark:ring-white/15 dark:text-slate-200 dark:hover:bg-white dark:hover:text-slate-900 ${ring}`;
   const scrolls = !(edges.start && edges.end);
   return (
-    <section aria-labelledby="svc-blog" className={`${wrap} overflow-x-clip`}>
+    <section aria-labelledby="svc-blog" className={`${className || wrap} overflow-x-clip`}>
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div><p className={kicker}>{tx("Blog")}</p><h2 id="svc-blog" className={h2}>{tx("Read more about")}{" "}{s.name}</h2></div>
+        <div><p className={kicker}>{tx("Blog")}</p><h2 id="svc-blog" className={h2}>{tx("Read more about")}{" "}{name}</h2></div>
         <div className="flex items-center gap-2">
           {scrolls && <>
             <button type="button" onClick={() => nudge(-1)} disabled={edges.start} aria-label={tx("Previous articles")} className={`${arrow} hidden sm:grid`}><ChevronLeft aria-hidden className="h-5 w-5 rtl:rotate-180" /></button>
             <button type="button" onClick={() => nudge(1)} disabled={edges.end} aria-label={tx("Next articles")} className={`${arrow} hidden sm:grid`}><ChevronRight aria-hidden className="h-5 w-5 rtl:rotate-180" /></button>
           </>}
-          <Link href={`/blog?topic=${s.blogCat}`} className={`${secondary} py-2.5 sm:ms-2`}>{tx("All {0} articles", { 0: topic })}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></Link>
+          <Link href={`/blog?topic=${cat}`} className={`${secondary} py-2.5 sm:ms-2`}>{tx("All {0} articles", { 0: topic })}<ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></Link>
         </div>
       </div>
       <div ref={track} {...handlers}

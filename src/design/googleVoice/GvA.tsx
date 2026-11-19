@@ -79,7 +79,7 @@ export default function GvA() {
             <div className="text-xs text-slate-500 dark:text-slate-400">{t("Selected")}</div>
             <div className="truncate font-mono font-semibold text-slate-900 dark:text-white">{gv.selected.number} <span className="font-sans text-sm font-normal text-slate-500 dark:text-slate-400">· {gv.selected.city}</span></div>
           </div>
-          <BuyButton gv={gv}>{t("Buy ·")}{" "}{money.format(gvPrice(gv.selected))}</BuyButton>
+          <BuyButton gv={gv}>{t("Buy")}</BuyButton>
         </div>
       </div>}
       {!empty && <GvCheckout gv={gv} />}

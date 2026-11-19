@@ -7,6 +7,7 @@ import { PageShell } from "../otp/parts";
 import { useT } from "@/i18n/client";
 import type { AccountOrder } from "@/content/account-en";
 import { PrintInvoice } from "./invoice";
+import { ReviewCard } from "./ReviewCard";
 import {
   AmountPicker, Badge, CardPicker, Delivery, Empty, NewTicketForm, OrderSteps, PasswordForm, ProfileForm, ReplyBox,
   ServiceTile, Thread, TopUpSummary, buyAgainHref, card, cardShort, deptLabel, field, laneOf, secondary,
@@ -369,6 +370,7 @@ function Receipt({ order, demo, go, slots = {} }: { order: AccountOrder; demo: D
       <Head back={inCart ? { label: t("Order #C-{0}", { 0: order.cart!.id }), onClick: () => go({ page: "cart", id: order.cart!.id }) } : { label: t("Orders"), onClick: () => go({ page: "orders" }) }} title={t(order.title)}
         sub={<span className="flex flex-wrap items-center gap-x-3 gap-y-2">{t("Order #{0} · {1}", { 0: order.id, 1: f.when(order.at) })}<Badge kind={order.state} />{inCart && <span className="text-sm text-slate-600 dark:text-slate-400">{t("Part of order #C-{0}", { 0: order.cart!.id })}</span>}</span>} />
       {Top && <Top order={order} demo={demo} go={go} />}
+      {order.review && <ReviewCard key={order.id} orderId={order.id} review={order.review} name={demo.user.name} product={t(order.title)} className="mb-6" />}
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
         <article className={card}>
           <section aria-labelledby="c-got" className="p-6 sm:p-8">

@@ -15,7 +15,8 @@ import { tgFaq } from "./telegram-en";
 // addresses aren't duplicates of each other for search engines.
 export type ServiceId = "virtual-number" | "rent-number" | "google-voice" | "apple-id" | "apple-id-usa" | "apple-id-custom" | "subscriptions" | "telegram-stars" | "telegram-premium";
 
-export type ServiceComment = { id: string; name: string; date: string; text: string; replies?: { name: string; date: string; text: string; staff?: boolean }[] };
+// `verified`: written by the buyer from their delivered order (Back: App\Services\OrderReviews).
+export type ServiceComment = { id: string; name: string; date: string; text: string; verified?: boolean; replies?: { name: string; date: string; text: string; staff?: boolean }[] };
 
 export type ServiceExtras = {
   name: string;

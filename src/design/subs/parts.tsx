@@ -15,6 +15,7 @@ import { field, primary, ring, secondary } from "../googleVoice/clean";
 import { useT } from "@/i18n/client";
 import { SearchInput } from "../search";
 import { useLiveSubs, useSubsList } from "./live";
+import { ReviewCard } from "../account/ReviewCard";
 
 // Pieces shared by the Subscriptions page offers. Accessible like the other product pages: real radio groups,
 // labelled fields with hints and errors tied to them, focus moved to the first problem, visible focus rings.
@@ -420,9 +421,8 @@ export function Notes({ p }: { p: SubProduct }) {
 
 // `onBuy` replaces the default (e.g. to close a sheet first); it should call s.proceed().
 export function BuyButton({ s, className = "", label, onBuy }: { s: Subs; className?: string; label?: string; onBuy?: () => void }) {
-  const usd = useMoney().format;
   const tx = useT();
-  return <button type="button" onClick={onBuy ?? s.proceed} className={`${primary} w-full ${className}`}>{s.inCart ? <span className="inline-flex items-center justify-center gap-2"><ShoppingBag aria-hidden className="h-5 w-5" />{tx("Add to cart · {0}", { 0: s.plan ? usd(s.plan.price) : "" })}</span> : label ?? tx("Continue · {0}", { 0: s.plan ? usd(s.plan.price) : "" })}</button>;
+  return <button type="button" onClick={onBuy ?? s.proceed} className={`${primary} w-full ${className}`}>{s.inCart ? <span className="inline-flex items-center justify-center gap-2"><ShoppingBag aria-hidden className="h-5 w-5" />{tx("Add to cart")}</span> : label ?? tx("Continue")}</button>;
 }
 
 // Plans, fields, notes and buy for the chosen product, in one block.
@@ -562,6 +562,7 @@ function LiveSubsOrderView({ s }: { s: Subs }) {
           })}
         </ol>
       )}
+      {done && r.review && <ReviewCard orderId={r.id} review={r.review} product={p.name} className="mt-8" />}
       <div className="mt-8 flex flex-wrap gap-3">
         {/* The order page is still the old user panel (served by the backend through the proxy). */}
         <a href={`/user/orders/${r.id}`} className={primary}>{tx("View in my orders")}</a>

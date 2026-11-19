@@ -302,7 +302,7 @@ export function PayAgain({ f, className = "" }: { f: RentFlow; className?: strin
   const usd = useMoney().format;
   const t = useT();
   if (!f.ready) return null;
-  return <button onClick={f.openPay} className={`${primary} w-full ${className}`}>{t("Continue to payment ·")}{" "}{usd(f.price)}</button>;
+  return <button onClick={f.openPay} className={`${primary} w-full ${className}`}>{t("Continue to payment")}</button>;
 }
 
 // One-line summary of a finished step.

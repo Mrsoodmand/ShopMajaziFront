@@ -134,7 +134,7 @@ function OtpLView({ orderView, previewOrder = false, source, store, appId, cc }:
               </div>
               <button onClick={() => setPayOpen(true)} disabled={!f.operator}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-3.5 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40">
-                {f.operator ? <>{t("Continue to payment ·")}{" "}{usd(f.operator.price)}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></> : t("Pick an operator")}
+                {f.operator ? <>{t("Continue to payment")}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></> : t("Pick an operator")}
               </button>
             </Col>
           </div>

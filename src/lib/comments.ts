@@ -5,7 +5,7 @@ import type { ServiceComment } from "@/content/service-extras-en";
 // Real customer comments from the Laravel `comments` table (Back: Api\StorefrontCommentController). Only comments
 // the admin approved are returned; new ones are posted to the same endpoint and wait for review.
 
-type ApiComment = { id: number; name: string; text: string; date: string | null; replies: { text: string; date: string | null }[] };
+type ApiComment = { id: number; name: string; text: string; date: string | null; verified?: boolean; replies: { text: string; date: string | null }[] };
 export type ApiTestimonial = { id: number; name: string; text: string; date: string | null; about: string | null; product: string | null };
 
 // Which comments each service page shows. The keys match the old site's (page ids 1, 4, 6 …), so comments posted
@@ -48,6 +48,7 @@ export async function loadComments(key: string | null, locale: Locale, supportNa
       name: c.name,
       date: commentDate(c.date, locale),
       text: c.text,
+      verified: !!c.verified,
       replies: c.replies.map((r) => ({ name: supportName, date: commentDate(r.date, locale), text: r.text, staff: true })),
     }));
   } catch (e) {

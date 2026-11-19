@@ -235,7 +235,7 @@ export function OrderCard({ pm, who, profile = true }: { pm: PremiumState; who: 
           ))}
         </dl>
         <div aria-live="polite" className="mt-2 flex items-baseline justify-between border-t border-white/10 pt-4"><span className="text-violet-100/70">{t("Total")}</span><span className="font-display text-2xl font-bold tabular-nums text-white">{usd(pm.total)}</span></div>
-        <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{t("Continue ·")}{" "}{usd(pm.total)}</button>
+        <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{t("Continue")}</button>
         <p role="status" className="mt-2.5 text-center text-sm font-semibold text-red-300 empty:hidden">{pm.blocker ?? ""}</p>
         {sample && <p className="mt-2 text-center text-xs text-violet-100/60">{t("Sample prices and account lookup (design preview)")}</p>}
       </div>

@@ -47,7 +47,7 @@ export default function StarsD() {
                 })}
               </div>
             </fieldset>
-            <button type="button" onClick={st.proceed} className={`${accent.stars.btn} mt-6 w-full py-4 text-lg`}>Buy {st.amount.toLocaleString("en-US")} Stars · {usd(st.total)}</button>
+            <button type="button" onClick={st.proceed} className={`${accent.stars.btn} mt-6 w-full py-4 text-lg`}>Buy {st.amount.toLocaleString("en-US")} Stars</button>
             <p className="mt-3 text-center text-sm text-white/60">Need a different amount? Up to 100,000 on the <a href="#prices" className="font-semibold text-amber-300 underline underline-offset-2">price list</a>.</p>
           </div>
           <div className="mt-8 flex justify-center"><Trust light items={["No login needed", "1–5 minute delivery", "Refund if not delivered"]} /></div>

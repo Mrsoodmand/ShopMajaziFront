@@ -289,7 +289,7 @@ function BudgetPanel({ ad }: { ad: Ad }) {
           <div role="group" aria-label={tx("Quick amounts")} className="flex flex-wrap gap-2 pt-1">
             {quick.map((v) => {
               const on = ad.budget === v;
-              return <button key={v} type="button" aria-pressed={on} onClick={() => ad.setBudget(v)} className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold tabular-nums transition-colors ${on ? "border-sky-600 bg-sky-600 text-white dark:border-sky-400 dark:bg-sky-400 dark:text-sky-950" : "border-slate-300 text-slate-800 hover:border-slate-500 dark:border-white/20 dark:text-slate-200 dark:hover:border-white/50"} ${ring}`}>{usd(v).replace(".00", "")}</button>;
+              return <button key={v} type="button" aria-pressed={on} onClick={() => ad.setBudget(v)} className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold tabular-nums transition-colors ${on ? "border-sky-600 bg-sky-600 text-white dark:border-sky-400 dark:bg-sky-600 dark:text-white" : "border-slate-300 text-slate-800 hover:border-slate-500 dark:border-white/20 dark:text-slate-200 dark:hover:border-white/50"} ${ring}`}>{usd(v).replace(".00", "")}</button>;
             })}
           </div>
         </div>
@@ -458,7 +458,7 @@ function OrderCard({ ad }: { ad: Ad }) {
         ))}
       </dl>
       <div aria-live="polite" className="mt-1 flex items-baseline justify-between border-t border-slate-200 pt-3 dark:border-white/10"><span className="text-slate-600 dark:text-slate-400">{tx("Budget")}</span><span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{usd(ad.budget || 0)}</span></div>
-      <button type="submit" className={`${primary} mt-4 w-full tabular-nums`}>{tx("Continue ·")}{" "}{usd(ad.budget || 0)}</button>
+      <button type="submit" className={`${primary} mt-4 w-full tabular-nums`}>{tx("Continue")}</button>
       <p role="status" className="mt-2.5 text-center text-sm font-semibold text-red-700 empty:hidden dark:text-red-400">{blocker}</p>
       {sample && <p className="mt-1 text-center text-xs text-slate-500 dark:text-slate-400">{tx("Sample prices and estimates (design preview)")}</p>}
     </section>

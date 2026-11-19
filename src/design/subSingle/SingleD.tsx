@@ -2,15 +2,16 @@
 import { useMoney } from "@/lib/money";
 import { PageShell } from "../otp/parts";
 import { ActivationBadge, brand, SubsCheckout, SubsOrderView, Tile, useSubs } from "../subs/parts";
-import { BuyBox, Crumbs, DEFAULT_SLUG, FromLine, H2, HowDelivered, PlanTable, QuickFacts, Related, Trust, WhatYouGet } from "./parts";
-import { useT } from "@/i18n/client";
+import { BuyBox, Crumbs, DEFAULT_SLUG, FromLine, Related, Trust } from "./parts";
+import { ProductTabs } from "./tabs";
+import type { LiveComments } from "../service/ServiceExtras";
 import { SpotlightBand, spotTone, useSpotlight } from "@/design/service/spotlight";
 
 // Single D — "Brand Hero": a hero in the product's own colour with a large title; on desktop the buy box overlaps
 // the hero, so it's the first thing on the right. On phones it follows the hero. Details come below.
-export default function SingleD({ slug, panel }: { slug?: string; panel?: string }) {
+// `comments`: the page's real comments for the testimonials tab (none on the /design previews: placeholders).
+export default function SingleD({ slug, panel, comments }: { slug?: string; panel?: string; comments?: LiveComments }) {
   const usd = useMoney().format;
-  const t = useT();
   const spot = useSpotlight();
   const s = useSubs(slug ?? DEFAULT_SLUG);
   if (s.order) return <PageShell><div className="px-6 py-14"><SubsOrderView s={s} /></div></PageShell>;
@@ -37,10 +38,8 @@ export default function SingleD({ slug, panel }: { slug?: string; panel?: string
           <aside className="relative z-10 -mt-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:-mt-80"><div className="lg:sticky lg:top-24"><BuyBox s={s} panel={panel} className="shadow-2xl shadow-slate-900/20" /></div></aside>
           <div className="space-y-12 lg:col-start-1 lg:row-start-1">
             {/* On desktop the facts sit in the hero's faded foot, which is otherwise empty beside the buy box. */}
-            <div className="relative z-10 space-y-5 lg:-mt-28"><QuickFacts p={p} /><Trust p={p} /></div>
-            <section aria-labelledby="get"><H2 id="get">{t("What you get")}</H2><div className="mt-5"><WhatYouGet p={p} /></div></section>
-            <section aria-labelledby="how"><H2 id="how">{t("How it's delivered")}</H2><div className="mt-5"><HowDelivered p={p} /></div></section>
-            <section aria-labelledby="plans"><H2 id="plans">{t("Plans compared")}</H2><div className="mt-5"><PlanTable p={p} /></div></section>
+            <div className="relative z-10 lg:-mt-28"><Trust p={p} /></div>
+            <ProductTabs p={p} live={comments} />
           </div>
         </div>
         <div className="mt-16"><Related p={p} /></div>

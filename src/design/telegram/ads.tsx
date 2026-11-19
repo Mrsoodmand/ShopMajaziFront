@@ -42,7 +42,7 @@ export const SubmitAd = ({ a, className = "", label }: { a: AdsState; className?
   const usd = useMoney().format;
   const tx = useT();
   return (
-  <button type="button" onClick={a.proceed} className={`${tx.tr(accent).ads.btn} w-full ${className}`}>{label ?? tx("Pay {0} and submit", { 0: usd(a.f.budget || 0) })}</button>
+  <button type="button" onClick={a.proceed} className={`${tx.tr(accent).ads.btn} w-full ${className}`}>{label ?? tx("Pay and submit")}</button>
 );
 };
 

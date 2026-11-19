@@ -17,7 +17,7 @@ export const fieldFocus = "transition-[border-color,background-color] duration-2
 // The same on a dark band (Telegram night pages, dark heroes).
 export const fieldFocusDark = "transition-[border-color,background-color] duration-200 focus:outline-none focus:border-white/45";
 export const field = `w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-500 dark:border-white/20 dark:bg-white/5 dark:text-white dark:placeholder:text-slate-400 ${fieldFocus}`;
-export const primary = `inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-base font-semibold text-white transition-colors hover:bg-emerald-800 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400 ${ring}`;
+export const primary = `inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 text-base font-semibold text-white transition-colors hover:bg-emerald-800 dark:bg-emerald-600 dark:text-white dark:hover:bg-emerald-500 ${ring}`;
 export const secondary = `inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-6 py-3.5 text-base font-semibold text-slate-800 transition-colors hover:bg-slate-50 dark:border-white/20 dark:text-slate-100 dark:hover:bg-white/5 ${ring}`;
 
 // Screen-reader announcement for changes (result counts, selection).

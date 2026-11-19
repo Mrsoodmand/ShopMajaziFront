@@ -97,7 +97,7 @@ const Accent = ({ children }: { children: React.ReactNode }) => <span className=
 
 function PrimaryBtn({ children }: { children: React.ReactNode }) {
   return (
-    <a href="#" className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 font-semibold text-white transition hover:bg-emerald-800 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400">
+    <a href="#" className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-6 py-3.5 font-semibold text-white transition hover:bg-emerald-800 dark:bg-emerald-600 dark:text-white dark:hover:bg-emerald-500">
       {children}<ArrowLeft className="h-4 w-4" />
     </a>
   );
@@ -148,7 +148,7 @@ export function HeroSysA() {
               <Search className="ms-2 h-5 w-5 shrink-0 text-slate-400" />
               <input aria-label="جستجو" placeholder={s.placeholder} className="min-w-0 flex-1 bg-transparent py-2 text-base outline-none placeholder:text-slate-400" />
               <kbd dir="ltr" className="hidden rounded-md border border-slate-200 px-1.5 py-0.5 font-mono text-[11px] text-slate-400 sm:block dark:border-white/10">Ctrl K</kbd>
-              <button type="button" className="rounded-xl bg-emerald-700 px-5 py-2.5 font-semibold text-white dark:bg-emerald-500 dark:text-emerald-950">{s.cta}</button>
+              <button type="button" className="rounded-xl bg-emerald-700 px-5 py-2.5 font-semibold text-white dark:bg-emerald-600 dark:text-white">{s.cta}</button>
             </form>
             <dl className="mx-auto mt-12 grid max-w-xl grid-cols-3 divide-x divide-x-reverse divide-slate-200 dark:divide-white/10">
               {s.stats.map(([v, l]) => (

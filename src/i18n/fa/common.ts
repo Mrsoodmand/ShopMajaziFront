@@ -80,6 +80,7 @@ export const common: Record<string, string> = {
   "Refund policy": "قوانین بازگشت وجه",
   "Support": "پشتیبانی",
   "Blog": "وبلاگ",
+  "Back to top": "بازگشت به بالا",
   "Virtual numbers, Google Voice, Apple IDs, subscriptions and social growth, delivered instantly with a refund guarantee.": "شماره مجازی، گوگل ویس، اپل آیدی، اشتراک‌ها و خدمات شبکه‌های اجتماعی؛ تحویل آنی با تضمین بازگشت وجه.",
   "One-time SMS codes, 150+ countries": "کد پیامکی یک‌بارمصرف، بیش از ۱۵۰ کشور",
   "Permanent US number you own": "شماره دائمی آمریکا، مال خودتان",

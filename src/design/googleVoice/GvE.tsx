@@ -93,7 +93,7 @@ export default function GvE() {
               <div className="text-xs font-semibold uppercase tracking-widest text-slate-400">3 · Buy</div>
               <div className="mt-3 font-mono text-xl font-bold text-slate-900 dark:text-white">{gv.selected.number}</div>
               <div className="text-sm text-slate-500 dark:text-slate-400">{gv.selected.city}, {gv.selected.state}</div>
-              <BuyButton gv={gv} className="mt-5 w-full">Buy · {usd(GV_PRICE)}</BuyButton>
+              <BuyButton gv={gv} className="mt-5 w-full">Buy</BuyButton>
             </div>
           </div>
         </section>

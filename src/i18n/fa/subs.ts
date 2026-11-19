@@ -347,4 +347,8 @@ export const subs: Record<string, string> = {
   "Online, in one step": "آنلاین، در یک مرحله",
   "Delivery": "تحویل",
   "Step {0}": "مرحله {0}",
+  // Product page tabs (subSingle/tabs.tsx).
+  "Short details": "توضیحات کوتاه",
+  "Testimonials": "دیدگاه‌ها",
+  "{0} details": "جزئیات {0}",
 };

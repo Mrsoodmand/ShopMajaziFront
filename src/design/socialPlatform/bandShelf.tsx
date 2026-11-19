@@ -7,7 +7,7 @@ import { LiveAmount, LiveCheckout, LiveFields, LiveMark, LiveNotice, LiveSummary
 import { SpotlightBand, spotTone, useSpotlight } from "../service/spotlight";
 import { card, PayBar, toneVars, useOnScreen } from "../socialService/parts";
 import { ServiceCard } from "./offers";
-import { Done, Empty, PlatformBelow, PlatformRoot, PlatformSwitch, usePlatform } from "./parts";
+import { Done, Empty, PlatformBelow, PlatformRoot, usePlatform } from "./parts";
 
 // L — Band + Shelf: A's top as it is live (the Spotlight band while that hero is on, else the band in the
 // platform's colours, with the title, icon and platform switch), and F's order under it: "Pick a service" with
@@ -43,8 +43,7 @@ function BodyL() {
               </div>
               <LiveMark key={d.platform.slug} c={d.platform} size="xl" className="hidden animate-pop shadow-2xl shadow-black/30 sm:grid" />
             </div>
-            <PlatformSwitch d={d} look={spot ? "chips" : "glass"} className="mt-6" />
-            <div className="mt-5"><Trust light={!spot} items={[tx("No password needed"), tx("24/7 support"), tx("Refund if it can't start")]} /></div>
+            <div className="mt-6"><Trust light={!spot} items={[tx("No password needed"), tx("24/7 support"), tx("Refund if it can't start")]} /></div>
             {o.notice && <LiveNotice n={o.notice} />}
           </div>
         </section>

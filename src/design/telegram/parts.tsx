@@ -40,7 +40,7 @@ export const accent = {
   ads: {
     text: "text-sky-700 dark:text-sky-300", soft: "bg-sky-100 text-sky-900 dark:bg-sky-400/15 dark:text-sky-200",
     border: "border-sky-600 dark:border-sky-400", ringOn: "has-[:focus-visible]:ring-sky-500",
-    btn: `inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 py-3.5 text-base font-semibold text-white transition-colors hover:bg-sky-700 dark:bg-sky-500 dark:text-sky-950 dark:hover:bg-sky-400 ${ring}`,
+    btn: `inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 py-3.5 text-base font-semibold text-white transition-colors hover:bg-sky-700 dark:bg-sky-600 dark:text-white dark:hover:bg-sky-500 ${ring}`,
     hero: "bg-[linear-gradient(160deg,#0c4a6e_0%,#0369a1_50%,#0ea5e9_100%)]",
   },
 } as const;
@@ -625,7 +625,7 @@ export function TargetingFields({ a, compact = false }: { a: AdsState; compact?:
           <div className="mt-2 flex flex-wrap gap-2">
             {tx.tr(adTopics).map((t) => {
               const on = a.f.topics.includes(t);
-              return <button key={t} type="button" aria-pressed={on} onClick={() => { a.toggleTopic(t); a.touch("targeting"); }} className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${on ? "border-sky-600 bg-sky-600 text-white dark:border-sky-400 dark:bg-sky-400 dark:text-sky-950" : "border-slate-300 text-slate-800 hover:border-slate-500 dark:border-white/20 dark:text-slate-200"} ${ring}`}>{on && <Check aria-hidden className="h-3.5 w-3.5" />}{t}</button>;
+              return <button key={t} type="button" aria-pressed={on} onClick={() => { a.toggleTopic(t); a.touch("targeting"); }} className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${on ? "border-sky-600 bg-sky-600 text-white dark:border-sky-400 dark:bg-sky-600 dark:text-white" : "border-slate-300 text-slate-800 hover:border-slate-500 dark:border-white/20 dark:text-slate-200"} ${ring}`}>{on && <Check aria-hidden className="h-3.5 w-3.5" />}{t}</button>;
             })}
           </div>
         </fieldset>

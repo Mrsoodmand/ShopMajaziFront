@@ -393,7 +393,7 @@ export function LiveSummary({ o, className = card }: { o: LiveOrder; className?:
         <span className="font-semibold text-slate-900 dark:text-white">{tx("Total")}</span>
         <span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{o.total && !o.qtyError ? money.format(o.total) : "—"}</span>
       </div>
-      <button type="submit" disabled={!s || !!o.d.error} className={`${primary} mt-5 w-full tabular-nums disabled:cursor-not-allowed disabled:opacity-50`}>{o.inCart && <ShoppingBag aria-hidden className="h-5 w-5" />}{o.total && !o.qtyError ? `${tx(o.inCart ? "Add to cart" : "Continue")} · ${money.format(o.total)}` : tx(o.inCart ? "Add to cart" : "Continue")}</button>
+      <button type="submit" disabled={!s || !!o.d.error} className={`${primary} mt-5 w-full tabular-nums disabled:cursor-not-allowed disabled:opacity-50`}>{o.inCart && <ShoppingBag aria-hidden className="h-5 w-5" />}{tx(o.inCart ? "Add to cart" : "Continue")}</button>
       {o.blocker && <p role="alert" className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />{o.blocker}</p>}
     </div>
   );

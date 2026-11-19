@@ -262,7 +262,7 @@ function BodyH() {
                   <div key={o.service.id} className="animate-step-in space-y-7 p-5 sm:p-6"><LiveAmount o={o} /><LiveFields o={o} /></div>
                   <div ref={payRef} className="border-t border-slate-200 p-5 sm:p-6 dark:border-white/10">
                     <div className="flex items-baseline justify-between"><span className="font-semibold text-slate-900 dark:text-white">{tx("Total")}</span><span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{t.total}</span></div>
-                    <button type="submit" className={`${primary} mt-4 w-full`}>{o.total && !o.qtyError ? `${tx(o.inCart ? "Add to cart" : "Continue")} · ${money.format(o.total)}` : tx(o.inCart ? "Add to cart" : "Continue")}</button>
+                    <button type="submit" className={`${primary} mt-4 w-full`}>{tx(o.inCart ? "Add to cart" : "Continue")}</button>
                     {o.blocker && <p role="alert" className="mt-3 text-center text-sm font-semibold text-red-700 dark:text-red-400">{o.blocker}</p>}
                     <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-600 dark:text-slate-400"><ShieldCheck aria-hidden className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />{tx("Refund if it can't start")}</p>
                   </div>

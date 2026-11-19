@@ -539,7 +539,7 @@ export function OrderCard({ ad, preview = true, estimate = true }: { ad: Ad; pre
           ))}
         </dl>
         <div aria-live="polite" className="mt-1 flex items-baseline justify-between border-t border-white/10 pt-3"><span className="text-sky-100/70">{tx("Budget")}</span><span className="font-display text-2xl font-bold tabular-nums text-white">{usd(ad.budget || 0)}</span></div>
-        <button type="submit" className={`${primary} mt-4 w-full tabular-nums`}>{tx("Continue ·")}{" "}{usd(ad.budget || 0)}</button>
+        <button type="submit" className={`${primary} mt-4 w-full tabular-nums`}>{tx("Continue")}</button>
         <p role="status" className="mt-2.5 text-center text-sm font-semibold text-red-300 empty:hidden">{blocker}</p>
         {sample && <p className="mt-1 text-center text-xs text-sky-100/60">{tx("Sample prices and estimates (design preview)")}</p>}
       </div>
