@@ -233,7 +233,7 @@ function Statement({ demo, go }: { demo: Demo; go: Go }) {
             </tbody>
           ))}
         </table>
-        {!lines.length && <Empty title={t("Nothing here yet")} text={t("Lines of this kind will show here.")} />}
+        {!lines.length && <Empty title={t("Nothing here yet")} text={t("Entries like these will show up here.")} />}
       </div>
     </div>
   );

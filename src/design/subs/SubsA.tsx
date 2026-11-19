@@ -117,7 +117,7 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
             <div className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-white/15 dark:bg-[#0E1424]">
               {s.product
                 ? <div key={s.product.slug} className="animate-fade-up [animation-duration:250ms]"><Panel s={s} focusable /></div>
-                : <div className="py-10 text-center"><Sparkles aria-hidden className="mx-auto h-8 w-8 text-violet-600 dark:text-violet-400" /><p className="mt-3 font-semibold text-slate-900 dark:text-white">{t("Pick a subscription")}</p><p className="text-slate-600 dark:text-slate-400">{t("Its plans and price show here.")}</p></div>}
+                : <div className="py-10 text-center"><Sparkles aria-hidden className="mx-auto h-8 w-8 text-violet-600 dark:text-violet-400" /><p className="mt-3 font-semibold text-slate-900 dark:text-white">{t("Pick a subscription")}</p><p className="text-slate-600 dark:text-slate-400">{t("You'll see its plans and price here.")}</p></div>}
             </div>
           </div>
         </div>

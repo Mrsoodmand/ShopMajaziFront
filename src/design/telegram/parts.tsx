@@ -468,7 +468,7 @@ export function PremiumCheckout({ pm }: { pm: PremiumState }) {
   return (
     <>
     {pm.notice && <SubsNoticeToast n={pm.notice} onClose={pm.dismissNotice} />}
-    <CheckoutModal open={pm.payOpen} onClose={pm.closePay} price={pm.total} itemLabel={tx("Premium · {0}", { 0: pm.plan.label })} note={tx("Activated in a few minutes on the account. Nothing else is needed from you.")} onPay={pm.buy} onAddToCart={pm.addToCart}
+    <CheckoutModal open={pm.payOpen} onClose={pm.closePay} price={pm.total} itemLabel={tx("Premium · {0}", { 0: pm.plan.label })} note={tx("It's active on the account in a few minutes. You don't need to do anything else.")} onPay={pm.buy} onAddToCart={pm.addToCart}
       {...(pm.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<><ServiceIcon s="premium" /><div className="min-w-0 flex-1"><div className="truncate font-semibold text-slate-900 dark:text-white">{tx("Telegram Premium ·")}{" "}{pm.plan.label}</div><div className="truncate text-xs text-slate-500 dark:text-slate-400">{tx("To @")}{cleanUsername(pm.r.value)}</div></div></>} />
     </>

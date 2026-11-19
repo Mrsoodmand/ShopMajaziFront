@@ -54,7 +54,7 @@ export default function HowD() {
         </div>
 
         <div className="mt-4 grid gap-4 rounded-3xl bg-slate-900 p-7 text-white sm:grid-cols-3">
-          {[[ShieldCheck, tx("Secure payments"), tx("Encrypted checkout, no card details stored.")], [RefreshCcw, tx("Automatic refunds"), tx("No delivery means your money goes back.")], [Headphones, "24/7 support", tx("Real people on chat, any time.")]].map(([I, t, d]) => {
+          {[[ShieldCheck, tx("Secure payments"), tx("Encrypted checkout, no card details stored.")], [RefreshCcw, tx("Automatic refunds"), tx("If we can't deliver, you get your money back.")], [Headphones, "24/7 support", tx("Real people on chat, any time.")]].map(([I, t, d]) => {
             const Icon = I as typeof Wallet;
             return (
               <div key={t as string} className="flex items-start gap-3">

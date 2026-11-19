@@ -73,7 +73,7 @@ export function ServicesMega({ open, onEnter, onLeave }: { open: boolean; onEnte
           <div>
             <Headphones className="h-6 w-6" />
             <div className="mt-3 font-display text-lg font-semibold">{t("Not sure what to pick?")}</div>
-            <p className="mt-1 text-sm text-white/80">{t("Our team answers 24/7 and will point you to the right service.")}</p>
+            <p className="mt-1 text-sm text-white/80">{t("Message us 24/7 and we'll help you find the right service.")}</p>
           </div>
           <Link href="/contact-us" className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-sm font-semibold text-indigo-700">{t("Chat with support")}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link>
         </aside>

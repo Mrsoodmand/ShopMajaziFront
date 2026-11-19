@@ -27,9 +27,9 @@ export const faqs: Faq[] = [
   { id: "tggift", cat: "telegram", q: "Can I buy Telegram Premium for someone else?", a: "Yes. Enter their @username at checkout and the gift goes straight to them." },
   { id: "tgads", cat: "telegram", q: "How do Telegram Ads work?", a: "Telegram Ads are short sponsored messages shown in large public channels. Send us your link, ad text and the channels or topics you want to reach; we set up and run the campaign, and you follow its views and clicks in your dashboard." },
   { id: "password", cat: "social", q: "Do you need my password for social growth?", a: "No. You only share the link to your channel, profile or post. We never ask for passwords." },
-  { id: "drop", cat: "social", q: "What happens if followers or members drop?", a: "Drops during the guarantee period are refilled for free. You can track delivery and refills live in your dashboard." },
+  { id: "drop", cat: "social", q: "What happens if followers or members drop?", a: "We refill drops for free during the guarantee period. You can track delivery and refills live in your dashboard." },
   { id: "pay", cat: "payments", q: "Which payment methods do you accept?", a: "You can pay by card or with crypto, or use your wallet balance. Topping up the wallet once lets you buy any service in one click." },
-  { id: "refund", cat: "payments", q: "How do refunds work?", a: "If an order can't be delivered, the amount is returned to your wallet automatically. For anything else, open a support ticket and our team will review it within 24 hours." },
+  { id: "refund", cat: "payments", q: "How do refunds work?", a: "If we can't deliver an order, the amount goes back to your wallet automatically. For anything else, open a support ticket and our team will review it within 24 hours." },
 ];
 
 export const faqSupport = { telegram: "#", email: "support@shopmajazi.com", chat: "/contact-us" };

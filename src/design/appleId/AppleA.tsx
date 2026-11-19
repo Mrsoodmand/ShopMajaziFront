@@ -51,7 +51,7 @@ export default function AppleA({ method }: { method?: string }) {
         <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,1fr)_340px]">
           <section key={a.method} aria-labelledby="details" className="animate-fade-up rounded-3xl border border-slate-200 bg-white p-6 [animation-duration:300ms] sm:p-8 dark:border-white/15 dark:bg-[#0E1424]">
             <H2 id="details">{a.method === "ready" ? t("How many do you need?") : t("Your details")}</H2>
-            {a.method === "custom" && <p className="mt-1 text-slate-600 dark:text-slate-400">{t("We create the Apple ID with these. All fields are required unless marked optional.")}</p>}
+            {a.method === "custom" && <p className="mt-1 text-slate-600 dark:text-slate-400">{t("We'll create the Apple ID with these details. Fill in everything except the fields marked optional.")}</p>}
             <div className="mt-6 space-y-6">
               {a.method === "custom" && <ErrorSummary a={a} />}
               {a.method === "ready" ? <><Quantity a={a} side /><ReadyNotes /></> : <CustomForm a={a} />}

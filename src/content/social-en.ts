@@ -70,7 +70,7 @@ export const socialHeadings = {
 export const socialRules = [
   { title: "Keep it public until it's done", text: "A private account or channel can't receive followers or views. Delivery pauses until it's public again." },
   { title: "Don't change the username", text: "Renaming the account or deleting the post mid-order stops delivery, and it can't be refunded." },
-  { title: "One seller per link at a time", text: "Running another order on the same link at the same time makes counts impossible to check. Wait for one to finish." },
+  { title: "One seller per link at a time", text: "If two orders run on the same link at once, we can't check the counts. Wait for one to finish." },
   { title: "Drops are refilled", text: "Orders with a refill period are topped up for free if the count drops within that time. Ask support from your order page." },
 ];
 

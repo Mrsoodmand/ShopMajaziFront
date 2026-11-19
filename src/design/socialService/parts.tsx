@@ -120,7 +120,7 @@ export function FactTiles({ o, className = "", cols = "sm:grid-cols-4", tone = "
 export function usePromises() {
   const tx = useT();
   return [
-    { Icon: KeyRound, title: tx("No password, ever"), text: tx("We only need the public link. Nobody from us will ask for a login code.") },
+    { Icon: KeyRound, title: tx("No password, ever"), text: tx("We only need the public link. No one on our team will ask for a login code.") },
     { Icon: Undo2, title: tx("Refund if it can't start"), text: tx("Wrong or private link? The order is cancelled and the money goes back to your wallet.") },
     { Icon: Headphones, title: tx("Real support"), text: tx("Message us from your order page and a person answers, around the clock.") },
     { Icon: BadgeCheck, title: tx("Registered with Enamad"), text: tx("ShopMajazi is a registered Iranian online shop.") },

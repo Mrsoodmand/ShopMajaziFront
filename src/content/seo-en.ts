@@ -21,8 +21,8 @@ export const seoSections: SeoSection[] = [
     id: "virtual-number",
     heading: "Buy a virtual number for SMS verification",
     paragraphs: [
-      "Many apps and websites ask for a phone number before you can sign up. A virtual number lets you receive that verification code without using your personal SIM card. It is useful for keeping your private number private, managing several accounts, or signing up for services that are not available in your country.",
-      "ShopMajazi numbers are delivered instantly from more than 150 countries and work with over 2,000 apps, including WhatsApp, Telegram, Instagram and Google. Once a number is sold, it is taken out of circulation, so nobody else can use it to access your account. If no code arrives, the cost goes back to your wallet automatically.",
+      "Many apps and websites ask for a phone number before you can sign up. A virtual number lets you receive that verification code without using your personal SIM card. It's useful for keeping your private number private, managing several accounts, or signing up for services that aren't available in your country.",
+      "ShopMajazi numbers are delivered instantly from more than 150 countries and work with over 2,000 apps, including WhatsApp, Telegram, Instagram and Google. Once a number is sold, we take it out of circulation, so nobody else can use it to access your account. If no code arrives, the cost goes back to your wallet automatically.",
     ],
     bullets: ["Numbers from 150+ countries", "Works with WhatsApp, Telegram, Instagram, Google and more", "Automatic refund if no SMS arrives"],
     link: { label: "Buy a virtual number", href: "/virtual-number" },

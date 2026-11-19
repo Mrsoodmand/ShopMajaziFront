@@ -30,8 +30,8 @@ const otpFaq = [
   { q: "What is a virtual number for verification?", a: "A temporary phone number that receives one SMS code, so you can sign up for an app without using your own SIM." },
   { q: "What if the code never arrives?", a: "If no SMS arrives within 20 minutes, the number is cancelled and the full amount goes back to your wallet automatically." },
   { q: "Can I use the number again later?", a: "A one-time number is for one code. To log in again later, rent a number for 7 to 30 days instead." },
-  { q: "Which apps does it work with?", a: "More than 2,000, including WhatsApp, Telegram, Google, Instagram and ChatGPT. Each app shows its success rate per country." },
-  { q: "How do I choose the best country?", a: "Pick by success rate first and price second. A slightly more expensive number that works on the first try saves time." },
+  { q: "Which apps does it work with?", a: "More than 2,000, including WhatsApp, Telegram, Google, Instagram and ChatGPT." },
+  { q: "How do I choose the best country?", a: "Don't go for the cheapest one by default. A slightly more expensive number that works on the first try saves time." },
 ];
 
 const support = (text: string) => ({ name: "ShopMajazi support", date: "", text, staff: true });
@@ -41,7 +41,7 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
     name: "Virtual Number",
     howTo: [
       { title: "Choose the app", text: "Pick the app you want to verify, like WhatsApp or Telegram." },
-      { title: "Choose country and operator", text: "Each shows its price and how often codes arrive." },
+      { title: "Choose country and operator", text: "Each one shows its price." },
       { title: "Enter the number in the app", text: "Copy the number and paste it where the app asks for your phone." },
       { title: "Copy your code", text: "The SMS code appears on the order page within seconds. No code means a refund." },
     ],
@@ -54,7 +54,7 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
         "Privacy is the big one: apps can't link the account to your personal phone. It also helps when an app isn't available with your own number, or when you manage several accounts for work.",
       ] },
       { id: "choose", title: "How to choose a country", paragraphs: [
-        "Every country lists a success rate from the last 24 hours. Choose by that first. Countries close to where you are tend to trigger fewer extra checks later.",
+        "Countries close to where you are tend to trigger fewer extra checks later. If a number doesn't work, try another country.",
         "If a number doesn't receive a code, it's cancelled automatically and the money returns to your wallet, so trying another country costs nothing.",
       ] },
       { id: "safe", title: "Keeping your account safe", paragraphs: [

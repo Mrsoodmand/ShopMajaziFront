@@ -453,7 +453,7 @@ export function SubsCheckout({ s }: { s: Subs }) {
   const forWho = (target && s.values[target.id]?.trim()) || Object.values(s.values)[0]?.trim() || tx("your account");
   const note = s.changedTo != null
     ? tx("The price just changed to {price}. Check it and pay again.", { price: money.format(s.changedTo) })
-    : p?.activation === "ready" ? tx("Login shown on your order page.")
+    : p?.activation === "ready" ? tx("The login will be on your order page.")
     : p?.delivery ? tx("Activated on your account · {0}.", { 0: tx.locale === "fa" ? p.delivery : p.delivery.toLowerCase() })
     : tx("Activated on your account by our team after payment.");
   return (

@@ -4,7 +4,7 @@
 import { posts, type BlogCat, type Post } from "./blog-en";
 
 const older: Post[] = [
-  { slug: "best-countries-otp", cat: "numbers", title: "Which countries give the most reliable verification numbers?", excerpt: "Success rates by country and app, and why the cheapest number isn't always the best pick.", date: "Sep 4, 2026", read: "6 min" },
+  { slug: "best-countries-otp", cat: "numbers", title: "Which countries give the most reliable verification numbers?", excerpt: "How to choose a country for each app, and why the cheapest number isn't always the best pick.", date: "Sep 4, 2026", read: "6 min" },
   { slug: "apple-id-region-change", cat: "apple", title: "Changing your Apple ID region: what you lose and what you keep", excerpt: "Subscriptions, store credit, Family Sharing and purchased apps: a checklist before you switch.", date: "Aug 29, 2026", read: "5 min" },
   { slug: "rent-vs-one-time", cat: "numbers", title: "Rent a number or buy one-time? A quick decision guide", excerpt: "How many codes you need, for how long, and which option ends up cheaper.", date: "Aug 22, 2026", read: "3 min" },
   { slug: "youtube-watch-time", cat: "social", title: "YouTube watch hours: how the 4,000-hour rule really works", excerpt: "What counts toward monetization, what doesn't, and how long it usually takes a new channel.", date: "Aug 15, 2026", read: "7 min" },

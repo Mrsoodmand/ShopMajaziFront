@@ -678,7 +678,7 @@ export function AppleOrderView({ a }: { a: AppleState }) {
         <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
           {ready ? (o.qty > 1 ? tx("Your {0} Apple IDs are ready", { 0: o.qty }) : tx("Your Apple ID is ready")) : partial ? tx("We're finishing your order") : tx("We're creating your Apple ID")}
         </h1>
-        {partial && <p className="mt-3 text-lg text-slate-700 dark:text-slate-300">{accounts.length ? tx("{0} of {1} are ready below. The rest will appear here and in your orders shortly.", { 0: accounts.length, 1: o.qty }) : tx("Your {0} Apple IDs are on the way. They will appear here and in your orders as soon as they are added; you can leave this page.", { 0: o.qty })}</p>}
+        {partial && <p className="mt-3 text-lg text-slate-700 dark:text-slate-300">{accounts.length ? tx("{0} of {1} are ready below. The rest will appear here and in your orders shortly.", { 0: accounts.length, 1: o.qty }) : tx("Your {0} Apple IDs are on the way. They'll show up here and in your orders as soon as they're added; you can leave this page.", { 0: o.qty })}</p>}
         {!ready && !partial && <p className="mt-3 text-lg text-slate-700 dark:text-slate-300">{tx("This usually takes about 10 minutes. You can leave this page; the login will be in your orders.")}</p>}
       </div>
 

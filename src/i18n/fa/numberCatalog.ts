@@ -1,7 +1,7 @@
 // The number pages' "Catalog + Panel" designs (src/design/numbers): virtual number P, rent K, Google Voice K.
 export const numberCatalog: Record<string, string> = {
   // Virtual number
-  "A number for one SMS code: WhatsApp, Telegram, Google, ChatGPT and thousands more. No code, no charge.": "شماره برای دریافت یک کد پیامکی: واتس‌اپ، تلگرام، گوگل، ChatGPT و هزاران اپ دیگر. کد نیاید، پولی کسر نمی‌شود.",
+  "A number for one SMS code: WhatsApp, Telegram, Google, ChatGPT and thousands more. No code, no charge.": "یک شماره برای گرفتن یک کد پیامکی: واتس‌اپ، تلگرام، گوگل، ChatGPT و هزاران اپ دیگر. کد نیاید، پولی کم نمی‌شود.",
   "Search an app, e.g. WhatsApp": "جستجوی اپلیکیشن، مثلاً واتس‌اپ",
   "Search a country, e.g. Germany": "جستجوی کشور، مثلاً آلمان",
   "{0} apps · {1} countries": "{0} اپلیکیشن · {1} کشور",
@@ -10,10 +10,10 @@ export const numberCatalog: Record<string, string> = {
   "{0} apps": "{0} اپلیکیشن",
   "{0} countries": "{0} کشور",
   "Pick an app": "یک اپلیکیشن انتخاب کنید",
-  "Its countries and prices show here.": "کشورها و قیمت‌هایش اینجا نمایش داده می‌شود.",
+  "Its countries and prices show here.": "کشورها و قیمت‌هایش همین‌جا می‌آید.",
   "Numbers in {0}": "شماره‌های {0}",
   "Pick a country": "یک کشور انتخاب کنید",
-  "The apps it has numbers for show here.": "اپ‌هایی که در این کشور شماره دارند اینجا نمایش داده می‌شود.",
+  "The apps it has numbers for show here.": "اپ‌هایی که در این کشور شماره دارند همین‌جا می‌آیند.",
   "{0}, from {1}": "{0}، از {1}",
   "Show more ({0} left)": "نمایش بیشتر ({0} مورد دیگر)",
   // Virtual number panel versions
@@ -35,10 +35,10 @@ export const numberCatalog: Record<string, string> = {
   "More apps": "اپ‌های بیشتر",
   // Order screens F–J
   "Your {app} code": "کد {app} شما",
-  "The code appears here by itself. No need to refresh.": "کد خودش همین‌جا نمایش داده می‌شود. نیازی به رفرش نیست.",
+  "The code appears here by itself. No need to refresh.": "کد خودش همین‌جا می‌آید. رفرش لازم نیست.",
   "Copy the number": "شماره را کپی کنید",
   "Enter it in {app}": "آن را در {app} وارد کنید",
-  "The code shows up here": "کد همین‌جا نمایش داده می‌شود",
+  "The code shows up here": "کد همین‌جا می‌آید",
   "Closed": "بسته شد",
   "No code before the timer ends? The full amount comes back to your wallet.": "تا پایان زمان کدی نیامد؟ کل مبلغ به کیف پولتان برمی‌گردد.",
   "Copy": "کپی",
@@ -51,7 +51,7 @@ export const numberCatalog: Record<string, string> = {
   "Code": "کد",
   "Show all ({0})": "نمایش همه ({0})",
   // Rent
-  "Your own number for a week to a month, with unlimited SMS. For all your apps, or cheaper for just one.": "یک شماره اختصاصی برای یک هفته تا یک ماه با پیامک نامحدود. برای همه اپ‌ها، یا ارزان‌تر برای فقط یک اپ.",
+  "Your own number for a week to a month, with unlimited SMS. For all your apps, or cheaper for just one.": "شماره‌ای مال خودتان برای یک هفته تا یک ماه، با پیامک نامحدود. برای همه اپ‌هایتان، یا ارزان‌تر فقط برای یک اپ.",
   "Search a country, e.g. United Kingdom": "جستجوی کشور، مثلاً انگلستان",
   "{0} countries · unlimited SMS · extend any time": "{0} کشور · پیامک نامحدود · تمدید در هر زمان",
   "Number in {0}": "شماره {0}",

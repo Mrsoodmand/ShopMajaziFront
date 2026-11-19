@@ -24,7 +24,7 @@ export type Reason = { id: string; icon: LucideIcon; tone: Tone; title: string; 
 export const REASONS: Reason[] = [
   { id: "speed", icon: Zap, tone: "amber", title: "Delivered in seconds", desc: "Most orders are delivered automatically, day or night, with no waiting for an operator." },
   { id: "refund", icon: ShieldCheck, tone: "green", title: "Automatic refund", desc: "If a code never arrives or an order fails, the money goes straight back to your wallet." },
-  { id: "pay", icon: CreditCard, tone: "blue", title: "No foreign card needed", desc: "Pay from your wallet, by bank card or with crypto. No PayPal, TON or Fragment account required." },
+  { id: "pay", icon: CreditCard, tone: "blue", title: "No foreign card needed", desc: "Pay from your wallet, by bank card or with crypto. You don't need a PayPal, TON or Fragment account." },
   { id: "support", icon: Headphones, tone: "coral", title: "Human support 24/7", desc: "Real people on Telegram and chat, in Persian and English, around the clock." },
   { id: "private", icon: Lock, tone: "violet", title: "No passwords, ever", desc: "Gifts and activations go to a username or email. We never ask for your login or codes." },
   { id: "catalog", icon: LayoutGrid, tone: "teal", title: "Everything in one place", desc: "Virtual numbers, Apple ID, Google Voice, subscriptions, Telegram Premium and social growth." },
