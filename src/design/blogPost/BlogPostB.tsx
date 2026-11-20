@@ -1,22 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { ChevronDown, ListOrdered } from "lucide-react";
 import Cover from "../blog/Cover";
 import { textLang } from "../blog/live";
 import { Chip } from "../blog/parts";
 import { PageShell } from "../otp/parts";
-import { ArticleProvider, AuthorBox, Body, Byline, Crumbs, FaqList, ProductCta, ProgressBar, RelatedPosts, Share, Tags, Toc, useActiveSection, useArticle, useProgress } from "./parts";
+import { ArticleProvider, AuthorBox, Body, Byline, Crumbs, FaqList, PostComments, ProductCta, ProgressBar, RelatedPosts, Share, Tags, Toc, useActiveSection, useArticle, useProgress } from "./parts";
 import { useT } from "@/i18n/client";
 
 // Post B — "Guide with Contents": a docs-style three-column read. Contents on the left highlight the section you're
 // in; the article sits in the middle; the product card and share buttons stay in view on the right (wide screens).
 // On phones the contents fold into a "Jump to section" panel under the title.
-export default function BlogPostB({ slug }: { slug?: string }) {
-  return <ArticleProvider slug={slug}><Page /></ArticleProvider>;
+// `Hero`: the top of the page (gallery section "blog-post-hero", heroes.tsx); without one, the original header.
+// `coverInHero`: that hero shows the cover itself, so the article doesn't repeat it.
+export type PostHero = { Hero?: ComponentType; coverInHero?: boolean };
+
+export default function BlogPostB({ slug, Hero, coverInHero = false }: { slug?: string } & PostHero) {
+  return <ArticleProvider slug={slug}><Page Hero={Hero} coverInHero={coverInHero} /></ArticleProvider>;
 }
 
-function Page() {
+// The header this page was built with: title, lead and byline over the article column.
+export function HeroOriginal() {
+  const article = useArticle();
+  const { post } = article;
+  return (
+    <header className="mx-auto max-w-3xl lg:mx-0 lg:ms-[240px] lg:max-w-[720px] xl:ms-[260px]">
+      <Crumbs />
+      <div className="mt-8"><Chip p={post} /></div>
+      <h1 className="mt-4 font-display text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl dark:text-white" {...textLang(post)}>{post.title}</h1>
+      <p {...textLang(post)} className="mt-5 text-lg leading-relaxed text-slate-600 dark:text-slate-400">{article.lead}</p>
+      <div className="mt-8"><Byline /></div>
+    </header>
+  );
+}
+
+function Page({ Hero = HeroOriginal, coverInHero }: PostHero) {
   const t = useT();
   const article = useArticle();
   const { post, toc } = article;
@@ -28,13 +47,7 @@ function Page() {
     <PageShell>
       <ProgressBar pct={pct} />
       <div className="mx-auto max-w-7xl px-6 pb-24 pt-12">
-        <header className="mx-auto max-w-3xl lg:mx-0 lg:ms-[240px] lg:max-w-[720px] xl:ms-[260px]">
-          <Crumbs />
-          <div className="mt-8"><Chip p={post} /></div>
-          <h1 className="mt-4 font-display text-4xl font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl dark:text-white" {...textLang(post)}>{post.title}</h1>
-          <p {...textLang(post)} className="mt-5 text-lg leading-relaxed text-slate-600 dark:text-slate-400">{article.lead}</p>
-          <div className="mt-8"><Byline /></div>
-        </header>
+        <Hero />
 
         <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,720px)_minmax(0,1fr)]">
           <aside className="hidden lg:block">
@@ -52,7 +65,7 @@ function Page() {
               </div>
             </div>
 
-            <Cover cat={post.cat} src={post.image} priority size="lg" className="mt-8 aspect-[16/9] rounded-3xl lg:mt-0" />
+            {!coverInHero && <Cover cat={post.cat} src={post.image} priority size="lg" className="mt-8 aspect-[16/9] rounded-3xl lg:mt-0" />}
             <Body />
 
             <FaqList title={t("Questions about this guide")} />
@@ -60,6 +73,7 @@ function Page() {
             <div className="mt-10 xl:hidden"><ProductCta /></div>
             <div className="mt-10 flex flex-wrap items-center justify-between gap-4"><Tags /><div className="xl:hidden"><Share /></div></div>
             <div className="mt-8"><AuthorBox /></div>
+            <PostComments />
           </article>
 
           <aside className="hidden xl:block">

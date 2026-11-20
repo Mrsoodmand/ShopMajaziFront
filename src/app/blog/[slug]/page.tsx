@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { getSection } from "@/design/registry";
 import { readDecisions } from "@/components/design/decisions";
 import { LiveArticleProvider } from "@/design/blogPost/parts";
+import { PostWithHero, type PostHeroId } from "@/design/blogPost/heroes";
 import { getLocale, getT } from "@/i18n/server";
 import { loadArticle } from "@/lib/blog";
+import { loadComments } from "@/lib/comments";
 import { absolute } from "@/lib/seo";
 import { SITE_URL } from "@/lib/sitemap";
 
@@ -38,12 +40,18 @@ export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const found = await loadArticle(slug, await getLocale());
   if (!found) notFound();
-  const { article, seo } = found;
+  const { article: post, seo, id } = found;
 
-  const [decisions, t] = await Promise.all([readDecisions(), getT()]);
+  const [decisions, t, locale] = await Promise.all([readDecisions(), getT(), getLocale()]);
+  // The post's approved comments (the old site's too: same comments table), and the key new ones are sent under.
+  const key = `blog:${id}`;
+  const article = { ...post, comments: { key, list: await loadComments(key, locale, t("ShopMajazi support")) } };
   const section = getSection("page-blog-post")!;
   const offer = section.offers.find((o) => o.id === decisions["page-blog-post"]?.offer) ?? section.offers.find((o) => o.id === "B")!;
   const { Component } = offer;
+  // The hero chosen in /design/blog-post-hero; it fits post design B, the one the live page uses.
+  const picked = decisions["blog-post-hero"]?.offer;
+  const hero = offer.id === "B" && picked && "ABCDEF".includes(picked) && picked.length === 1 ? (picked as PostHeroId) : undefined;
 
   // Article structured data for search results.
   const ld = {
@@ -74,7 +82,7 @@ export default async function BlogPostPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
       {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd).replace(/</g, "\\u003c") }} />}
       <LiveArticleProvider value={article}>
-        <Component slug={slug} />
+        {hero ? <PostWithHero slug={slug} hero={hero} /> : <Component slug={slug} />}
       </LiveArticleProvider>
     </>
   );

@@ -104,6 +104,7 @@ import BlogPostB from "./blogPost/BlogPostB";
 import BlogPostC from "./blogPost/BlogPostC";
 import BlogPostD from "./blogPost/BlogPostD";
 import BlogPostE from "./blogPost/BlogPostE";
+import { HeroOfferA as PostHeroA, HeroOfferB as PostHeroB, HeroOfferC as PostHeroC, HeroOfferD as PostHeroD, HeroOfferE as PostHeroE, HeroOfferF as PostHeroF } from "./blogPost/heroes";
 import GvA from "./googleVoice/GvA";
 import GvB from "./googleVoice/GvB";
 import GvC from "./googleVoice/GvC";
@@ -564,6 +565,20 @@ export const sections: Section[] = [
       { id: "C", name: "Immersive Cover", summary: "The cover fills the first screen with the title over it; larger reading type, floating share buttons and a full-width Next article.", Component: BlogPostC },
       { id: "D", name: "Guide + Buy", summary: "Key takeaways up top, a sticky buy card beside the article, a slim buy bar on phones, and the guide's FAQ.", Component: BlogPostD },
       { id: "E", name: "Focus Reader", summary: "Text first, no big cover. A floating reader bar with a progress ring and minutes left, contents and a text-size switch.", Component: BlogPostE },
+    ],
+  },
+  {
+    // The top of a blog post (title, lead, byline, cover), shown inside the live post layout B.
+    id: "blog-post-hero",
+    title: "Blog post · Hero",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Split Cover", summary: "Title, lead and byline on one side, the cover whole on the other, so the first screen shows both. Date, reading time and views as small facts beside the topic.", Component: PostHeroA },
+      { id: "B", name: "Panel Banner", summary: "The header in a white panel with a faint grid and a soft glow; author and share buttons along its bottom edge. The cover stays at the top of the article.", Component: PostHeroB },
+      { id: "C", name: "Blurred Backdrop", summary: "A dark panel coloured by the post's own cover (blurred behind), white text, and the sharp cover beside it.", Component: PostHeroC },
+      { id: "D", name: "Meta Strip", summary: "A compact header, then one strip with author, date, reading time, views and share, and the cover wide under it.", Component: PostHeroD },
+      { id: "E", name: "Centered Editorial", summary: "Everything centred like a magazine opener: topic, title, lead, byline and facts, the cover under them.", Component: PostHeroE },
+      { id: "F", name: "Current", summary: "Today's header: a large title over the article column, three lines on wide screens.", Component: PostHeroF },
     ],
   },
   {

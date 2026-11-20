@@ -205,6 +205,7 @@ export const subs: Record<string, string> = {
   "Grid view": "نمای شبکه‌ای",
   "List view": "نمای فهرستی",
   "Questions about this guide": "سؤالات درباره این راهنما",
+  "Your questions and experience": "سؤال‌ها و تجربه‌های شما",
   "Guides": "راهنماها",
   "Tech News": "اخبار تکنولوژی",
   "ShopMajazi Team": "تیم شاپ مجازی",

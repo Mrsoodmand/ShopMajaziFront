@@ -3,6 +3,7 @@
 // Only the WhatsApp guide has a full sample body; every other post gets a short generated stand-in so its page renders.
 
 import { archive } from "./blog-list-en";
+import type { ServiceComment } from "./service-extras-en";
 import type { BlogCat, Post } from "./blog-en";
 
 export type Block =
@@ -33,7 +34,8 @@ export type Article = {
 // A contents entry: an h2 of the article, or an h3 under one (live posts).
 export type TocItem = { id: string; text: string; level?: 2 | 3 };
 // Article plus what the page needs around it. `lang`: the article's language when it differs from the page's.
-export type ArticlePage = Article & { toc: TocItem[]; related: Post[]; next: Post; lang?: "fa" };
+// `comments`: a live post's approved comments and the key new ones are posted under (absent on the /design previews).
+export type ArticlePage = Article & { toc: TocItem[]; related: Post[]; next: Post; lang?: "fa"; comments?: { key: string; list: ServiceComment[] } };
 
 export const team = { name: "ShopMajazi Team", role: "Guides & support", initials: "SM" };
 

@@ -210,8 +210,14 @@ function CommentItem({ c }: { c: ServiceComment }) {
 
 // `embedded`: inside a page's tabs, without its own heading, the form under the list instead of beside it.
 export function Comments({ service, live, embedded = false }: { service: string; live?: LiveComments; embedded?: boolean }) {
-  const tx = useT();
   const s = useServiceExtras(service);
+  return <CommentsBlock about={s.name} placeholder={s.comments} live={live} embedded={embedded} />;
+}
+
+// The comments section for any page: `about` is what the comments are about (the heading), `placeholder` the comments
+// shown when there is no `live` data (the /design previews). Blog posts use it directly (blogPost/parts › PostComments).
+export function CommentsBlock({ about, placeholder, live, embedded = false }: { about: string; placeholder: ServiceComment[]; live?: LiveComments; embedded?: boolean }) {
+  const tx = useT();
   const [shown, setShown] = useState(PAGE);
   const [name, setName] = useState("");
   const [text, setText] = useState("");
@@ -251,7 +257,7 @@ export function Comments({ service, live, embedded = false }: { service: string;
       .catch(() => setFailed(tx("Your comment couldn't be sent. Please try again.")))
       .finally(() => setSending(false));
   };
-  const list = live ? live.list : s.comments;
+  const list = live ? live.list : placeholder;
   const total = list.length;
 
   const body = (
@@ -299,7 +305,7 @@ export function Comments({ service, live, embedded = false }: { service: string;
   return (
     <section aria-labelledby="comments" className={wrap}>
       <p className={kicker}>{tx("Comments")}</p>
-      <h2 id="comments" className={h2}>{total > 0 ? <>{total} {tx(total === 1 ? "comment" : "comments")}{" "}{tx("on")}{" "}{s.name}</> : tx("Comments on {0}", { 0: s.name })}</h2>
+      <h2 id="comments" className={h2}>{total > 0 ? <>{total} {tx(total === 1 ? "comment" : "comments")}{" "}{tx("on")}{" "}{about}</> : tx("Comments on {0}", { 0: about })}</h2>
       {body}
     </section>
   );

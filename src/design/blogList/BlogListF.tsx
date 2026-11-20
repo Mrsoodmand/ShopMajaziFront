@@ -63,7 +63,7 @@ export default function BlogListF({ topic }: { topic?: string }) {
               <TopicTabs value={cat} onChange={pick} />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <span className="text-sm text-slate-500 dark:text-slate-400"><b className="text-slate-900 dark:text-white">{list.length}</b>{" "}{tx("article")}{list.length === 1 ? "" : "s"}{q && <>{" "}{tx("matching “")}{q}”</>}</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400"><b className="text-slate-900 dark:text-white">{list.length}</b>{" "}{list.length === 1 ? tx("article") : tx("articles")}{q && <>{" "}{tx("matching “")}{q}”</>}</span>
               <div className="flex items-center gap-2 text-sm">
                 <div className="flex rounded-full bg-white p-1 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10">
                   <button onClick={() => { setSort("new"); restart(); }} className={seg(sort === "new")}>{tx("Newest")}</button>

@@ -82,7 +82,7 @@ export const loadBlog = cache(async (locale: Locale): Promise<Post[] | null> => 
 
 // One post, ready for the post page designs. null when there is no such published post; throws when the backend
 // can't be reached (the page shows the error page rather than a wrong 404).
-export const loadArticle = cache(async (slug: string, locale: Locale): Promise<{ article: ArticlePage; seo: ArticleSeo } | null> => {
+export const loadArticle = cache(async (slug: string, locale: Locale): Promise<{ article: ArticlePage; seo: ArticleSeo; id: number } | null> => {
   let data: ApiBlogArticle;
   try {
     data = await storefront<ApiBlogArticle>(`blog/${encodeURIComponent(slug)}`, BLOG_CACHE);
@@ -118,5 +118,5 @@ export const loadArticle = cache(async (slug: string, locale: Locale): Promise<{
     published: p.published_at ?? p.created_at,
     modified: p.updated_at,
   };
-  return { article, seo };
+  return { article, seo, id: p.id };
 });

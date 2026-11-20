@@ -1,14 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "@/i18n/Link";
-import { ArrowRight, Check, ChevronRight, Clock, Info, Link2, Quote, Send, TriangleAlert, Zap } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, Clock, Info, Link2, Plus, Quote, Send, TriangleAlert, Zap } from "lucide-react";
 import { catLabel, type Post } from "@/content/blog-en";
 import { getArticle, sampleArticle, type ArticlePage, type Block } from "@/content/blog-post-en";
 import Cover from "../blog/Cover";
 import { textLang } from "../blog/live";
 import { PostCard } from "../blogList/parts";
 import { useT } from "@/i18n/client";
+import { CommentsBlock } from "../service/ServiceExtras";
 
 // Pieces shared by the blog post page offers.
 
@@ -123,7 +124,8 @@ export function Crumbs({ light = false }: { light?: boolean }) {
   );
 }
 
-export function Byline({ light = false, updated = true }: { light?: boolean; updated?: boolean }) {
+// `meta`: date and reading time under the name; off where the page shows them elsewhere (the author's role instead).
+export function Byline({ light = false, updated = true, meta = true }: { light?: boolean; updated?: boolean; meta?: boolean }) {
   const tx = useT();
   const article = useArticle();
   const { author, post } = article;
@@ -132,10 +134,11 @@ export function Byline({ light = false, updated = true }: { light?: boolean; upd
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-indigo-600 to-fuchsia-500 text-sm font-bold text-white">{author.initials}</span>
       <div className="text-sm">
         <div className={`font-semibold ${light ? "text-white" : "text-slate-900 dark:text-white"}`}>{author.name}</div>
-        <div className={`flex flex-wrap items-center gap-x-2 ${light ? "text-white/70" : "text-slate-500 dark:text-slate-400"}`}>
+        {!meta && <div className={light ? "text-white/70" : "text-slate-500 dark:text-slate-400"}>{author.role}</div>}
+        {meta && <div className={`flex flex-wrap items-center gap-x-2 ${light ? "text-white/70" : "text-slate-500 dark:text-slate-400"}`}>
           <time>{post.date}</time>{updated && article.updated !== post.date && <><span aria-hidden>·</span><span>{tx("Updated")}{" "}{article.updated}</span></>}<span aria-hidden>·</span>
           <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{post.read}{" "}{tx("read")}</span>
-        </div>
+        </div>}
       </div>
     </div>
   );
@@ -317,22 +320,56 @@ export function RelatedPosts({ title = "Keep reading", posts }: { title?: string
 }
 
 // The article's own questions under a heading; renders nothing when the article has none.
+// The post's questions. Each answer slides open and shut (grid rows 0fr → 1fr, so every browser animates it, the
+// iPhone's included) and fades in; one is open at a time, the first to start with. Closed answers stay in the HTML
+// (search engines, FAQ data) but are inert, so keyboards and screen readers skip them.
 export function FaqList({ title }: { title: string }) {
   const article = useArticle();
+  const [open, setOpen] = useState<number | null>(0);
+  const base = useId();
   if (!article.faq.length) return null;
   return (
-    <>
-    <h2 className="mt-14 font-display text-2xl font-bold text-slate-900 dark:text-white">{title}</h2>
-    <div {...textLang(article)} className="mt-6 divide-y divide-slate-200 rounded-3xl bg-white ring-1 ring-slate-200 dark:divide-white/10 dark:bg-[#0E1424] dark:ring-white/10">
-      {article.faq.map((f) => (
-        <details key={f.q} className="group p-5 [&_summary::-webkit-details-marker]:hidden">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900 dark:text-white">
-            {f.q}<ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-90 rtl:rotate-180 rtl:group-open:rotate-90" />
-          </summary>
-          <p className="mt-3 text-[15px] leading-7 text-slate-600 dark:text-slate-400">{f.a}</p>
-        </details>
-      ))}
-    </div>
-    </>
+    <section aria-labelledby={`${base}-h`} className="mt-14">
+      <h2 id={`${base}-h`} className="font-display text-2xl font-bold text-slate-900 dark:text-white">{title}</h2>
+      <div {...textLang(article)} className="mt-6 space-y-3">
+        {article.faq.map((f, i) => {
+          const on = open === i;
+          return (
+            <div key={f.q} className={`rounded-2xl border bg-white transition-[border-color,box-shadow,background-color] duration-300 dark:bg-[#0E1424] ${on ? "border-indigo-300 shadow-[0_22px_44px_-30px_rgba(79,70,229,0.55)] dark:border-indigo-400/40" : "border-slate-200 hover:border-indigo-200 dark:border-white/10 dark:hover:border-white/20"}`}>
+              <h3>
+                <button type="button" id={`${base}-q${i}`} aria-expanded={on} aria-controls={`${base}-a${i}`} onClick={() => setOpen(on ? null : i)}
+                  className="group flex w-full items-center justify-between gap-4 rounded-2xl px-5 py-4 text-start text-base font-semibold leading-7 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 sm:px-6 sm:py-5 dark:text-white">
+                  <span>{f.q}</span>
+                  <span aria-hidden className={`grid h-8 w-8 shrink-0 place-items-center rounded-full transition-[background-color,color,rotate] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${on ? "rotate-45 bg-indigo-600 text-white dark:bg-indigo-400 dark:text-slate-950" : "bg-slate-100 text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:bg-white/10 dark:text-slate-300"}`}><Plus className="h-4 w-4" /></span>
+                </button>
+              </h3>
+              <div id={`${base}-a${i}`} role="region" aria-labelledby={`${base}-q${i}`} inert={!on}
+                className={`grid transition-[grid-template-rows] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${on ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                <div className="overflow-hidden">
+                  <p className={`max-w-[65ch] px-5 pb-5 text-[15px] leading-7 text-slate-700 transition-[opacity,translate] duration-[460ms] ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 sm:pb-6 dark:text-slate-300 ${on ? "translate-y-0 opacity-100 delay-75" : "-translate-y-1.5 opacity-0"}`}>{f.a}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// The post's comments: the approved ones and a form (new ones wait for the admin), as on the service pages. On the
+// /design previews there are no live comments, so it shows the empty state and the form only pretends to send.
+export function PostComments() {
+  const tx = useT();
+  const { comments } = useArticle();
+  const total = comments?.list.length ?? 0;
+  return (
+    <section aria-labelledby="post-comments" className="mt-16 border-t border-slate-200 pt-12 dark:border-white/10">
+      <p className="text-sm font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-300">{tx("Comments")}</p>
+      <h2 id="post-comments" className="mt-2 font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+        {total > 0 ? <>{total}{" "}{tx(total === 1 ? "comment" : "comments")}</> : tx("Your questions and experience")}
+      </h2>
+      <div className="mt-8"><CommentsBlock about="" placeholder={[]} live={comments} embedded /></div>
+    </section>
   );
 }
