@@ -19,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return seoMetadata("virtual-number", {
     title: t("Buy a virtual number for SMS verification — ShopMajazi"),
     description: t("Virtual numbers from 150+ countries for WhatsApp, Telegram, Google, ChatGPT and 2,000+ apps. Choose app, country and operator; refund if no code arrives."),
+    alternates: { canonical: "/virtual-number" },
   });
 }
 

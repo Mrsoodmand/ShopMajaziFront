@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Fragment } from "react";
 import Link from "next/link";
 import { sections } from "@/design/registry";
@@ -14,6 +15,10 @@ import { BridgeBeam, BridgeMarquee, BridgeThread, BridgeTwinkle, BridgeWave } fr
 const bridges: Record<string, typeof BridgeWave> = { A: BridgeThread, B: BridgeMarquee, C: BridgeBeam, D: BridgeWave, E: BridgeTwinkle };
 
 export const dynamic = "force-dynamic";
+
+// Title and description come from the root layout; the home page adds its own address (same in both languages,
+// like the other pages).
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 // How many of the newest posts the home page's blog section gets.
 const HOME_POSTS = 8;
