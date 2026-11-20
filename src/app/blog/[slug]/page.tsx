@@ -6,6 +6,7 @@ import { LiveArticleProvider } from "@/design/blogPost/parts";
 import { getLocale, getT } from "@/i18n/server";
 import { loadArticle } from "@/lib/blog";
 import { absolute } from "@/lib/seo";
+import { SITE_URL } from "@/lib/sitemap";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: seo.description,
     alternates: { canonical: `/blog/${article.post.slug}` },
     openGraph: {
-      type: "article", title: seo.title, description: seo.description, locale: "fa_IR",
+      type: "article", title: seo.title, description: seo.description, locale: "fa_IR", url: `/blog/${article.post.slug}`,
       ...(seo.published && { publishedTime: seo.published }),
       ...(image && { images: [{ url: image }] }),
     },
@@ -54,14 +55,24 @@ export default async function BlogPostPage({ params }: Props) {
     ...(seo.image && { image: await absolute(seo.image) }),
     ...(seo.published && { datePublished: seo.published }),
     ...(seo.modified && { dateModified: seo.modified }),
-    author: { "@type": "Organization", name: t("ShopMajazi") },
-    publisher: { "@type": "Organization", name: t("ShopMajazi") },
-    mainEntityOfPage: `/blog/${article.post.slug}`,
+    author: { "@type": "Organization", name: t("ShopMajazi"), url: SITE_URL },
+    publisher: { "@type": "Organization", name: t("ShopMajazi"), logo: { "@type": "ImageObject", url: `${SITE_URL}/upload/logo/logo-v5.jpg` } },
+    mainEntityOfPage: `${SITE_URL}/blog/${article.post.slug}`,
+  };
+
+  // The post's questions and answers as plain text, as the old site gave them to search engines.
+  const plain = (s: string) => s.replace(/<[^>]*>/g, "").trim();
+  const questions = article.faq.map((f) => ({ q: plain(f.q), a: plain(f.a) })).filter((f) => f.q && f.a);
+  const faqLd = questions.length > 0 && {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: questions.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
   };
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />
+      {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd).replace(/</g, "\\u003c") }} />}
       <LiveArticleProvider value={article}>
         <Component slug={slug} />
       </LiveArticleProvider>

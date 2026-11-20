@@ -46,6 +46,10 @@ const dates: Record<Locale, Intl.DateTimeFormat> = {
   en: new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Tehran" }),
 };
 
+// Posts are kept for an hour: the backend drops them here itself when one is saved, published or deleted
+// (App\Models\Blog › booted), so the hour only decides how often an unchanged post is asked for again.
+const BLOG_CACHE = 3600;
+
 const isCat = (v: string): v is BlogCat => blogCats.some((c) => c.id === v);
 
 export function toPost(p: ApiBlogPost, locale: Locale): Post {
@@ -68,7 +72,7 @@ export function toPost(p: ApiBlogPost, locale: Locale): Post {
 // Every published post and news item, newest first. null when the backend can't be reached.
 export const loadBlog = cache(async (locale: Locale): Promise<Post[] | null> => {
   try {
-    const { posts } = await storefront<{ posts: ApiBlogPost[] }>("blog", 60);
+    const { posts } = await storefront<{ posts: ApiBlogPost[] }>("blog", BLOG_CACHE);
     return posts.map((p) => toPost(p, locale));
   } catch (e) {
     console.error("blog: backend unavailable", e);
@@ -81,7 +85,7 @@ export const loadBlog = cache(async (locale: Locale): Promise<Post[] | null> => 
 export const loadArticle = cache(async (slug: string, locale: Locale): Promise<{ article: ArticlePage; seo: ArticleSeo } | null> => {
   let data: ApiBlogArticle;
   try {
-    data = await storefront<ApiBlogArticle>(`blog/${encodeURIComponent(slug)}`, 60);
+    data = await storefront<ApiBlogArticle>(`blog/${encodeURIComponent(slug)}`, BLOG_CACHE);
   } catch (e) {
     if (isNotFound(e)) return null;
     throw e;

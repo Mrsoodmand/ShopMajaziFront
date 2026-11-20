@@ -18,6 +18,7 @@ import { getLocale, getPrices, getT } from "@/i18n/server";
 import { cookies } from "next/headers";
 import { SpotlightProvider } from "@/design/service/spotlight";
 import { HERO_PREVIEW_COOKIE } from "@/design/service/heroPreview";
+import { SITE_URL } from "@/lib/sitemap";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk" });
@@ -40,6 +41,8 @@ const iransans = localFont({
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
   return {
+    // Canonical and share addresses the pages give as paths ("/blog/x") go out as full addresses on the site's domain.
+    metadataBase: new URL(SITE_URL),
     title: t("ShopMajazi — Digital services, delivered instantly"),
     description: t("Virtual numbers, Google Voice, Apple ID, subscriptions and social growth services."),
   };

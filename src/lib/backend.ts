@@ -29,12 +29,32 @@ export async function storefront<T>(path: string, revalidate = 300): Promise<T> 
   const clean = path.replace(/^\//, "");
   const section = clean.split(/[/?]/)[0];
   const seconds = (await cacheTimes())[section] ?? revalidate;
-  const res = await fetch(`${BACKEND_URL}/api/v1/storefront/${clean}`, {
-    headers: { Accept: "application/json" },
-    next: { revalidate: seconds, tags: ["storefront", `storefront:${section}`] },
-  });
+  const res = await withRetry(() =>
+    fetch(`${BACKEND_URL}/api/v1/storefront/${clean}`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: seconds, tags: ["storefront", `storefront:${section}`] },
+    }),
+  );
   if (!res.ok) throw Object.assign(new Error(`Backend ${path}: HTTP ${res.status}`), { status: res.status });
   const body = (await res.json()) as ApiEnvelope<T>;
   if (!body.success) throw new Error(`Backend ${path}: ${body.message ?? "failed"}`);
   return body.data;
+}
+
+// A backend that is briefly busy (rate limit, restart) gets two more tries before the page fails: a failed page is a
+// 500 for the visitor and for search engines. Answers that won't change by asking again (404, 422…) are returned as is.
+const BUSY = new Set([429, 502, 503, 504]);
+const WAITS = [300, 900];
+
+async function withRetry(ask: () => Promise<Response>): Promise<Response> {
+  for (let i = 0; ; i++) {
+    const last = i === WAITS.length;
+    try {
+      const res = await ask();
+      if (last || !BUSY.has(res.status)) return res;
+    } catch (e) {
+      if (last) throw e;
+    }
+    await new Promise((r) => setTimeout(r, WAITS[i]));
+  }
 }
