@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { AlertTriangle, Bot, CalendarDays, Check, Eye, ImagePlus, Megaphone, MousePointerClick, Search, Users, X } from "lucide-react";
 import CheckoutModal from "@/components/checkout/CheckoutModal";
 import { useMoney } from "@/lib/money";
-import { AD_MAX_BUDGET, AD_MIN_BUDGET, AD_TEXT_MAX, adCountries, adLanguages, estClicks, estViews, fmt, tgHeadings } from "@/content/telegram-en";
+import { AD_MAX_BUDGET, AD_TEXT_MAX, adCountries, adLanguages, adMinBudget, estClicks, estViews, fmt, tgHeadings } from "@/content/telegram-en";
 import { PageShell } from "../otp/parts";
 import { useHasExtras } from "../service/slot";
 import { fieldFocusDark, primary, ring } from "../googleVoice/clean";
@@ -86,7 +86,9 @@ export function useAdForm(init: { status?: "active" | "hold" } = {}) {
   else if (!isTg && !SITE.test(url.trim())) all.url = tx("Enter a t.me link or a website starting with https://");
   if (mediaErr) all.media = mediaErr;
   if (!(cpm >= MIN_CPM)) all.cpm = tx("CPM must be at least {0}", { 0: usd(MIN_CPM) });
-  if (!(budget >= tx.tr(AD_MIN_BUDGET))) all.budget = tx("The smallest budget is {0}", { 0: usd(AD_MIN_BUDGET) });
+  const minBudget = adMinBudget(tx.rate);
+  // A hair of slack: a Toman amount typed in the field comes back as dollars through the same division.
+  if (!(budget >= minBudget - 1e-9)) all.budget = tx("The smallest budget is {0}", { 0: usd(minBudget) });
   else if (budget > AD_MAX_BUDGET) all.budget = tx("For more than {0}, contact us", { 0: usd(AD_MAX_BUDGET) });
   if (dailyOn && !(daily > 0)) all.daily = tx("Enter a daily limit, or remove it");
   else if (dailyOn && daily > budget) all.daily = tx("The daily limit can't be more than the budget");
@@ -361,7 +363,7 @@ export function CpmBudgetFields({ ad, budget = true }: { ad: Ad; budget?: boolea
           <Money id={`${p}-cpm`} value={ad.cpm} onChange={ad.setCpm} onBlur={() => ad.touch("cpm")} error={errors.cpm} hint />
         </Field>
         {budget && (
-          <Field id={`${p}-budget`} label={tx("Budget")} hint={tx("From {0}. Unspent money is refunded.", { 0: usd(AD_MIN_BUDGET) })} error={errors.budget}>
+          <Field id={`${p}-budget`} label={tx("Budget")} hint={tx("From {0}. Unspent money is refunded.", { 0: usd(adMinBudget(tx.rate)) })} error={errors.budget}>
             <Money id={`${p}-budget`} value={ad.budget} onChange={ad.setBudget} onBlur={() => ad.touch("budget")} error={errors.budget} hint />
           </Field>
         )}

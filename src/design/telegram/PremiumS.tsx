@@ -10,6 +10,7 @@ import { BandBackground, BentoGlow, glowPanel, glowSelection, JumpBarGlow, Order
 import { useT } from "@/i18n/client";
 import { SpotlightBand, spotTone, useSpotlight } from "@/design/service/spotlight";
 import { PageH1 } from "@/components/seo/PageHeading";
+import { useHasExtras } from "@/design/service/slot";
 
 // Premium S — "Feature Bento on a Brand Band": Single D's layout in Premium's own gradient. A violet-to-fuchsia band
 // holds the title and badge; on desktop the order card rises into the band beside the title, so it's the first thing
@@ -22,6 +23,8 @@ export default function PremiumS() {
   const spot = useSpotlight();
   const { who, setWho } = useWho(pm);
   const jump = useJump(pm);
+  // On the live page the shared sections follow under a hairline (PremiumFaq is dropped), so the form keeps its own space above it.
+  const extras = useHasExtras();
   if (pm.order) return <PageShell><div className="px-6 py-14"><TgOrderView o={pm.order} onAgain={pm.reset} /></div></PageShell>;
   return (
     <PageShell heroDark={!spot}>
@@ -40,13 +43,13 @@ export default function PremiumS() {
           </div>
         </section>
 
-        <div id="buy" className="mx-auto max-w-7xl scroll-mt-24 px-4 sm:px-6">
+        <div id="buy" className={`mx-auto max-w-7xl scroll-mt-24 px-4 sm:px-6 ${extras ? "pb-20" : ""}`}>
           <PremiumForm pm={pm} className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="relative z-10 -mt-16 min-w-0 space-y-10 lg:col-start-1 lg:row-start-1">
               <section aria-label={t("Choose")} className={`${glowPanel} space-y-8 p-6 shadow-2xl shadow-violet-950/15 sm:p-8`}>
                 <PlanRadios pm={pm} legend={t("Choose a plan")} />
                 <WhoSwitchGlow who={who} setWho={setWho} />
-                <UsernameField r={pm.r} s="premium" mine={false} chip={false} label={who === "me" ? t("Your username") : t("Your friend's username")} hint={t("We never need a password or login code.")} />
+                <UsernameField r={pm.r} s="premium" mine={false} chip={false} rich fieldClass="focus:!border-violet-600 focus:shadow-[0_0_0_4px_rgba(139,92,246,.18)] dark:focus:!border-violet-400 dark:focus:shadow-[0_0_0_4px_rgba(167,139,250,.2)]" label={who === "me" ? t("Your username") : t("Your friend's username")} hint={t("We never need a password or login code.")} />
               </section>
               <BentoGlow />
             </div>

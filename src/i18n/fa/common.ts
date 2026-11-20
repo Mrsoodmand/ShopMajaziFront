@@ -11,7 +11,7 @@ export const common: Record<string, string> = {
   "A real US number for calls and texts on its own Google account. Pick your number by city or area code, pay once, get the login instantly.": "یک شماره واقعی آمریکا برای تماس و پیامک، روی اکانت گوگل مخصوص خودش. شماره را بر اساس شهر یا کد منطقه انتخاب کنید، یک بار پرداخت کنید و اطلاعات ورود را فوراً بگیرید.",
   "Rent a phone number for unlimited SMS (1 week to 1 month) — ShopMajazi": "اجاره شماره با پیامک نامحدود (۱ هفته تا ۱ ماه) | شاپ مجازی",
   "Rent a number for all your apps or for one app, from 12 countries. Unlimited SMS for a week to a month, extend any time.": "اجاره شماره برای همه اپ‌ها یا یک اپ، از ۱۲ کشور. پیامک نامحدود از یک هفته تا یک ماه؛ هر وقت خواستید تمدید کنید.",
-  "Telegram Ads: sponsored messages from $50, no TON needed — ShopMajazi": "تبلیغات تلگرام: پیام اسپانسری از $50، بدون نیاز به TON | شاپ مجازی",
+  "Telegram Ads: sponsored messages from $50, no TON needed — ShopMajazi": "تبلیغات تلگرام: پیام اسپانسری از ۱٬۰۰۰٬۰۰۰ تومان، بدون نیاز به TON | شاپ مجازی",
   "Run a Telegram ad in channels, bots or search, paid in dollars from your wallet, card or crypto. No TON or Fragment account. Refunded if rejected.": "آگهی تلگرام در کانال‌ها، ربات‌ها یا جستجو، با پرداخت از کیف پول، کارت یا ارز دیجیتال. بدون TON یا اکانت فرگمنت. اگر رد شود، پولتان برمی‌گردد.",
   "Telegram Premium: gifted to your username, 3 to 12 months — ShopMajazi": "خرید تلگرام پرمیوم: هدیه به یوزرنیم شما، ۳ تا ۱۲ ماه | شاپ مجازی",
   "Telegram Premium on your own account or as a gift, active in minutes. Only the username is needed, never a password. 3, 6 or 12 months.": "تلگرام پرمیوم روی اکانت خودتان یا به‌صورت هدیه، فعال در چند دقیقه. فقط یوزرنیم لازم است، نه رمز عبور. ۳، ۶ یا ۱۲ ماهه.",

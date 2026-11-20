@@ -89,7 +89,7 @@ export function AmountPicker({ st }: { st: StarsState }) {
       <button type="button" onClick={toggle} aria-expanded={show} aria-controls="star-other" className={`flex items-center gap-1.5 rounded-lg font-semibold text-amber-800 underline-offset-4 hover:underline dark:text-amber-300 ${ring}`}>
         {!show ? t("Other amount") : packs.includes(st.amount) ? t("Hide other amount") : t("Use a pack instead")}<ChevronDown aria-hidden className={`h-4 w-4 transition-transform ${show ? "rotate-180" : ""}`} />
       </button>
-      <div id="star-other" hidden={!show} className="space-y-3">{show && <><div className="sm:max-w-xs"><StarAmountInput st={st} label={t("Amount")} /></div><TierNudge st={st} /></>}</div>
+      <div id="star-other" hidden={!show} className="space-y-3">{show && <div className="animate-step-in space-y-3"><div className="sm:max-w-sm"><StarAmountInput st={st} label={t("Amount")} rich /></div><TierNudge st={st} /></div>}</div>
     </div>
   );
 }

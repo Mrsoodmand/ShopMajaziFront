@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ChangeEvent, type CSSProperties, type ReactNode } from "react";
 import Link from "@/i18n/Link";
 import { AtSign, BadgeCheck, Check, ChevronRight, Crown, Loader2, Megaphone, ShieldCheck, Star, X } from "lucide-react";
 import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
@@ -206,8 +206,8 @@ export function UserChip({ r, s }: { r: Recipient; s: TgService }) {
   );
 }
 
-export function UsernameField({ r, s, id = `tg-user-${s}`, label = "Telegram username", hint = "The account that receives it. We never need a password or login code.", mine = true, chip = true, big = false, chipClass = "" }: {
-  r: Recipient; s: TgService; id?: string; label?: string; hint?: string; mine?: boolean; chip?: boolean; big?: boolean; chipClass?: string;
+export function UsernameField({ r, s, id = `tg-user-${s}`, label = "Telegram username", hint = "The account that receives it. We never need a password or login code.", mine = true, chip = true, big = false, chipClass = "", rich = false, fieldClass = "" }: {
+  r: Recipient; s: TgService; id?: string; label?: string; hint?: string; mine?: boolean; chip?: boolean; big?: boolean; chipClass?: string; rich?: boolean; fieldClass?: string;
 }) {
   const tx = useT();
   label = tx(label);
@@ -221,11 +221,15 @@ export function UsernameField({ r, s, id = `tg-user-${s}`, label = "Telegram use
       </div>
       {hint && <p id={`${id}-hint`} className="text-sm text-slate-600 dark:text-slate-400">{hint}</p>}
       {e && <p id={`${id}-error`} className="mt-1 flex items-start gap-1.5 text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" /><span><span className="sr-only">{tx("Error:")}{" "}</span>{e}</span></p>}
-      <div className="relative mt-2">
-        <AtSign aria-hidden className={`pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 text-slate-500 ${big ? "h-5 w-5" : "h-4 w-4"}`} />
+      {/* `rich`: a larger field typed left to right (usernames are Latin), with the lookup's state at its end. */}
+      <div dir={rich ? "ltr" : undefined} className="group relative mt-2">
+        <AtSign aria-hidden className={`pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 ${rich ? "h-5 w-5 text-slate-400 transition-colors duration-200 group-focus-within:text-slate-700 dark:group-focus-within:text-white" : `text-slate-500 ${big ? "h-5 w-5" : "h-4 w-4"}`}`} />
         <input id={id} value={r.value} onChange={(x) => r.set(x.target.value)} onBlur={r.touch} autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder={tx("username")}
           aria-invalid={!!e} aria-describedby={[hint && `${id}-hint`, e && `${id}-error`].filter(Boolean).join(" ") || undefined}
-          className={`${field} ${big ? "py-4 ps-11 text-lg" : "ps-10"} ${e ? "!border-red-700 focus-visible:!ring-red-600 dark:!border-red-400 dark:focus-visible:!ring-red-400" : ""}`} />
+          className={`${field} ${rich ? `!rounded-2xl !border-2 !py-3.5 pe-12 ps-12 text-lg font-medium tracking-wide !transition-[border-color,background-color,box-shadow] placeholder:font-normal placeholder:tracking-normal ${r.user && !e ? "!border-emerald-600 dark:!border-emerald-400" : ""} ${fieldClass}` : big ? "py-4 ps-11 text-lg" : "ps-10"} ${e ? "!border-red-700 focus-visible:!ring-red-600 dark:!border-red-400 dark:focus-visible:!ring-red-400" : ""}`} />
+        {rich && !e && (r.checking
+          ? <Loader2 aria-hidden className="pointer-events-none absolute end-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-slate-400" />
+          : r.user && <span aria-hidden className="pointer-events-none absolute end-3.5 top-1/2 -mt-3 grid h-6 w-6 animate-pop place-items-center rounded-full bg-emerald-600 text-white dark:bg-emerald-400 dark:text-emerald-950"><Check className="h-4 w-4" strokeWidth={3} /></span>)}
       </div>
       {/* Fixed height, so the packs below don't jump when the account is found. */}
       {chip && (
@@ -349,19 +353,46 @@ export function useStars(initial = 500) {
 export type StarsState = ReturnType<typeof useStars>;
 
 // Same error style as the username field: X icon, red text, red border. Shown after leaving the field.
-export function StarAmountInput({ st, id = "star-amount", label = "Or enter an amount" }: { st: StarsState; id?: string; label?: string }) {
+// Digits typed in Persian or Arabic count too; anything else is dropped.
+const toDigits = (v: string) => v.replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0)).replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/\D/g, "");
+
+// A whole number shown grouped in thousands (25,000) while typing; the caret stays after the same digit.
+// Spread the result on an <input type="text" inputMode="numeric">.
+export function useGroupedInput(value: number, set: (n: number) => void) {
+  const ref = useRef<HTMLInputElement>(null);
+  const caret = useRef<number | null>(null);
+  const shown = value ? Math.round(value).toLocaleString("en-US") : "";
+  useLayoutEffect(() => {
+    const el = ref.current, digits = caret.current;
+    caret.current = null;
+    if (!el || digits === null || document.activeElement !== el) return;
+    let pos = 0;
+    for (let seen = 0; pos < shown.length && seen < digits; pos++) if (/\d/.test(shown[pos])) seen++;
+    el.setSelectionRange(pos, pos);
+  }, [shown]);
+  const onChange = (x: ChangeEvent<HTMLInputElement>) => {
+    caret.current = toDigits(x.target.value.slice(0, x.target.selectionStart ?? x.target.value.length)).length;
+    set(Number(toDigits(x.target.value)));
+  };
+  return { ref, value: shown, onChange, type: "text", inputMode: "numeric", autoComplete: "off" } as const;
+}
+
+// `rich`: the larger field with the amber focus glow and the unit at its end (the amount picker).
+export function StarAmountInput({ st, id = "star-amount", label = "Or enter an amount", rich = false }: { st: StarsState; id?: string; label?: string; rich?: boolean }) {
   const tx = useT();
   label = tx(label);
   const e = st.amountShown;
+  const grouped = useGroupedInput(st.amount, st.setAmount);
   return (
     <div>
       <label htmlFor={id} className="text-base font-semibold text-slate-900 dark:text-white">{label}</label>
       <p id={`${id}-hint`} className="text-sm text-slate-600 dark:text-slate-400">{st.min.toLocaleString("en-US")}{" "}{tx("to")}{" "}{st.max.toLocaleString("en-US")}{" "}{tx("Stars")}</p>
       {e && <p id={`${id}-error`} className="mt-1 flex items-start gap-1.5 text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" /><span><span className="sr-only">{tx("Error:")}{" "}</span>{e}</span></p>}
-      <div className="relative mt-2">
-        <StarGlyph className="pointer-events-none absolute start-4 top-1/2 h-4 w-4 -translate-y-1/2" />
-        <input id={id} type="number" inputMode="numeric" min={st.min} max={st.max} value={st.amount || ""} onChange={(x) => st.setAmount(Number(x.target.value))} onBlur={st.touchAmount}
-          aria-invalid={!!e} aria-describedby={[`${id}-hint`, e && `${id}-error`].filter(Boolean).join(" ")} className={`${field} ps-10 font-semibold tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${e ? "!border-red-700 focus-visible:!ring-red-600 dark:!border-red-400 dark:focus-visible:!ring-red-400" : ""}`} />
+      <div dir="ltr" className="relative mt-2">
+        <StarGlyph className={`pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 ${rich ? "h-5 w-5" : "h-4 w-4"}`} />
+        <input {...grouped} id={id} placeholder={st.min.toLocaleString("en-US")} onBlur={st.touchAmount}
+          aria-invalid={!!e} aria-describedby={[`${id}-hint`, e && `${id}-error`].filter(Boolean).join(" ")} className={`${field} font-semibold tabular-nums placeholder:font-normal ${rich ? "!rounded-2xl !border-2 !py-3.5 pe-20 ps-12 text-xl tracking-wide !transition-[border-color,background-color,box-shadow] focus:!border-amber-500 focus:shadow-[0_0_0_4px_rgba(245,158,11,.2)] dark:focus:!border-amber-400 dark:focus:shadow-[0_0_0_4px_rgba(251,191,36,.18)]" : "ps-10"} ${e ? "!border-red-700 focus-visible:!ring-red-600 dark:!border-red-400 dark:focus-visible:!ring-red-400" : ""}`} />
+        {rich && <span aria-hidden className="pointer-events-none absolute end-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500 dark:text-slate-400">{tx("Stars")}</span>}
       </div>
     </div>
   );

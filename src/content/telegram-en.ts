@@ -91,6 +91,10 @@ export const premiumCompare = [
 export const AD_TEXT_MAX = 160;
 export const AD_BUTTON_MAX = 30;
 export const AD_MIN_BUDGET = 50;
+// The Persian site's smallest ad budget is a round Toman amount, not $50 converted; `rate` is Toman per dollar
+// (t.rate, 0 in English, where the dollar minimum stays). Budgets are kept in dollars, so this returns dollars.
+export const AD_MIN_BUDGET_TOMAN = 1_000_000;
+export const adMinBudget = (rate: number) => (rate ? AD_MIN_BUDGET_TOMAN / rate : AD_MIN_BUDGET);
 export const AD_MAX_BUDGET = 5000;
 export const AD_CPM = 2.5; // placeholder: average cost per 1,000 views
 

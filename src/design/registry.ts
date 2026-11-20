@@ -1,6 +1,8 @@
 import type { ComponentType } from "react";
 import HeroA from "./hero/HeroA";
 import { BridgeA, BridgeB, BridgeC, BridgeD, BridgeE } from "./bridge/offers";
+import { AdsBudgetA, AdsBudgetB, AdsBudgetC, AdsBudgetD, AdsBudgetE, AdsRulesA, AdsRulesB, AdsRulesC, AdsRulesD, AdsRulesE } from "./telegram/adsParts";
+import { SubBridgeA, SubBridgeB, SubBridgeC, SubBridgeD, SubBridgeE, SubBridgeF, SubBridgeG, SubBridgeH, SubBridgeI, SubBridgeJ, SubBridgeK, SubBridgeL, SubBridgeM, SubBridgeN, SubBridgeO, SubBridgeP, SubBridgeQ, SubBridgeR } from "./subSingle/bridge";
 import { CartA, CartB, CartC, CartD, CartE } from "./cart/offers";
 import { CartOrderA, CartOrderB, CartOrderC, CartOrderD } from "./account/cartOrders";
 import { OrderPayA, OrderPayB, OrderPayC } from "./account/orderPay";
@@ -225,7 +227,7 @@ import { InvoiceA, InvoiceB, InvoiceC, InvoiceD, InvoiceE } from "./account/invo
 
 // archived offers stay in the code but are hidden from the comparison page unless "Show archived" is on.
 // `overlay` (headers only): the header floats over the hero instead of sitting above it.
-export type Offer = { id: string; name: string; summary: string; Component: ComponentType<{ card?: string; bare?: "overlay" | "flow"; orderView?: string; slug?: string; topic?: string; method?: string; word?: string; panel?: string; hero?: string; texture?: string; icons?: string; object?: string; bg?: string; code?: string }>; archived?: boolean; overlay?: boolean };
+export type Offer = { id: string; name: string; summary: string; Component: ComponentType<{ card?: string; bare?: "overlay" | "flow"; orderView?: string; slug?: string; topic?: string; method?: string; word?: string; panel?: string; hero?: string; texture?: string; icons?: string; object?: string; bg?: string; code?: string; budget?: string; rules?: string }>; archived?: boolean; overlay?: boolean };
 // A section with `variantOf` refines another section (e.g. its arrow style); on the home page its chosen offer replaces the parent's.
 // `context` is rendered under each offer on the comparison page (e.g. the hero under a header).
 // `kind: "page"` marks a whole-page design (with its own header and footer); `kind: "brand"` marks a site-wide
@@ -823,6 +825,55 @@ export const sections: Section[] = [
       { id: "C", name: "Tabs", summary: "Title and buy box side by side; details in keyboard tabs (Overview, Plans, How it works) that stay in the HTML for search.", Component: SinglePreviewC },
       { id: "D", name: "Brand Hero", summary: "A hero in the product's own colour; the buy box overlaps it on desktop. Details and related subscriptions below.", Component: SinglePreviewD },
       { id: "E", name: "Buy First", summary: "Minimal: a one-line title, the buy box straight away, and the details folded into expandable sections underneath.", Component: SinglePreviewE },
+    ],
+  },
+  {
+    id: "sub-single-bridge",
+    title: "Single subscription · Bridge to How to use",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Logo Orbit", summary: "The product's tile glowing in the middle; six other subscriptions circle it slowly on a dashed ring, staying upright.", Component: SubBridgeA, archived: true },
+      { id: "B", name: "Logo Marquee", summary: "Two rows of subscription chips (logo + name) drifting in opposite directions, fading at both edges; pauses on hover.", Component: SubBridgeB, archived: true },
+      { id: "C", name: "Brand Aurora", summary: "Two soft clouds, one in the product's own colour, drifting over a faint dot grid. Pure atmosphere, the calmest one.", Component: SubBridgeC, archived: true },
+      { id: "D", name: "Step Rail", summary: "A preview of the steps below: four icons (pick, pay, deliver, done) on a line light up one by one as a light runs along it.", Component: SubBridgeD, archived: true },
+      { id: "E", name: "Rising Logos", summary: "Other subscriptions' tiles floating gently up and fading at staggered spots, like bubbles.", Component: SubBridgeE, archived: true },
+      { id: "F", name: "Signal Ripple", summary: "The product's tile sending soft rings out in its own colour, with hairlines reaching to both sides.", Component: SubBridgeF, archived: true },
+      { id: "G", name: "Promise Ticker", summary: "A pill with the product's logo turning over its own promises one at a time: delivery time, how it's activated, fixed or refunded.", Component: SubBridgeG, archived: true },
+      { id: "H", name: "Brand Wave", summary: "Two thin waves in the product's colour and violet rolling across at different speeds.", Component: SubBridgeH, archived: true },
+      { id: "I", name: "Constellation", summary: "The product at the centre with lines drawing out to six other subscriptions floating as stars; small dots twinkle between them.", Component: SubBridgeI, archived: true },
+      { id: "J", name: "Glow Thread", summary: "A hairline in the product's colour drops from the cards; a bright dot runs down it to a bobbing arrow pointing at the steps.", Component: SubBridgeJ, archived: true },
+      { id: "K", name: "Twin Threads", summary: "Two curved hairlines start under the cards and meet in the middle; dots slide down both and land on the arrow together.", Component: SubBridgeK, archived: true },
+      { id: "L", name: "Flowing Dash", summary: "A dashed line in the product's colour that keeps flowing downward into a softly pulsing ring with the arrow.", Component: SubBridgeL, archived: true },
+      { id: "M", name: "Comet Drop", summary: "A small comet with a fading tail falls down the thread and makes a ripple where it lands on the arrow.", Component: SubBridgeM, archived: true },
+      { id: "N", name: "Chevron Cascade", summary: "Three stacked chevrons on the thread light up top to bottom, again and again, like a gentle scroll hint.", Component: SubBridgeN, archived: true },
+      { id: "O", name: "Four Beads", summary: "Four beads on the thread, one per step below, light up in turn on the way down to the arrow.", Component: SubBridgeO, archived: true },
+      { id: "P", name: "Logo Landing", summary: "The thread ends in the product's own logo instead of an arrow; each dot that lands makes the logo glow.", Component: SubBridgeP, archived: true },
+      { id: "Q", name: "Triple Threads", summary: "K with three lines: two curved hairlines from the sides and a straight one down the middle meet at the arrow, a dot on each, landing together.", Component: SubBridgeQ, archived: true },
+      { id: "R", name: "Triple Cascade", summary: "N three times: three widely spaced columns of chevrons on their own threads, the middle one longer, lighting top to bottom one after another.", Component: SubBridgeR },
+    ],
+  },
+  {
+    id: "tg-ads-budget",
+    title: "Telegram Ads · Budget section",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Current", summary: "Today's layout: budget field, CPM as three radio cards plus My own, the estimate in a light strip, daily limit link.", Component: AdsBudgetA },
+      { id: "B", name: "Calculator", summary: "Fields on one side, a blue result card on the other with views, clicks and the sum written out (budget ÷ CPM × 1,000). CPM is a four-way switch.", Component: AdsBudgetB },
+      { id: "C", name: "Slider", summary: "The amount large with a slider from the minimum up; CPM levels as three cards side by side with speed bars; the estimate under them.", Component: AdsBudgetC },
+      { id: "D", name: "Three Steps", summary: "Reads top to bottom as numbered steps on a line: how much, how fast (CPM list with speed bars), what you get.", Component: AdsBudgetD },
+      { id: "E", name: "Compact", summary: "One row: budget, CPM as a drop-down, and the estimate as two chips with the daily limit beside them. The shortest.", Component: AdsBudgetE },
+    ],
+  },
+  {
+    id: "tg-ads-rules",
+    title: "Telegram Ads · Where the ad rules sit",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Current", summary: "An amber box at the bottom of the page, after How it works.", Component: AdsRulesA },
+      { id: "B", name: "Under the ad text", summary: "A compact amber box right under the ad text field, where the rules matter.", Component: AdsRulesB },
+      { id: "C", name: "Live check", summary: "Under the ad text as a checklist: the text and link rules tick green as you type (red when broken); the other two are reminders.", Component: AdsRulesC },
+      { id: "D", name: "Beside the preview", summary: "A folded amber box in the side column between the preview and the order card; one tap opens it.", Component: AdsRulesD },
+      { id: "E", name: "Before you start", summary: "A slim strip above the form with the four rules as pills, read before anything is filled in.", Component: AdsRulesE },
     ],
   },
   {

@@ -5,6 +5,8 @@ import { readDecisions } from "@/components/design/decisions";
 import { tgPaths } from "@/content/telegram-en";
 import { PageHeadingProvider } from "@/components/seo/PageHeading";
 import { pageSeo, seoMetadata } from "@/lib/seo";
+import { ExtrasSlot } from "@/design/service/slot";
+import LiveServiceExtras from "@/design/service/LiveServiceExtras";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +19,14 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-// The live Telegram Ads page: renders whichever design is chosen in /design/page-tg-ads (G).
+// The live Telegram Ads page: renders whichever design is chosen in /design/page-tg-ads (G), followed by the shared
+// sections like the other Telegram pages (how to use, guide, comments, FAQ, blog).
 export default async function TelegramAdsPage() {
   const seo = await pageSeo("telegram-ads");
   const decisions = await readDecisions();
   const section = getSection("page-tg-ads")!;
   const offer = section.offers.find((o) => o.id === decisions["page-tg-ads"]?.offer) ?? section.offers.find((o) => o.id === "G")!;
+  // The budget and rules picks (/design/tg-ads-budget, /design/tg-ads-rules) go to design G; others ignore them.
   const { Component } = offer;
-  return <PageHeadingProvider h1={seo.h1}><Component /></PageHeadingProvider>;
+  return <PageHeadingProvider h1={seo.h1}><ExtrasSlot extras={<LiveServiceExtras service="telegram-ads" />}><Component budget={decisions["tg-ads-budget"]?.offer} rules={decisions["tg-ads-rules"]?.offer} /></ExtrasSlot></PageHeadingProvider>;
 }

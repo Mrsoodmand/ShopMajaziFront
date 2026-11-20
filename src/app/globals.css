@@ -329,6 +329,57 @@
   from { left: -12rem; }
   to { left: 100%; }
 }
+/* Subscription bridge (design/subSingle/bridge): step icons lighting up in turn, tiles rising like bubbles, a pill
+   turning over its promises, and constellation lines drawing in. */
+@keyframes bridge-node {
+  0%, 22%, 100% { border-color: var(--rest-b); color: var(--rest-c); box-shadow: 0 0 0 0 transparent; }
+  4%, 14% { border-color: var(--tone); color: var(--tone); box-shadow: 0 0 0 5px color-mix(in srgb, var(--tone) 18%, transparent); }
+}
+@keyframes bridge-rise {
+  0% { transform: translateY(24px) scale(.85); opacity: 0; }
+  20%, 70% { opacity: .9; }
+  100% { transform: translateY(-160px) scale(1); opacity: 0; }
+}
+@keyframes bridge-ticker3 {
+  0%, 28% { transform: translateY(0); }
+  33%, 61% { transform: translateY(-24px); }
+  66%, 94% { transform: translateY(-48px); }
+  100% { transform: translateY(-72px); }
+}
+@keyframes bridge-ticker2 {
+  0%, 45% { transform: translateY(0); }
+  50%, 95% { transform: translateY(-24px); }
+  100% { transform: translateY(-48px); }
+}
+@keyframes bridge-path {
+  0% { offset-distance: 0%; opacity: 0; }
+  15%, 85% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+@keyframes bridge-dash {
+  from { background-position: 0 0; }
+  to { background-position: 0 16px; }
+}
+/* The comet falls through the thread (its parent clips it); the ring goes out as it lands (about 70% in). */
+@keyframes bridge-comet {
+  0% { transform: translateY(-100%); }
+  70%, 100% { transform: translateY(160px); }
+}
+@keyframes bridge-splash {
+  0%, 62% { transform: scale(1); opacity: 0; }
+  66% { opacity: .9; }
+  100% { transform: scale(2); opacity: 0; }
+}
+@keyframes bridge-bead {
+  0%, 30%, 100% { background-color: var(--rest); box-shadow: 0 0 0 0 transparent; transform: scale(1); }
+  8%, 18% { background-color: var(--tone); box-shadow: 0 0 10px 2px color-mix(in srgb, var(--tone) 60%, transparent); transform: scale(1.25); }
+}
+@keyframes bridge-draw {
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  8% { opacity: 1; }
+  35%, 78% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

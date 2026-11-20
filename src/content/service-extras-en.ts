@@ -9,11 +9,11 @@ import { rentFaq } from "./rent-en";
 import { appleFaq } from "./apple-en";
 import { subBySlug, subsFaq, type SubProduct } from "./subs-en";
 import { makeT, type T } from "@/i18n/translate";
-import { tgFaq } from "./telegram-en";
+import { adSteps, tgFaq } from "./telegram-en";
 
 // "apple-id" is the general Apple ID page; "apple-id-usa" and "apple-id-custom" have their own content so the three
 // addresses aren't duplicates of each other for search engines.
-export type ServiceId = "virtual-number" | "rent-number" | "google-voice" | "apple-id" | "apple-id-usa" | "apple-id-custom" | "subscriptions" | "telegram-stars" | "telegram-premium";
+export type ServiceId = "virtual-number" | "rent-number" | "google-voice" | "apple-id" | "apple-id-usa" | "apple-id-custom" | "subscriptions" | "telegram-stars" | "telegram-premium" | "telegram-ads";
 
 // `verified`: written by the buyer from their delivered order (Back: App\Services\OrderReviews).
 export type ServiceComment = { id: string; name: string; date: string; text: string; verified?: boolean; replies?: { name: string; date: string; text: string; staff?: boolean }[] };
@@ -272,6 +272,38 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
       { id: "c1", name: "Sina M.", date: "3 days ago", text: "Gifted 12 months to my sister, she had it a few minutes later.", replies: [support("Thanks Sina, enjoy!")] },
       { id: "c2", name: "Customer L.", date: "1 week ago", text: "Activated on my own account, no login needed. Voice to text is great." },
     ],
+    blogCat: "telegram",
+  },
+  // The steps are the page's own "How it works"; the guide only repeats what the form and its help already say.
+  // No sample comments: the page shows its real ones (Back: StorefrontCommentController::SLUG_PAGES).
+  "telegram-ads": {
+    name: "Telegram Ads",
+    howTo: adSteps,
+    content: [
+      { id: "what", title: "What Telegram Ads are", paragraphs: [
+        "Telegram Ads are Telegram's own sponsored messages. Your ad is a short text with a button, shown at the end of posts in public channels, inside bots and mini apps, or at the top of Telegram search: right where your audience already spends its time.",
+      ] },
+      { id: "why", title: "Why run it through us", paragraphs: [
+        "Running an ad yourself needs a Telegram Ads account topped up with TON through Fragment. We run your ad in our own account, so you pay from your wallet, a bank card or crypto, and never need TON or Fragment. You send the ad here, we submit it, and you get a report with views and clicks.",
+      ] },
+      { id: "where", title: "Choosing where it shows", paragraphs: [
+        "Channels is the usual choice: pick public channels with more than 1,000 subscribers whose readers fit your offer. 5 to 20 channels on one topic is a good start.",
+        "Bots shows the ad to people using the bots and mini apps you name. Search reaches people who type the words you choose. Users reaches people by country and app language, wherever they read.",
+      ] },
+      { id: "write", title: "Writing an ad Telegram approves", paragraphs: [
+        "You have up to 160 characters of plain text, with no emoji. Say what you offer and why it's worth a tap, in the language of the people you want to reach.",
+        "Telegram rejects ALL CAPS, \"click here\" and big promises, as well as gambling, adult content, scams and misleading claims. The link can only go to a Telegram channel, a bot or a website.",
+      ] },
+      { id: "budget", title: "Budget and CPM in plain words", paragraphs: [
+        "The budget is the total you pay now, and it's spent as people see the ad. CPM is the price for 1,000 views: a higher CPM is shown first and fills faster, a lower one costs less but may run slowly. Budget ÷ CPM × 1,000 is roughly the views you get.",
+        "A daily limit makes the budget last longer. When the ad stops, whatever is left goes back to your wallet.",
+      ] },
+      { id: "review", title: "After you pay", paragraphs: [
+        "Telegram reviews every ad, usually within 24 hours. If it's rejected, we tell you why and help you change it; if it can't be approved, the full budget goes back to your wallet. Once it runs, you can stop it any time.",
+      ] },
+    ],
+    faq: tgFaq.ads,
+    comments: [],
     blogCat: "telegram",
   },
   subscriptions: {

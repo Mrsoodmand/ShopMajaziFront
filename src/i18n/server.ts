@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { AD_MIN_BUDGET_TOMAN } from "@/content/telegram-en";
 import { headers } from "next/headers";
 import { LOCALE_HEADER, type Locale } from "./config";
 import { makeT, type Prices } from "./translate";
@@ -14,7 +15,9 @@ export async function getLocale(): Promise<Locale> {
 export const getPrices = cache(async (): Promise<Prices | null> => {
   if ((await getLocale()) !== "fa") return null;
   try {
-    return await storefront<Prices>("prices", 600);
+    const p = await storefront<Prices>("prices", 600);
+    // Telegram Ads has no backend price: its "from" (menu, home catalog) is the Persian minimum budget.
+    return { ...p, from: { ...p.from, "/telegram/ads": AD_MIN_BUDGET_TOMAN } };
   } catch (e) {
     console.error("prices: backend unavailable", e);
     return null;

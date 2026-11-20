@@ -98,6 +98,8 @@ export function Trust({ p, className = "" }: { p: SubProduct; className?: string
   );
 }
 
+const ease = "ease-[cubic-bezier(0.22,1,0.36,1)]";
+
 // Other subscriptions in the same category (then popular ones), linking to their pages.
 export function Related({ p }: { p: SubProduct }) {
   const usd = useMoney().format;
@@ -113,14 +115,21 @@ export function Related({ p }: { p: SubProduct }) {
         <Link href="/accounts" className={`rounded-lg text-sm font-semibold text-violet-800 underline-offset-4 hover:underline dark:text-violet-300 ${ring}`}>{tx("All subscriptions")}</Link>
       </div>
       <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {list.map((x) => (
+        {list.map((x) => {
+          // Same motion as the catalog's "Read more" cards (subs/parts.tsx): a wash of the product's own colour with a
+          // soft glow in the corner; on hover the card lifts slowly, the glow swells and the logo follows.
+          const hex = x.color.match(/#[0-9a-f]{6}/i)?.[0] ?? "#64748b";
+          const wash = { backgroundImage: `linear-gradient(color-mix(in srgb, ${hex} 9%, transparent), color-mix(in srgb, ${hex} 9%, transparent))` };
+          return (
           <li key={x.slug}>
-            <Link href={`/accounts/${x.slug}`} className={`flex h-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-violet-400 dark:border-white/15 dark:bg-[#0E1424] ${ring}`}>
-              <Tile p={x} size="sm" />
-              <span className="min-w-0"><span className="block truncate font-semibold text-slate-900 dark:text-white">{x.name}</span><span className="text-sm text-slate-600 dark:text-slate-400">{tx("from")}{" "}{usd(fromPrice(x))}{monthly(x) ? tx("/mo") : ""}</span></span>
+            <Link href={`/accounts/${x.slug}`} style={wash} className={`group relative flex h-full items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 transition-[translate,box-shadow,border-color] duration-700 ${ease} hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_40px_-18px_rgba(15,23,42,.28)] dark:border-white/15 dark:bg-[#0E1424] dark:hover:border-white/25 dark:hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,.8)] ${ring}`}>
+              <span aria-hidden style={{ backgroundColor: hex }} className={`pointer-events-none absolute -end-8 -top-8 h-24 w-24 rounded-full opacity-15 blur-2xl transition-[scale,opacity] duration-1000 ${ease} group-hover:scale-150 group-hover:opacity-30`} />
+              <span className={`relative block shrink-0 transition-[translate,scale] duration-700 ${ease} group-hover:-translate-y-0.5 group-hover:scale-[1.06]`}><Tile p={x} size="sm" /></span>
+              <span className="relative min-w-0"><span className="block truncate font-semibold text-slate-900 dark:text-white">{x.name}</span><span className="text-sm text-slate-600 dark:text-slate-400">{tx("from")}{" "}{usd(fromPrice(x))}{monthly(x) ? tx("/mo") : ""}</span></span>
             </Link>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </section>
   );

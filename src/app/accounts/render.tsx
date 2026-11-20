@@ -26,7 +26,7 @@ import { pageSeo, seoMetadata } from "@/lib/seo";
 // backend (React admin › accounts; see lib/subs.ts), and buying goes through it (design/subs/parts.tsx useSubs).
 
 // Single-subscription designs by offer id (the registry holds previews of these for the comparison page).
-const singles: Record<string, ComponentType<{ slug?: string; panel?: string; comments?: LiveComments }>> = { A: SingleA, B: SingleB, C: SingleC, D: SingleD, E: SingleE };
+const singles: Record<string, ComponentType<{ slug?: string; panel?: string; comments?: LiveComments; bridge?: string }>> = { A: SingleA, B: SingleB, C: SingleC, D: SingleD, E: SingleE };
 
 const localeOf = async () => ((await getLocale()) === "fa" ? "fa" : "en") as "en" | "fa";
 
@@ -111,7 +111,7 @@ export async function AccountsPage({ slug }: { slug?: string }) {
     const Single = singles[decisions["page-sub-single"]?.offer ?? "A"] ?? SingleA;
     tabbed = Single === SingleD;
     if (tabbed) comments = await loadLiveComments(`subs:${p.slug}`);
-    page = <Single slug={p.slug} panel={panel} comments={comments} />;
+    page = <Single slug={p.slug} panel={panel} comments={comments} bridge={decisions["sub-single-bridge"]?.offer} />;
   } else {
     const section = getSection("page-subs")!;
     const { Component } = section.offers.find((o) => o.id === decisions["page-subs"]?.offer) ?? section.offers.find((o) => o.id === "A")!;
@@ -127,11 +127,15 @@ export async function AccountsPage({ slug }: { slug?: string }) {
 
   // How to use, content, comments, FAQ and blog follow the design; each product page has its own (see extrasFor).
   return (
+    <>
     <MoneyProvider currency="toman">
       <LiveSubsProvider value={live}>
-        {ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />}
-        <ExtrasSlot extras={<LiveServiceExtras service={p ? `subs:${p.slug}` : "subscriptions"} omit={tabbed} comments={comments} />} glow="rose">{page}</ExtrasSlot>
+        <ExtrasSlot extras={<LiveServiceExtras service={p ? `subs:${p.slug}` : "subscriptions"} omit={tabbed} comments={comments} rule={!p} />} glow="rose">{page}</ExtrasSlot>
       </LiveSubsProvider>
     </MoneyProvider>
+    {/* Last and outside the client providers: placed before the page it shifted the server's useId numbering
+        against the client's, so the buy box and tabs hydrated with mismatched ids. */}
+    {ld && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }} />}
+    </>
   );
 }

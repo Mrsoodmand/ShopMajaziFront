@@ -5,7 +5,7 @@ import { Gift, Star, User } from "lucide-react";
 import { useMoney } from "@/lib/money";
 import { perMonth, premiumFeatures } from "@/content/telegram-en";
 import { primary } from "../googleVoice/clean";
-import { Avatar, ring, type PremiumState } from "./parts";
+import { Avatar, ring, useTween, type PremiumState } from "./parts";
 import { featureIcons } from "./premium";
 import type { Who } from "./night";
 import { useT } from "@/i18n/client";
@@ -102,10 +102,17 @@ export function BentoGlow() {
   );
 }
 
+// A price that counts to its new value when the plan changes. Screen readers get only the final price.
+function RollingPrice({ value, className = "" }: { value: number; className?: string }) {
+  const { format, currency } = useMoney();
+  const shown = useTween(value, 500);
+  const step = currency === "toman" ? 1 : 100;
+  return <span className={className}><span className="sr-only">{format(value)}</span><span aria-hidden>{format(Math.round(shown * step) / step)}</span></span>;
+}
+
 // Sidebar: the recipient's profile on the Premium gradient, the order, and the site's green Continue (a submit
 // button of the page's form). Follows the site theme below the profile.
 export function OrderCardGlow({ pm, who, className = "" }: { pm: PremiumState; who: Who; className?: string }) {
-  const usd = useMoney().format;
   const t = useT();
   const u = pm.r.user;
   const sample = usePathname()?.startsWith("/design") ?? false;
@@ -123,15 +130,15 @@ export function OrderCardGlow({ pm, who, className = "" }: { pm: PremiumState; w
           {u ? u.name : pm.r.checking ? t("Checking…") : who === "gift" ? t("Your friend") : t("You")}
           <Star aria-hidden className={`h-5 w-5 fill-violet-600 text-violet-600 transition duration-500 ease-out dark:fill-violet-400 dark:text-violet-400 ${u ? "scale-100 opacity-100" : "scale-50 opacity-0"}`} />
         </p>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{u ? `@${u.username}` : t("Enter a username")}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{u ? <bdi dir="ltr">@{u.username}</bdi> : t("Enter a username")}</p>
       </div>
       <div className="p-6 text-[15px]">
         <dl className="divide-y divide-slate-200 dark:divide-white/10">
-          {([[t("Plan"), t("Premium · {0}", { 0: pm.plan.label })], [t("Per month"), usd(perMonth(pm.plan))], [who === "gift" ? t("From") : t("For"), who === "gift" ? t("You, as a gift") : t("Your account")], [t("Activation"), t("A few minutes")]] as const).map(([k, v]) => (
+          {([[t("Plan"), t("Premium · {0}", { 0: pm.plan.label })], [t("Per month"), <RollingPrice key="pm" value={perMonth(pm.plan)} />], [who === "gift" ? t("From") : t("For"), who === "gift" ? t("You, as a gift") : t("Your account")], [t("Activation"), t("A few minutes")]] as const).map(([k, v]) => (
             <div key={k} className="flex justify-between gap-4 py-2.5"><dt className="text-slate-600 dark:text-slate-400">{k}</dt><dd className="min-w-0 truncate text-end font-medium tabular-nums text-slate-900 dark:text-white">{v}</dd></div>
           ))}
         </dl>
-        <div aria-live="polite" className="mt-2 flex items-baseline justify-between border-t border-slate-200 pt-4 dark:border-white/10"><span className="text-slate-600 dark:text-slate-400">{t("Total")}</span><span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{usd(pm.total)}</span></div>
+        <div aria-live="polite" className="mt-2 flex items-baseline justify-between border-t border-slate-200 pt-4 dark:border-white/10"><span className="text-slate-600 dark:text-slate-400">{t("Total")}</span><RollingPrice value={pm.total} className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white" /></div>
         <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{t("Continue")}</button>
         <p role="status" className="mt-2.5 text-center text-sm font-semibold text-red-700 empty:hidden dark:text-red-400">{pm.blocker ?? ""}</p>
         {sample && <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">{t("Sample prices and account lookup (design preview)")}</p>}
@@ -156,12 +163,11 @@ export function useJump(pm: PremiumState) {
 }
 
 export function JumpBarGlow({ pm, inView, go }: { pm: PremiumState; inView: boolean; go: () => void }) {
-  const usd = useMoney().format;
   const t = useT();
   return (
     <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-violet-200 bg-white px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,.25)] transition-transform duration-300 lg:hidden dark:border-white/10 dark:bg-[#0E1424] ${inView ? "translate-y-full" : "translate-y-0"}`} aria-hidden={inView} inert={inView}>
       <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
-        <span className="min-w-0"><span className={`block truncate text-sm ${pm.r.user ? "text-slate-600 dark:text-slate-400" : "font-semibold text-violet-800 dark:text-violet-300"}`}>{pm.r.user ? t("Premium · {0} for @{1}", { 0: pm.plan.label, 1: pm.r.user.username }) : t("Add a username to continue")}</span><span className="font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white">{usd(pm.total)}</span></span>
+        <span className="min-w-0"><span className={`block truncate text-sm ${pm.r.user ? "text-slate-600 dark:text-slate-400" : "font-semibold text-violet-800 dark:text-violet-300"}`}>{pm.r.user ? t("Premium · {0} for @{1}", { 0: pm.plan.label, 1: pm.r.user.username }) : t("Add a username to continue")}</span><RollingPrice value={pm.total} className="font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white" /></span>
         <button type="button" onClick={go} className={`shrink-0 whitespace-nowrap rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-900 dark:border-white/20 dark:text-white ${ring}`}>{t("Review order")}</button>
       </div>
     </div>

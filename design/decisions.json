@@ -230,5 +230,17 @@
   "page-social-service": {
     "offer": "A",
     "savedAt": "2026-11-18T09:41:50.495Z"
+  },
+  "sub-single-bridge": {
+    "offer": "R",
+    "savedAt": "2026-11-20T09:46:39.000Z"
+  },
+  "tg-ads-budget": {
+    "offer": "B",
+    "savedAt": "2026-11-20T10:28:40.000Z"
+  },
+  "tg-ads-rules": {
+    "offer": "B",
+    "savedAt": "2026-11-20T10:28:40.000Z"
   }
 }

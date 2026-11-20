@@ -23,11 +23,11 @@ export async function loadLiveComments(service: string): Promise<LiveComments> {
 }
 
 // `omit`: the page shows comments and FAQ itself (see ServiceExtras); `comments`: already loaded by the page.
-export default async function LiveServiceExtras({ service, omit = false, comments }: { service: string; omit?: boolean; comments?: LiveComments }) {
+export default async function LiveServiceExtras({ service, omit = false, comments, rule = true }: { service: string; omit?: boolean; comments?: LiveComments; rule?: boolean }) {
   const locale = await getLocale();
   const [all, live] = await Promise.all([loadBlog(locale).then((p) => p ?? []), comments ?? loadLiveComments(service)]);
   const topic = extrasFor(service).blogCat;
   const onTopic = all.filter((p) => p.cat === topic);
   const posts = [...onTopic, ...all.filter((p) => p.cat === "guides" && !onTopic.includes(p))].slice(0, 8);
-  return <ServiceExtras service={service} posts={posts} comments={live} omit={omit} />;
+  return <ServiceExtras service={service} posts={posts} comments={live} omit={omit} rule={rule} />;
 }

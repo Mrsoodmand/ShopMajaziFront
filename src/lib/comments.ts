@@ -20,6 +20,7 @@ export function commentKey(service: string, productId?: number): string | null {
     "apple-id-usa": "apple-id",
     "apple-id-custom": "apple-id",
     "telegram-stars": "telegram-stars",
+    "telegram-ads": "telegram-ads",
     subscriptions: "accounts",
   };
   // Telegram Premium is also sold as the "telegram-premium" account product; both pages share its comments.

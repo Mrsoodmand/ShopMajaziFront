@@ -17,6 +17,17 @@ type Tab = { id: string; name: string; short: string; icon: LucideIcon; cards: C
 
 export const catalog: Tab[] = [
   {
+    id: "subs", name: "Subscriptions", short: "Subscriptions", icon: Sparkles, viewAll: "/accounts",
+    cards: [
+      // The live account products (backend type "accounts"); prices are each one's cheapest plan in dollars at the
+      // backend's rate, shown in Toman on the Persian site.
+      { name: "Claude", desc: "Anthropic's AI assistant on a ready account", features: ["1 month", "Pro, Max or Ultra"], from: "$22.00", href: "/accounts/buy-claude", icon: Bot, tint: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300", hot: true },
+      { name: "Spotify Premium", desc: "Ad-free music and offline listening", features: ["1 to 12 months", "Individual"], from: "$3.30", href: "/accounts/buy-spotify-account", icon: Headphones, tint: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300" },
+      { name: "Freepik", desc: "Premium photos, vectors and templates", features: ["1 or 12 months", "All premium assets"], from: "$9.90", href: "/accounts/buy-freepick-account", icon: Palette, tint: "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300" },
+      { name: "TradingView", desc: "Pro charts, alerts and market tools", features: ["3 to 18 months", "Pro plans"], from: "$32.99", href: "/accounts/trading-view", icon: LineChart, tint: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" },
+    ],
+  },
+  {
     id: "numbers", name: "Virtual Numbers", short: "Numbers", icon: Smartphone,
     cards: [
       { name: "Virtual Number (OTP)", desc: "One-time numbers to receive a verification code", features: ["150+ countries", "2,000+ apps", "Refund if no SMS"], from: "$0.30", href: "/virtual-number", icon: MessageSquareCode, tint: "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300", hot: true },
@@ -29,17 +40,6 @@ export const catalog: Tab[] = [
     cards: [
       { name: "Custom USA Apple ID", desc: "Made with your own name and email address", features: ["Your details", "Verified 2FA option", "Lifetime support"], from: "$9.00", href: "/apple-id/custom", icon: UserPen, tint: "bg-slate-200 text-slate-800 dark:bg-white/10 dark:text-slate-200", hot: true },
       { name: "USA Apple ID", desc: "Ready-made US Apple ID, delivered instantly", features: ["Instant delivery", "Email access option", "Works on all devices"], from: "$6.50", href: "/apple-id/usa", icon: BadgeCheck, tint: "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300" },
-    ],
-  },
-  {
-    id: "subs", name: "Subscriptions", short: "Subscriptions", icon: Sparkles, viewAll: "/accounts",
-    cards: [
-      // The live account products (backend type "accounts"); prices are each one's cheapest plan in dollars at the
-      // backend's rate, shown in Toman on the Persian site.
-      { name: "Claude", desc: "Anthropic's AI assistant on a ready account", features: ["1 month", "Pro, Max or Ultra"], from: "$22.00", href: "/accounts/buy-claude", icon: Bot, tint: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300", hot: true },
-      { name: "Spotify Premium", desc: "Ad-free music and offline listening", features: ["1 to 12 months", "Individual"], from: "$3.30", href: "/accounts/buy-spotify-account", icon: Headphones, tint: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300" },
-      { name: "Freepik", desc: "Premium photos, vectors and templates", features: ["1 or 12 months", "All premium assets"], from: "$9.90", href: "/accounts/buy-freepick-account", icon: Palette, tint: "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300" },
-      { name: "TradingView", desc: "Pro charts, alerts and market tools", features: ["3 to 18 months", "Pro plans"], from: "$32.99", href: "/accounts/trading-view", icon: LineChart, tint: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" },
     ],
   },
   {
@@ -59,13 +59,16 @@ export const catalog: Tab[] = [
   },
 ];
 
+// The tab that is open when the page loads.
+const DEFAULT_TAB = "subs";
+
 const cols: Record<number, string> = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 lg:grid-cols-3", 4: "sm:grid-cols-2 lg:grid-cols-4" };
 
 
 // A · Catalog Tabs (current): a scrolling row of tabs with a sliding pill, the products as full cards.
 function Tabs() {
   const tx = useT();
-  const [tabId, setTabId] = useState(tx.tr(catalog)[0].id);
+  const [tabId, setTabId] = useState(DEFAULT_TAB);
   const tab = tx.tr(catalog).find((t) => t.id === tabId)!;
 
   // Sliding pill behind the active tab (same motion as the "What are you buying today?" tabs).
@@ -132,10 +135,10 @@ const shell = "mt-12 rounded-3xl border border-white bg-white/80 p-3 text-start 
 // Our own focus ring, so a tapped tab doesn't keep the browser's default (orange on some systems) outline.
 const ring = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-[#0E1424]";
 
-function useCatalog(first = 0) {
+function useCatalog() {
   const tx = useT();
   const list = tx.tr(catalog);
-  const [tabId, setTabId] = useState(list[first].id);
+  const [tabId, setTabId] = useState(DEFAULT_TAB);
   return { list, tab: list.find((t) => t.id === tabId) ?? list[0], tabId, setTabId };
 }
 

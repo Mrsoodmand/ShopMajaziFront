@@ -38,11 +38,12 @@ export type LiveComments = { key: string | null; list: ServiceComment[] };
 
 // `omit`: the page design shows the comments and FAQ itself (subscription pages put them in tabs, subSingle/tabs.tsx),
 // so they are left out here; the FAQ structured data stays.
-export default function ServiceExtras({ service, posts, comments, omit = false }: { service: string; posts?: Post[]; comments?: LiveComments; omit?: boolean }) {
+// `rule`: the hairline above the block; a subscription's own page goes without it.
+export default function ServiceExtras({ service, posts, comments, omit = false, rule = true }: { service: string; posts?: Post[]; comments?: LiveComments; omit?: boolean; rule?: boolean }) {
   const tx = useT();
   const s = useServiceExtras(service);
   return (
-    <div className="space-y-24 border-t border-slate-200 pb-24 pt-20 dark:border-white/10">
+    <div className={`space-y-24 pb-24 ${rule ? "border-t border-slate-200 pt-20 dark:border-white/10" : "pt-10"}`}>
       <HowToUse service={service} />
       <ContentArea service={service} />
       {!omit && <Comments key={service} service={service} live={comments} />}

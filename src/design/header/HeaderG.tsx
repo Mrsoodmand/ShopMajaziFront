@@ -78,7 +78,9 @@ export default function HeaderG({ overDark = false }: { overDark?: boolean; bare
               <button onMouseEnter={() => show("about")} onClick={() => show("about")} onKeyDown={escape} aria-expanded={menu === "about"} className={item(onAbout || menu === "about")}>
                 <Info className={icon(onAbout || menu === "about")} />{t("About")}<ChevronDown className={`h-3.5 w-3.5 opacity-60 transition ${menu === "about" ? "rotate-180" : ""}`} />
               </button>
-              <div onMouseEnter={() => show("about")} className={`absolute start-0 top-full w-72 pt-3 transition-all duration-200 ${menu === "about" ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1 opacity-0"}`}>
+              {/* pt-[18px]: the panel starts where the Services mega menu does (just under the header's bottom edge),
+                  not inside the header; the padding also bridges the gap so the hover isn't lost on the way down. */}
+              <div onMouseEnter={() => show("about")} className={`absolute start-0 top-full w-72 pt-[18px] transition-all duration-200 ${menu === "about" ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1 opacity-0"}`}>
                 <div className="rounded-2xl bg-white p-2 shadow-2xl shadow-slate-900/15 ring-1 ring-slate-200 dark:bg-[#0E1424] dark:shadow-black/50 dark:ring-white/10">
                   {t.tr(aboutLinks).map((l) => (
                     <Link key={l.href} href={l.href} className="flex items-center gap-3 rounded-xl p-3 hover:bg-slate-50 dark:hover:bg-white/5">
