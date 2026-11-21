@@ -6,13 +6,16 @@ import {
   MessageSquareCode, Phone, CalendarClock, UserPen, BadgeCheck, Bot, LineChart, Headphones, Palette, Crown, Megaphone, type LucideIcon,
 } from "lucide-react";
 import { LocaleProvider, useT } from "@/i18n/client";
+import type { T } from "@/i18n/translate";
+import { pickPrice } from "@/i18n/nav";
 
 // The shop window under the home hero (offer G): the product categories and their products. Gallery section
 // "hero-catalog" (/design/hero-catalog) shows each style; the live hero (HeroG.tsx) uses CATALOG_STYLE below.
 // The prices are display text from the catalog below (translated to Toman on the Persian site by tx.tr).
 
 // Each card is a category; clicking it opens that category's own page.
-type Card = { name: string; desc: string; features: string[]; from: string; href: string; icon: LucideIcon; tint: string; hot?: boolean };
+// `image`: an admin-uploaded logo (cards the admin put on the home page), shown instead of `icon`.
+type Card = { name: string; desc: string; features: string[]; from: string; href: string; icon: LucideIcon; tint: string; hot?: boolean; image?: string };
 type Tab = { id: string; name: string; short: string; icon: LucideIcon; cards: Card[]; viewAll?: string };
 
 export const catalog: Tab[] = [
@@ -59,6 +62,41 @@ export const catalog: Tab[] = [
   },
 ];
 
+// The catalog in this language, with the Subscriptions and Social tabs showing what the admin put on the home page
+// (Api\StorefrontController::prices › picks.home). A chosen item that is also a built-in card keeps that card's
+// icon, colours and feature list; a new one gets its logo and description. Nothing chosen = the built-in cards.
+const catalogMemo = new WeakMap<T, Tab[]>();
+const PLAIN_TINT = "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300";
+export function catalogFor(tx: T): Tab[] {
+  let out = catalogMemo.get(tx);
+  if (out) return out;
+  const base = tx.tr(catalog);
+  const picks = tx.prices?.picks?.home;
+  const fa = tx.locale === "fa";
+  out = base.map((tab) => {
+    const chosen = tab.id === "subs" ? picks?.subs : tab.id === "social" ? picks?.social : undefined;
+    if (!chosen?.length) return tab;
+    return {
+      ...tab,
+      cards: chosen.map((p): Card => {
+        const known = tab.cards.find((c) => c.href === p.href);
+        const live = { from: pickPrice(p, tx) || known?.from || "", href: p.href };
+        if (known) return { ...known, ...live };
+        return { ...live, name: fa ? p.name : p.name_en || p.name, desc: (fa ? p.desc : p.desc_en || p.desc) ?? "", features: [], icon: tab.icon, tint: PLAIN_TINT, image: p.image ?? undefined };
+      }),
+    };
+  });
+  catalogMemo.set(tx, out);
+  return out;
+}
+
+// A card's icon tile content: the uploaded logo, else the built-in icon.
+function CardIcon({ c, className }: { c: Card; className: string }) {
+  if (c.image) return <img src={c.image} alt="" className="h-full w-full rounded-xl object-cover" />;
+  const Icon = c.icon;
+  return <Icon aria-hidden className={className} />;
+}
+
 // The tab that is open when the page loads.
 const DEFAULT_TAB = "subs";
 
@@ -69,7 +107,7 @@ const cols: Record<number, string> = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 l
 function Tabs() {
   const tx = useT();
   const [tabId, setTabId] = useState(DEFAULT_TAB);
-  const tab = tx.tr(catalog).find((t) => t.id === tabId)!;
+  const tab = catalogFor(tx).find((t) => t.id === tabId)!;
 
   // Sliding pill behind the active tab (same motion as the "What are you buying today?" tabs).
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -89,7 +127,7 @@ function Tabs() {
       {/* The sliding pill overshoots a little when it lands on an end tab; with no scrollbar that never flashes one. Phones still swipe the row. */}
       <div className="relative flex gap-1 overflow-x-auto rounded-2xl bg-slate-100/80 p-1 [scrollbar-width:none] dark:bg-white/5 [&::-webkit-scrollbar]:hidden">
         <span aria-hidden className="absolute inset-y-1 rounded-xl bg-white shadow-sm transition-all duration-500 ease-[cubic-bezier(.3,1.3,.5,1)] dark:bg-white/10" style={{ left: pill.left, width: pill.width }} />
-        {tx.tr(catalog).map((t) => {
+        {catalogFor(tx).map((t) => {
           const on = t.id === tabId;
           return (
             <button key={t.id} ref={(el) => { tabRefs.current[t.id] = el; }} onClick={() => setTabId(t.id)} className={`relative z-10 flex shrink-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-colors duration-300 ${on ? "text-slate-900 dark:text-white" : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"}`}>
@@ -104,7 +142,7 @@ function Tabs() {
           <div key={tab.id + c.name} className="animate-blur-in" style={{ animationDelay: `${i * 70}ms` }}>
           <Link href={c.href} className="group relative flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-indigo-400/50 dark:hover:shadow-black/30">
             {c.hot && <span className="absolute end-4 top-4 flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-600 dark:bg-orange-500/15 dark:text-orange-300"><Flame className="h-3 w-3" />{tx("Popular")}</span>}
-            <span className={`grid h-11 w-11 place-items-center rounded-xl ${c.tint}`}><c.icon className="h-5 w-5" /></span>
+            <span className={`grid h-11 w-11 place-items-center rounded-xl ${c.tint}`}><CardIcon c={c} className="h-5 w-5" /></span>
             <div className="mt-4 font-display text-lg font-semibold text-slate-900 dark:text-white">{c.name}</div>
             <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">{c.desc}</div>
             <ul className="mt-4 space-y-1.5">
@@ -137,7 +175,7 @@ const ring = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring
 
 function useCatalog() {
   const tx = useT();
-  const list = tx.tr(catalog);
+  const list = catalogFor(tx);
   const [tabId, setTabId] = useState(DEFAULT_TAB);
   return { list, tab: list.find((t) => t.id === tabId) ?? list[0], tabId, setTabId };
 }
@@ -168,7 +206,7 @@ function ProductRow({ c, i }: { c: Card; i: number }) {
   return (
     <Link href={c.href} style={{ animationDelay: `${i * 60}ms` }}
       className={`group flex min-w-0 animate-blur-in items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 transition hover:border-indigo-300 hover:shadow-md dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-indigo-400/50 ${ring}`}>
-      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${c.tint}`}><c.icon aria-hidden className="h-5 w-5" /></span>
+      <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${c.tint}`}><CardIcon c={c} className="h-5 w-5" /></span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2"><span className="truncate font-display font-semibold text-slate-900 dark:text-white">{c.name}</span>{c.hot && <Hot />}</span>
         <span className="block truncate text-[13px] text-slate-500 dark:text-slate-400">{c.desc}</span>
@@ -227,7 +265,7 @@ function Swipe() {
         {tab.cards.map((c, i) => (
           <Link key={c.name} href={c.href} style={{ animationDelay: `${i * 70}ms` }}
             className={`group relative flex w-[78%] shrink-0 animate-blur-in snap-start flex-col rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-indigo-300 hover:shadow-lg sm:w-auto sm:p-5 dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-indigo-400/50 ${ring}`}>
-            <span className="flex items-start justify-between gap-2"><span className={`grid h-11 w-11 place-items-center rounded-xl ${c.tint}`}><c.icon aria-hidden className="h-5 w-5" /></span>{c.hot && <Hot />}</span>
+            <span className="flex items-start justify-between gap-2"><span className={`grid h-11 w-11 place-items-center rounded-xl ${c.tint}`}><CardIcon c={c} className="h-5 w-5" /></span>{c.hot && <Hot />}</span>
             <span className="mt-3 font-display text-lg font-semibold text-slate-900 dark:text-white">{c.name}</span>
             <span className="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{c.desc}</span>
             <ul className="mt-3 hidden space-y-1.5 sm:block">
@@ -313,7 +351,7 @@ function Mini() {
           <Link key={c.name} href={c.href} style={{ animationDelay: `${i * 60}ms` }}
             className={`group relative flex animate-blur-in flex-col rounded-2xl border border-slate-200 bg-white p-3.5 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg sm:p-5 dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-indigo-400/50 ${ring} ${tab.cards.length === 3 && i === 2 ? "col-span-2 lg:col-span-1" : ""}`}>
             {c.hot && <Flame aria-label={tx("Popular")} className="absolute end-3 top-3 h-4 w-4 text-orange-500" />}
-            <span className={`grid h-10 w-10 place-items-center rounded-xl ${c.tint}`}><c.icon aria-hidden className="h-5 w-5" /></span>
+            <span className={`grid h-10 w-10 place-items-center rounded-xl ${c.tint}`}><CardIcon c={c} className="h-5 w-5" /></span>
             <span className="mt-3 line-clamp-2 font-display text-[15px] font-semibold leading-snug text-slate-900 sm:text-lg dark:text-white">{c.name}</span>
             <span className="mt-1 hidden line-clamp-2 text-sm text-slate-500 sm:block dark:text-slate-400">{c.desc}</span>
             <span className="mt-auto flex items-end justify-between gap-2 pt-3">

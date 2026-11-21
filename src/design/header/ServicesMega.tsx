@@ -3,14 +3,16 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import Link from "@/i18n/Link";
 import { ChevronRight, ArrowRight, Headphones } from "lucide-react";
-import { navGroups } from "@/content/nav-en";
+import { navFor } from "@/i18n/nav";
+import { NavIcon } from "./NavIcon";
 import { useT } from "@/i18n/client";
 
 // The "All services" mega panel (headers F and G): categories on the left, the hovered one's
 // sub-categories in the middle, a support card on the right. Sits under the bar, desktop only.
 export function ServicesMega({ open, onEnter, onLeave }: { open: boolean; onEnter: () => void; onLeave?: () => void }) {
   const t = useT();
-  const [cat, setCat] = useState(t.tr(navGroups)[0].id);
+  const groups = navFor(t);
+  const [cat, setCat] = useState(groups[0].id);
 
   // Sliding pill behind the active category (same motion as the hero's catalog tabs).
   const catRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -25,14 +27,14 @@ export function ServicesMega({ open, onEnter, onLeave }: { open: boolean; onEnte
     return () => window.removeEventListener("resize", measure);
   }, [cat, open]);
 
-  const group = t.tr(navGroups).find((g) => g.id === cat)!;
+  const group = groups.find((g) => g.id === cat)!;
 
   return (
     <div onMouseEnter={onEnter} onMouseLeave={onLeave} className={`absolute inset-x-0 top-full hidden px-6 pt-2 transition-all duration-200 lg:block ${open ? "visible translate-y-0 opacity-100" : "invisible -translate-y-1 opacity-0"}`}>
       <div className="mx-auto grid max-w-7xl grid-cols-[250px_1fr_250px] overflow-hidden rounded-3xl bg-white shadow-2xl shadow-slate-900/15 ring-1 ring-slate-200 dark:bg-[#0E1424] dark:shadow-black/50 dark:ring-white/10">
         <ul className="relative space-y-1 border-e border-slate-100 bg-slate-50/70 p-3 dark:border-white/10 dark:bg-white/[.02]">
           <span aria-hidden className="absolute inset-x-3 rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition-all duration-500 ease-[cubic-bezier(.3,1.3,.5,1)] dark:bg-white/10 dark:ring-white/10" style={{ top: pill.top, height: pill.height }} />
-          {t.tr(navGroups).map((g) => {
+          {groups.map((g) => {
             const on = g.id === cat;
             return (
               <li key={g.id}>
@@ -58,7 +60,7 @@ export function ServicesMega({ open, onEnter, onLeave }: { open: boolean; onEnte
           <div className="mt-4 grid grid-cols-2 gap-2">
             {group.items.map((it, i) => (
               <Link key={it.href} href={it.href} style={{ animationDelay: `${60 + i * 50}ms` }} className="group flex animate-fade-up items-center [animation-duration:450ms] gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-indigo-300 hover:bg-indigo-50/40 dark:border-white/10 dark:hover:border-indigo-400/50 dark:hover:bg-indigo-500/10">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300"><it.icon className="h-5 w-5" /></span>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300"><NavIcon item={it} className="h-5 w-5" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{it.label}</span>
                   <span className="block truncate text-xs text-slate-500 dark:text-slate-400">{it.desc}</span>

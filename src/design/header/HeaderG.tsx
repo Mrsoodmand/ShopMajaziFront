@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "@/i18n/Link";
 import { ChevronDown, Search, Menu, House, AlignLeft, BookOpen, Info } from "lucide-react";
-import { aboutLinks, navGroups } from "@/content/nav-en";
+import { aboutLinks } from "@/content/nav-en";
+import { navFor } from "@/i18n/nav";
 import { LangSwitch, Logo, MobileMenu, SearchPalette, ThemeToggle, useScrolled, useSearchHotkey } from "./shared";
 import { useT } from "@/i18n/client";
 import { stripLocale } from "@/i18n/config";
@@ -41,7 +42,7 @@ export default function HeaderG({ overDark = false }: { overDark?: boolean; bare
   // Which tray link matches the current page.
   const under = (href: string) => path === href || path.startsWith(href + "/");
   const onHome = path === "/";
-  const onServices = navGroups.some((g) => g.items.some((it) => under(it.href)) || (g.viewAll && under(g.viewAll.href)));
+  const onServices = navFor(t).some((g) => g.items.some((it) => under(it.href)) || (g.viewAll && under(g.viewAll.href)));
   const onBlog = under("/blog");
   const onAbout = aboutLinks.some((l) => under(l.href));
 

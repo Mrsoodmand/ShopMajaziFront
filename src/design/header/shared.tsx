@@ -7,7 +7,9 @@ import Link from "@/i18n/Link";
 import { ChevronDown, Globe, X, ArrowRight, Sun, Moon, Search, CornerDownLeft } from "lucide-react";
 import { brand } from "@/content/en";
 import { BrandMark, Wordmark } from "@/components/brand/Brand";
-import { aboutLinks, languages, navGroups, navLinks } from "@/content/nav-en";
+import { aboutLinks, languages, navLinks } from "@/content/nav-en";
+import { navFor } from "@/i18n/nav";
+import { NavIcon } from "./NavIcon";
 import { useLocale, useT } from "@/i18n/client";
 import { localePath, stripLocale, type Locale } from "@/i18n/config";
 import { useLocalePath } from "@/i18n/Link";
@@ -137,7 +139,7 @@ export function LangSwitch({ dark = false, variant = "menu" }: { dark?: boolean;
 // Slide-in mobile menu with an accordion per service group. `withAbout` swaps Support for an "About us" group (header F).
 export function MobileMenu({ open, onClose, dark = false, withAbout = false }: { open: boolean; onClose: () => void; dark?: boolean; withAbout?: boolean }) {
   const tx = useT();
-  const [group, setGroup] = useState<string | null>(tx.tr(navGroups)[0].id);
+  const [group, setGroup] = useState<string | null>(navFor(tx)[0].id);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -166,7 +168,7 @@ export function MobileMenu({ open, onClose, dark = false, withAbout = false }: {
           </div>
         </div>
         <nav className="flex-1 overflow-y-auto px-3">
-          {tx.tr(navGroups).map((g, gi) => {
+          {navFor(tx).map((g, gi) => {
             const on = group === g.id;
             const shown = open && on;
             return (
@@ -180,7 +182,7 @@ export function MobileMenu({ open, onClose, dark = false, withAbout = false }: {
                   <div className="overflow-hidden">
                     {g.items.map((it, i) => (
                       <Link key={it.href} href={it.href} onClick={onClose} style={delay(60 + i * 45)} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${hover} ${rise(shown)}`}>
-                        <it.icon className={`h-4 w-4 ${muted}`} />
+                        <NavIcon item={it} className={`h-4 w-4 ${muted}`} />
                         <span className="flex-1 text-sm">{it.label}</span>
                         <span className={`text-xs ${muted}`}>{it.from}</span>
                       </Link>
@@ -191,9 +193,9 @@ export function MobileMenu({ open, onClose, dark = false, withAbout = false }: {
               </div>
             );
           })}
-          {(withAbout ? tx.tr(navLinks).filter((l) => l.href !== "/contact-us") : tx.tr(navLinks)).map((l, li) => <Link key={l.href} href={l.href} onClick={onClose} style={delay(80 + (tx.tr(navGroups).length + li) * 50)} className={`block border-b px-2 py-4 font-medium ${line} ${rise(open)}`}>{l.label}</Link>)}
+          {(withAbout ? tx.tr(navLinks).filter((l) => l.href !== "/contact-us") : tx.tr(navLinks)).map((l, li) => <Link key={l.href} href={l.href} onClick={onClose} style={delay(80 + (navFor(tx).length + li) * 50)} className={`block border-b px-2 py-4 font-medium ${line} ${rise(open)}`}>{l.label}</Link>)}
           {withAbout && (
-            <div className={`px-2 py-4 ${rise(open)}`} style={delay(80 + (tx.tr(navGroups).length + tx.tr(navLinks).length) * 50)}>
+            <div className={`px-2 py-4 ${rise(open)}`} style={delay(80 + (navFor(tx).length + tx.tr(navLinks).length) * 50)}>
               <div className={`text-xs font-semibold uppercase tracking-widest ${muted}`}>{tx("About us")}</div>
               {tx.tr(aboutLinks).map((l) => (
                 <Link key={l.href} href={l.href} onClick={onClose} className={`mt-1 flex items-center gap-3 rounded-xl px-1 py-2.5 text-sm ${hover}`}><l.icon className={`h-4 w-4 ${muted}`} />{l.label}</Link>
@@ -233,7 +235,7 @@ export function SearchPalette({ onClose, dark = false }: { onClose: () => void; 
   useEffect(() => input.current?.focus(), []);
 
   const results = useMemo(() => {
-    const all = tx.tr(navGroups).flatMap((g) => g.items.map((it) => ({ ...it, group: g.label })));
+    const all = navFor(tx).flatMap((g) => g.items.map((it) => ({ ...it, group: g.label })));
     const t = q.trim().toLowerCase();
     return t ? all.filter((r) => `${r.label} ${r.desc} ${r.group}`.toLowerCase().includes(t)) : all;
   }, [q]);
@@ -265,7 +267,7 @@ export function SearchPalette({ onClose, dark = false }: { onClose: () => void; 
           {results.map((r, i) => (
             <li key={r.href}>
               <button onMouseEnter={() => setSel(i)} onClick={() => go(r.href)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start ${i === sel ? selRow : ""}`}>
-                <span className={`grid h-9 w-9 place-items-center rounded-lg ${i === sel ? "bg-indigo-500 text-white" : chip}`}><r.icon className="h-4 w-4" /></span>
+                <span className={`grid h-9 w-9 place-items-center rounded-lg ${i === sel ? "bg-indigo-500 text-white" : chip}`}><NavIcon item={r} className="h-4 w-4" /></span>
                 <span className="flex-1"><span className="block text-sm font-medium">{r.label}</span><span className={`block text-xs ${muted}`}>{r.group} · {r.desc}</span></span>
                 <span className={`text-xs ${muted}`}>{r.from}</span>
                 {i === sel && <CornerDownLeft className={`h-4 w-4 ${muted}`} />}

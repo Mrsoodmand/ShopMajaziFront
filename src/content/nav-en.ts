@@ -4,7 +4,8 @@ import {
 } from "lucide-react";
 
 // Site navigation, grouped the same way as the hero G tabs.
-export type NavItem = { label: string; desc: string; href: string; icon: LucideIcon; from: string };
+// `image`: an admin-uploaded logo (live menu items, i18n/nav.ts), shown instead of `icon`.
+export type NavItem = { label: string; desc: string; href: string; icon: LucideIcon; from: string; image?: string };
 export type NavGroup = { id: string; label: string; icon: LucideIcon; items: NavItem[]; viewAll?: { label: string; href: string } };
 
 export const navGroups: NavGroup[] = [

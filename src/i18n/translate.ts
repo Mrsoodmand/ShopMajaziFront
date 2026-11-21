@@ -17,13 +17,20 @@ export type T = ((text: string, vars?: Vars) => string) & {
   usd: (n: number) => string;
   // Toman per dollar when prices show in Toman (Persian with a known rate), else 0. For money inputs kept in dollars.
   rate: number;
+  // What the prices API sent (dollar rate, live lowest prices, admin-chosen menu/home items), or null.
+  prices: Prices | null;
 };
 
 // ---------- Prices ----------
 // The Persian site shows every price in Toman. Prices still kept in dollars (pages not on the backend yet, menu
 // "from" prices) are converted with the backend's dollar rate; live services show their real lowest price.
 // Without a rate (backend unreachable) dollars stay as they are.
-export type Prices = { usd: number; from: Record<string, number> };
+export type Prices = { usd: number; from: Record<string, number>; picks?: Picks };
+
+// Accounts and social platforms the admin put in the header menu (at most 6 and 4) and on the home page's shop
+// window (Api\StorefrontController::prices). An empty list = the site's built-in items. `from` is Toman.
+export type PickItem = { href: string; name: string; name_en: string | null; desc: string | null; desc_en: string | null; image: string | null; color: string | null; from: number | null };
+export type Picks = { menu: { subs: PickItem[]; social: PickItem[] }; home: { subs: PickItem[]; social: PickItem[] } };
 
 export const toman = (n: number, locale: Locale = "en") =>
   locale === "fa" ? `${Math.round(n).toLocaleString("fa-IR")} تومان` : `${Math.round(n).toLocaleString("en-US")} Toman`;
@@ -113,5 +120,6 @@ export function makeT(locale: Locale, prices?: Prices | null): T {
   t.num = (n, opts) => formatNum(n, locale, opts);
   t.usd = usd;
   t.rate = rate;
+  t.prices = prices ?? null;
   return t;
 }
