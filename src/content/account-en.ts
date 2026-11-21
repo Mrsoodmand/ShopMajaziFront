@@ -41,6 +41,8 @@ export type AccountOrder = {
   nightCall?: boolean | null; // "available for a call 21:00–07:00?" at checkout; null = not asked
   // An order support made: each line on its own (its own row on the order page and on the invoice).
   lines?: { title: string; note: string; price: number }[];
+  // An account bought with paid add-ons: the plan and each add-on, as invoice lines only.
+  bill?: { title: string; note: string; price: number }[];
 };
 
 export type OrderCharge = { id: number; kind: "order" | "extra"; title: string; price: number; paid: boolean; at: string };

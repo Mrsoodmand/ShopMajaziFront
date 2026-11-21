@@ -21,6 +21,7 @@ export type ApiSub = {
   popular: boolean;
   plans: ApiSubPlan[];
   fields: ApiSubField[];
+  addons?: { id: string; question: string; question_en: string; options: { id: string; label: string; label_en: string; prices: Record<string, number> }[] }[];
   notes: { label: string; value: string }[];
 };
 // GET accounts/{slug}: the same plus the page's own text and SEO.
@@ -91,6 +92,11 @@ export function toSubProduct(a: ApiSub, locale: "en" | "fa"): SubProduct {
     delivery: (locale === "fa" ? a.delivery : a.delivery_en) ?? "",
     plans,
     fields,
+    // The English site shows the English wording when the admin wrote one, else the Persian.
+    addons: (a.addons ?? []).map((x) => ({
+      id: x.id, question: (locale === "en" && x.question_en) || x.question,
+      options: x.options.map((o) => ({ id: o.id, label: (locale === "en" && o.label_en) || o.label, prices: o.prices ?? {} })),
+    })),
     notes,
     popular: a.popular,
   };

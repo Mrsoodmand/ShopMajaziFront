@@ -31,6 +31,12 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export type SubOrder = { product: SubProduct; plan: SubPlan; values: Record<string, string>; paidWith: PayMethod; live?: ApiSubOrder };
 export type SubsNotice = { good: boolean; text: string };
 
+// Add-ons start on their first option (the admin's default, usually «خیر»).
+const addonDefaults = (p: SubProduct | null) => Object.fromEntries((p?.addons ?? []).map((a) => [a.id, a.options[0]?.id ?? ""]));
+// What the chosen add-ons add to this plan, in Toman.
+const addonExtra = (p: SubProduct | null, pl: SubPlan | null, picks: Record<string, string>) =>
+  !p || !pl ? 0 : (p.addons ?? []).reduce((sum, a) => sum + (a.options.find((o) => o.id === picks[a.id])?.prices[pl.id] ?? 0), 0);
+
 // Selects start on their first option.
 const selectDefaults = (p: SubProduct | null) => Object.fromEntries((p?.fields ?? []).filter((f) => f.options).map((f) => [f.id, f.options![0]]));
 
@@ -52,6 +58,7 @@ export function useSubs(initial?: string) {
   const [product, setProduct] = useState<SubProduct | null>(list.find((s) => s.slug === initial) ?? null);
   const [plan, setPlan] = useState<SubPlan | null>(product ? firstPlan(product) : null);
   const [values, setValues] = useState<Record<string, string>>(() => selectDefaults(product));
+  const [picks, setPicks] = useState<Record<string, string>>(() => addonDefaults(product));
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
@@ -65,6 +72,7 @@ export function useSubs(initial?: string) {
     setProduct(p);
     setPlan(p ? firstPlan(p) : null);
     setValues(selectDefaults(p));
+    setPicks(addonDefaults(p));
     setTouched({}); setSubmitted(false); setChangedTo(null);
   };
 
@@ -114,9 +122,15 @@ export function useSubs(initial?: string) {
     setChangedTo(price);
   };
 
+  // The plan's price plus the chosen add-ons: what every total on the page and the payment shows.
+  const extra = addonExtra(product, plan, picks);
+  const total = (plan?.price ?? 0) + extra;
+  const pick = (addon: string, option: string) => setPicks((x) => ({ ...x, [addon]: option }));
+  const addonBody = product?.addons?.length ? { addons: picks } : {};
+
   const cart = useCart();
   const addToCart = live && cart && product && plan ? () => cart.add("subscription", {
-    ...nightCallBody(night), product_id: product.id, plan_id: Number(plan.id),
+    ...nightCallBody(night), ...addonBody, product_id: product.id, plan_id: Number(plan.id),
     fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
   }) : undefined;
 
@@ -124,7 +138,7 @@ export function useSubs(initial?: string) {
     if (!product || !plan) return;
     if (!live) { show(product, plan, values, m); return; }
     const body = {
-      ...nightCallBody(night), product_id: product.id, plan_id: Number(plan.id), price: plan.price,
+      ...nightCallBody(night), ...addonBody, product_id: product.id, plan_id: Number(plan.id), price: total,
       fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
     };
     try {
@@ -191,6 +205,7 @@ export function useSubs(initial?: string) {
     // Buying another opens the page's own product again (a product page has nothing to show without one).
     payOpen, closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => { setOrder(null); select(list.find((x) => x.slug === initial) ?? null); },
     live: !!live, notice, dismissNotice: () => setNotice(null), changedTo,
+    picks, pick, extra, total,
   };
 }
 export type Subs = ReturnType<typeof useSubs>;
@@ -406,8 +421,41 @@ export function FieldsForm({ s }: { s: Subs }) {
           </div>
         );
       })}
+      <AddonQuestions s={s} />
       <NightCallQuestion value={s.night} onChange={s.setNight} error={s.nightMissing ? tx("Answer the question to continue.") : undefined} />
     </div>
+  );
+}
+
+// The admin's add-on questions («ورود دو مرحله‌ای فعال شود؟ خیر / بله +۲٬۹۰۰٬۰۰۰»), in the night-call question's
+// segmented style (checkout-night-call A). The first option is chosen until the buyer picks another.
+function AddonQuestions({ s }: { s: Subs }) {
+  const tx = useT();
+  const usd = useMoney().format;
+  const name = useId();
+  const p = s.product;
+  if (!p?.addons?.length) return null;
+  return (
+    <>
+      {p.addons.map((a) => (
+        <fieldset key={a.id}>
+          <legend className="text-base font-semibold text-slate-900 dark:text-white">{a.question}</legend>
+          <div className={`mt-3 grid gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-white/[.06] ${a.options.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
+            {a.options.map((o) => {
+              const extra = s.plan ? o.prices[s.plan.id] ?? 0 : 0;
+              const on = s.picks[a.id] === o.id;
+              return (
+                <label key={o.id} className={`cursor-pointer rounded-xl px-4 py-2.5 text-center text-[15px] font-semibold transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-emerald-600 ${on ? "bg-white text-slate-900 shadow dark:bg-white/15 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}>
+                  <input type="radio" name={`${name}-${a.id}`} className="sr-only" checked={on} onChange={() => s.pick(a.id, o.id)} />
+                  {o.label}
+                  {extra > 0 && <span className="block text-xs font-medium tabular-nums text-slate-500 dark:text-slate-400">+{usd(extra)}</span>}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      ))}
+    </>
   );
 }
 
@@ -438,7 +486,7 @@ export function ProductPanel({ s, heading = "h2", cols = 2, focusable = false, o
       <Notes p={p} />
       <div aria-live="polite" className="flex items-baseline justify-between border-t border-slate-200 pt-5 dark:border-white/10">
         <span className="text-slate-700 dark:text-slate-300">{tx("Total")}</span>
-        <span className="font-display text-3xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.plan.price) : "—"}</span>
+        <span className="font-display text-3xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.total) : "—"}</span>
       </div>
       <BuyButton s={s} onBuy={onBuy} />
     </div>
@@ -459,7 +507,7 @@ export function SubsCheckout({ s }: { s: Subs }) {
   return (
     <>
       {s.notice && <SubsNoticeToast n={s.notice} onClose={s.dismissNotice} />}
-      <CheckoutModal open={s.payOpen && !!p && !!pl} onClose={s.closePay} price={pl?.price ?? 0} itemLabel={pl ? `${p?.name} · ${pl.name}` : tx("Subscription")} payLabel={tx("Pay")}
+      <CheckoutModal open={s.payOpen && !!p && !!pl} onClose={s.closePay} price={s.total} itemLabel={pl ? `${p?.name} · ${pl.name}` : tx("Subscription")} payLabel={tx("Pay")}
         note={note} onPay={s.buy} onAddToCart={s.addToCart}
         {...(s.live ? { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } } : {})}
         summary={p && pl && <>

@@ -86,9 +86,9 @@ export default function SubsI({ slug }: { slug?: string }) {
               <FieldsForm s={s} />
               <Notes p={p} />
               <div aria-live="polite" className="flex items-baseline justify-between border-t border-slate-200 pt-5 dark:border-white/10">
-                <span className="text-slate-700 dark:text-slate-300">Total</span><span className="font-display text-3xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.plan.price) : "—"}</span>
+                <span className="text-slate-700 dark:text-slate-300">Total</span><span className="font-display text-3xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.total) : "—"}</span>
               </div>
-              <BuyButton s={s} label={`Buy ${p.name} · ${s.plan ? usd(s.plan.price) : ""}`} />
+              <BuyButton s={s} label={`Buy ${p.name} · ${s.plan ? usd(s.total) : ""}`} />
             </div>
           )}
         </div>

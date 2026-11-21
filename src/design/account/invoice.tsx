@@ -58,7 +58,8 @@ export function toInvoice(o: AccountOrder, store: Store): Invoice {
     buyer: store.user,
     item: { title: o.title, detail: o.detail, amount: o.price },
     // An order support made: every line on its own, its note under it (never in the amount column).
-    lines: o.lines?.length ? o.lines.map((l) => ({ title: l.title, detail: l.note, amount: l.price })) : undefined,
+    // An account with paid add-ons (o.bill): its plan, then each add-on, the same way.
+    lines: (o.lines?.length ? o.lines : o.bill?.length ? o.bill : null)?.map((l) => ({ title: l.title, detail: l.note, amount: l.price })),
     paid: { how: c ? cardShort(c) : "Wallet balance", at: o.at },
     refund: o.refund,
     net: o.price - (o.refund?.amount ?? 0),

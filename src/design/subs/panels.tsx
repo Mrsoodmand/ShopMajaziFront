@@ -82,7 +82,7 @@ function Total({ s, label = "Total" }: { s: Subs; label?: string }) {
   return (
     <div aria-live="polite" className="flex items-baseline justify-between">
       <span className="text-slate-700 dark:text-slate-300">{label}</span>
-      <span className="font-display text-2xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.plan.price) : "—"}</span>
+      <span className="font-display text-2xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.total) : "—"}</span>
     </div>
   );
 }
@@ -101,7 +101,7 @@ function PanelCompact({ s, focusable }: PanelProps) {
       <div className="flex items-center gap-4 border-t border-slate-200 pt-4 dark:border-white/10">
         <div aria-live="polite" className="min-w-0">
           <p className="text-sm text-slate-600 dark:text-slate-400">{s.plan?.name}</p>
-          <p className="font-display text-2xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.plan.price) : "—"}</p>
+          <p className="font-display text-2xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.total) : "—"}</p>
         </div>
         <BuyButton s={s} className="flex-1" label={t("Continue")} />
       </div>
@@ -142,7 +142,7 @@ function PanelList({ s, focusable }: PanelProps) {
       </fieldset>
       <FieldsForm s={s} />
       <p aria-live="polite" className="rounded-xl bg-slate-100 px-4 py-3 text-[15px] text-slate-800 dark:bg-white/5 dark:text-slate-200">
-        {t("You pay")}{" "}<b>{s.plan ? usd(s.plan.price) : "—"}</b>{" "}{t("once for")}{" "}{s.plan?.name.toLowerCase()}{t(". No automatic renewal.")}
+        {t("You pay")}{" "}<b>{s.plan ? usd(s.total) : "—"}</b>{" "}{t("once for")}{" "}{s.plan?.name.toLowerCase()}{t(". No automatic renewal.")}
       </p>
       <BuyButton s={s} label={t("Continue to payment")} />
     </div>
@@ -331,7 +331,7 @@ function PanelSegmented({ s, focusable }: PanelProps) {
           })}
         </div>
         <p aria-live="polite" className="mt-3 flex flex-wrap items-baseline justify-center gap-x-2 text-center">
-          <span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{s.plan ? usd(s.plan.price) : "—"}</span>
+          <span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{s.plan ? usd(s.total) : "—"}</span>
           {save > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-400/15 dark:text-amber-300">{t("{0}% off", { 0: save })}</span>}
         </p>
       </fieldset>

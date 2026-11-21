@@ -23,10 +23,14 @@ export type SubField = { id: string; label: string; hint?: string; type: "email"
 // needs their login (email and password). "ready": we deliver a ready account login.
 // `color` is a Tailwind background class here, or a plain hex colour for live products (see brand() in subs/parts).
 // Live products (lib/subs.ts) also carry the backend `id` and the admin's `image` (a square logo); their prices are toman.
+export type SubAddon = { id: string; question: string; options: { id: string; label: string; prices: Record<string, number> }[] };
+
 export type SubProduct = {
   slug: string; name: string; cat: SubCat; letter: string; color: string; tagline: string;
   activation: "own" | "login" | "ready"; delivery: string; plans: SubPlan[]; fields: SubField[]; notes: string[]; popular?: boolean;
   id?: number; image?: string;
+  // Add-on questions (admin › اکانت‌ها › افزودنی‌ها); an option's extra in Toman per plan id. First option = default.
+  addons?: SubAddon[];
   // Live, Persian site, the product's own page only: the admin's article (lib/article.ts), shown in its guide.
   guide?: { title: string; paragraphs: string[] }[];
 };
