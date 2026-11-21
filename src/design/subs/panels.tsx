@@ -4,7 +4,7 @@ import { Check, Lock, RotateCcw, Zap } from "lucide-react";
 import { useMoney } from "@/lib/money";
 import { savePct, type SubPlan } from "@/content/subs-en";
 import { ring } from "../googleVoice/clean";
-import { ActivationBadge, BuyButton, FieldsForm, Notes, PopularBadge, ProductPanel, Tile, type Subs } from "./parts";
+import { ActivationBadge, BuyButton, FieldsForm, Notes, PopularBadge, ProductPanel, Receipt, Tile, type Subs } from "./parts";
 import { useT } from "@/i18n/client";
 import { PLAN_TONE, planTones } from "./planSelect";
 
@@ -423,6 +423,7 @@ function PanelSplit({ s, focusable }: PanelProps) {
         </div>
       </fieldset>
       <MiniFields s={s} />
+      <Receipt s={s} />
       <BuyButton s={s} className="!py-3" />
     </div>
   );

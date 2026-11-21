@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "@/i18n/Link";
-import { Bot, Briefcase, Check, LayoutGrid, ChevronRight, Clapperboard, Clock, Eye, EyeOff, KeyRound, LineChart, LogIn, MessageCircle, Music2, Palette, Shapes, ShoppingBag, Star, UserCheck, X, type LucideIcon } from "lucide-react";
+import { Bot, Briefcase, Check, LayoutGrid, ChevronRight, Clapperboard, Clock, Eye, EyeOff, KeyRound, LineChart, LogIn, MessageCircle, Music2, Palette, PhoneCall, Shapes, ShoppingBag, Star, UserCheck, X, type LucideIcon } from "lucide-react";
 import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
-import NightCallQuestion, { nightCallBody } from "@/components/checkout/NightCall";
+import { nightCallBody } from "@/components/checkout/NightCall";
 import { useMoney } from "@/lib/money";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
 import { useCart } from "@/lib/cart";
@@ -422,27 +422,33 @@ export function FieldsForm({ s }: { s: Subs }) {
         );
       })}
       <AddonQuestions s={s} />
-      <NightCallQuestion value={s.night} onChange={s.setNight} error={s.nightMissing ? tx("Answer the question to continue.") : undefined} />
     </div>
   );
 }
 
-// The admin's add-on questions («ورود دو مرحله‌ای فعال شود؟ خیر / بله +۲٬۹۰۰٬۰۰۰»), in the night-call question's
-// segmented style (checkout-night-call A). The first option is chosen until the buyer picks another.
+// The admin's add-on questions and the night-call question (design «Switch rows», buy-form option 2). A yes/no
+// add-on (two options) is one row with its price and a switch: off = its first option (the admin's default, usually
+// «خیر»), on = the second. Questions with more options keep the segmented buttons above the rows. Night call is the
+// last row: off = «no, daytime only», so showing the form answers it (night_call 0) until the buyer turns it on.
 function AddonQuestions({ s }: { s: Subs }) {
   const tx = useT();
   const usd = useMoney().format;
   const name = useId();
   const p = s.product;
-  if (!p?.addons?.length) return null;
+  const { night, setNight } = s;
+  useEffect(() => { if (night === null) setNight(false); }, [night, setNight]);
+  const addons = p?.addons ?? [];
+  const extraOf = (o: { prices: Record<string, number> }) => (s.plan ? o.prices[s.plan.id] ?? 0 : 0);
+  const binary = addons.filter((a) => a.options.length === 2);
+  const multi = addons.filter((a) => a.options.length !== 2);
   return (
     <>
-      {p.addons.map((a) => (
+      {multi.map((a) => (
         <fieldset key={a.id}>
           <legend className="text-base font-semibold text-slate-900 dark:text-white">{a.question}</legend>
-          <div className={`mt-3 grid gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-white/[.06] ${a.options.length === 2 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
+          <div className="mt-3 grid grid-cols-1 gap-1 rounded-2xl bg-slate-100 p-1 sm:grid-cols-3 dark:bg-white/[.06]">
             {a.options.map((o) => {
-              const extra = s.plan ? o.prices[s.plan.id] ?? 0 : 0;
+              const extra = extraOf(o);
               const on = s.picks[a.id] === o.id;
               return (
                 <label key={o.id} className={`cursor-pointer rounded-xl px-4 py-2.5 text-center text-[15px] font-semibold transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-emerald-600 ${on ? "bg-white text-slate-900 shadow dark:bg-white/15 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}>
@@ -455,7 +461,67 @@ function AddonQuestions({ s }: { s: Subs }) {
           </div>
         </fieldset>
       ))}
+      <div className="divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-slate-50 dark:divide-white/10 dark:border-white/10 dark:bg-white/[.04]">
+        {binary.map((a) => {
+          const [off, onOpt] = a.options;
+          const on = s.picks[a.id] === onOpt.id;
+          const extra = extraOf(onOpt);
+          return (
+            <SwitchRow key={a.id} title={a.question} price={extra > 0 ? `+${usd(extra)}` : undefined} on={on}
+              onChange={(v) => s.pick(a.id, v ? onOpt.id : off.id)} />
+          );
+        })}
+        <SwitchRow id="night-call" icon={<PhoneCall aria-hidden className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />}
+          title={tx("Can support call you between 9 pm and 7 am?")} detail={tx("If something about your order needs a quick answer.")}
+          on={night === true} onChange={(v) => setNight(v)} />
+      </div>
     </>
+  );
+}
+
+// One row of the switch list: question, a short line under it, the extra price, and a real switch.
+function SwitchRow({ id, icon, title, detail, price, on, onChange }: { id?: string; icon?: ReactNode; title: string; detail?: string; price?: string; on: boolean; onChange: (v: boolean) => void }) {
+  const label = useId();
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <p id={label} className="flex items-center gap-2 text-[15px] font-semibold text-slate-900 dark:text-white">{icon}{title}</p>
+        {detail && <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{detail}</p>}
+      </div>
+      {price && <span className="shrink-0 whitespace-nowrap rounded-lg bg-indigo-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">{price}</span>}
+      <button id={id} type="button" role="switch" aria-checked={on} aria-labelledby={label} onClick={() => onChange(!on)}
+        className={`relative h-7 w-12 shrink-0 rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${on ? "bg-indigo-600 dark:bg-indigo-500" : "bg-slate-300 dark:bg-white/20"}`}>
+        <span aria-hidden className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? "start-6" : "start-1"}`} />
+      </button>
+    </div>
+  );
+}
+
+// What the buyer pays, line by line, above the buy button (buy-form option 5): the plan, each paid add-on they
+// turned on, then the total. Updates as plans and add-ons change.
+export function Receipt({ s }: { s: Subs }) {
+  const tx = useT();
+  const usd = useMoney().format;
+  const p = s.product, pl = s.plan;
+  if (!p || !pl) return null;
+  const extras = (p.addons ?? []).flatMap((a) => {
+    const o = a.options.find((x) => x.id === s.picks[a.id]);
+    const v = o ? o.prices[pl.id] ?? 0 : 0;
+    if (!o || v <= 0) return [];
+    const title = a.options.length === 2 ? a.question.replace(/[؟?]\s*$/, "") : `${a.question.replace(/[؟?]\s*$/, "")}: ${o.label}`;
+    return [{ id: a.id, title, v }];
+  });
+  return (
+    <div aria-live="polite" className="space-y-1.5 text-sm">
+      <div className="flex items-baseline justify-between gap-3 text-slate-700 dark:text-slate-300"><span className="min-w-0 truncate">{pl.name}</span><span className="shrink-0 tabular-nums">{usd(pl.price)}</span></div>
+      {extras.map((e) => (
+        <div key={e.id} className="flex items-baseline justify-between gap-3 text-slate-700 dark:text-slate-300"><span className="min-w-0">{e.title}</span><span className="shrink-0 tabular-nums">+{usd(e.v)}</span></div>
+      ))}
+      <div className="flex items-baseline justify-between gap-3 border-t border-dashed border-slate-300 pt-2 dark:border-white/15">
+        <span className="font-semibold text-slate-900 dark:text-white">{tx("Total")}</span>
+        <span className="font-display text-lg font-bold tabular-nums text-slate-900 dark:text-white">{usd(s.total)}</span>
+      </div>
+    </div>
   );
 }
 

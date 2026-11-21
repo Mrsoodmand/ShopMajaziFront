@@ -604,3 +604,27 @@ html body .mixed-lang [lang="fa"], html body .mixed-lang [lang="fa"] :is(.font-s
     mask-image: linear-gradient(to bottom, #000, transparent var(--edge), transparent calc(100% - var(--edge)), #000);
   }
 }
+
+/* Page headings (h1), one size step smaller than the class each page sets (owner's request, 2026-11-22). Every h1
+   keeps its own classes; these rules map each size to the next one down at the same breakpoint. Plain CSS outside
+   Tailwind's layers wins over its utilities, so the breakpoints below must stay in ascending order. */
+h1.text-xl { font-size: var(--text-lg, 1.125rem); }
+h1.text-2xl { font-size: var(--text-xl, 1.25rem); }
+h1.text-3xl { font-size: var(--text-2xl, 1.5rem); }
+h1.text-4xl { font-size: var(--text-3xl, 1.875rem); }
+h1.text-5xl { font-size: var(--text-4xl, 2.25rem); }
+h1[class*="text-[clamp(3rem,8.2vw,6rem)]"] { font-size: clamp(2.5rem, 6.8vw, 5rem); }
+@media (min-width: 40rem) {
+  h1.sm\:text-3xl { font-size: var(--text-2xl, 1.5rem); }
+  h1.sm\:text-4xl { font-size: var(--text-3xl, 1.875rem); }
+  h1.sm\:text-5xl { font-size: var(--text-4xl, 2.25rem); }
+  h1.sm\:text-6xl { font-size: var(--text-5xl, 3rem); }
+  h1.sm\:text-7xl { font-size: var(--text-6xl, 3.75rem); }
+}
+@media (min-width: 48rem) {
+  h1.md\:text-7xl { font-size: var(--text-6xl, 3.75rem); }
+  h1.md\:text-8xl { font-size: var(--text-7xl, 4.5rem); }
+}
+@media (min-width: 80rem) {
+  h1[class*="xl:text-[2.6rem]"] { font-size: 2.2rem; }
+}
