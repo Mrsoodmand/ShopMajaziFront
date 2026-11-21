@@ -39,6 +39,8 @@ export type AccountOrder = {
   due?: number; // Toman still to pay
   cancellable?: boolean; // the buyer may cancel it themselves (pending, not started): everything paid goes back
   nightCall?: boolean | null; // "available for a call 21:00–07:00?" at checkout; null = not asked
+  // An order support made: each line on its own (its own row on the order page and on the invoice).
+  lines?: { title: string; note: string; price: number }[];
 };
 
 export type OrderCharge = { id: number; kind: "order" | "extra"; title: string; price: number; paid: boolean; at: string };

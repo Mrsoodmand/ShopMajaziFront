@@ -393,6 +393,19 @@ export function Delivery({ order, demo, compact = false }: { order: AccountOrder
   if (d.type === "details")
     return (
       <div>
+        {!!order.lines?.length && (
+          <ul className="divide-y divide-slate-200 dark:divide-white/10">
+            {order.lines.map((l, i) => (
+              <li key={i} className="flex items-start gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-slate-900 dark:text-white">{l.title}</div>
+                  {l.note && <p className="mt-0.5 whitespace-pre-line break-words text-sm text-slate-600 dark:text-slate-400">{l.note}</p>}
+                </div>
+                <div className="shrink-0 text-[15px] font-semibold tabular-nums text-slate-900 dark:text-white">{f.money(l.price)}</div>
+              </li>
+            ))}
+          </ul>
+        )}
         {d.loading && !d.fields.length ? (
           <div className="space-y-3" aria-busy="true">{[0, 1].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100 dark:bg-white/5" />)}</div>
         ) : (

@@ -22,6 +22,7 @@ type ApiOrder = {
   // What the order still asks for (an order support made, tax, VAT…) and whether the buyer may cancel it.
   charges?: { id: number; kind: "order" | "extra"; title: string; price: number; paid: boolean; at: string | null }[];
   due?: number; cancellable?: boolean; night_call?: boolean | null;
+  lines?: { title: string; note: string; price: number }[]; // an order support made (kind "custom")
   fields?: { label: string; value: string; secret?: boolean; raw?: boolean }[];
   product_id?: number | null; review?: { state: "open" | "sent" } | null;
 };
@@ -293,7 +294,7 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
     case "google-voice":
       return { ...base, kind: "google-voice", service: "Google Voice", title: t("Google Voice number"), detail: o.number ? `⁦${o.number}⁩` : "", delivery };
     case "custom":
-      return { ...base, kind: "custom", service: "Custom order", title: name || t("Custom order"), detail: t("Made for you by support"), delivery };
+      return { ...base, kind: "custom", service: "Custom order", title: name || t("Custom order"), detail: t("Made for you by support"), lines: o.lines ?? [], delivery: { ...delivery, loading: false } };
     case "static-ip":
       return { ...base, kind: "static-ip", service: "Static IP", title: t("Static IP"), detail: "", delivery };
     default:
