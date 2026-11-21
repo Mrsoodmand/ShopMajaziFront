@@ -44,7 +44,9 @@ export default function SingleD({ slug, panel, comments, bridge }: { slug?: stri
       <div className={`mx-auto max-w-6xl px-4 sm:px-6 ${Bridge ? "pb-0" : "pb-20"}`}>
         <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_380px]">
           <aside className="relative z-10 -mt-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:-mt-80"><div className="lg:sticky lg:top-24"><BuyBox s={s} panel={panel} className="shadow-2xl shadow-slate-900/20" /></div></aside>
-          <div className="space-y-12 lg:col-start-1 lg:row-start-1">
+          {/* Sticky beside the buy box: when the box (plans and order form) is taller than the details, the details stay in
+              view while the buyer scrolls down the form instead of leaving an empty column. */}
+          <div className="space-y-12 lg:sticky lg:top-36 lg:col-start-1 lg:row-start-1 lg:self-start">
             {/* On desktop the facts sit in the hero's faded foot, which is otherwise empty beside the buy box. */}
             <div className="relative z-10 lg:-mt-28"><Trust p={p} /></div>
             <ProductTabs p={p} live={comments} />
