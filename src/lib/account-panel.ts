@@ -294,7 +294,8 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
     case "google-voice":
       return { ...base, kind: "google-voice", service: "Google Voice", title: t("Google Voice number"), detail: o.number ? `⁦${o.number}⁩` : "", delivery };
     case "custom":
-      return { ...base, kind: "custom", service: "Custom order", title: name || t("Custom order"), detail: t("Made for you by support"), lines: o.lines ?? [], delivery: { ...delivery, loading: false } };
+      // Titled by its number («سفارش #2552»): its lines are listed on the order page and the invoice.
+      return { ...base, kind: "custom", service: "Custom order", title: t("Order #{0}", { 0: t.num(o.id, { useGrouping: false }) }), detail: t("Made for you by support"), lines: o.lines ?? [], delivery: { ...delivery, loading: false } };
     case "static-ip":
       return { ...base, kind: "static-ip", service: "Static IP", title: t("Static IP"), detail: "", delivery };
     default:
