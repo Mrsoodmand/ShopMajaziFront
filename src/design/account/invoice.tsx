@@ -7,7 +7,7 @@ import { BrandMark, Wordmark } from "@/components/brand/Brand";
 import { LocaleProvider, useT } from "@/i18n/client";
 import { makeT } from "@/i18n/translate";
 import type { AccountOrder } from "@/content/account-en";
-import { cardShort, useAccountDemo, useFmt, type Fmt, type Store } from "./kit";
+import { useAccountDemo, useFmt, type Fmt, type Store } from "./kit";
 
 // Offers for the printable invoice (فاکتور) of one order, opened from the order's receipt in the account (Passbook).
 // The sheet is always paper-white, whatever the site theme. Print hides everything on the page except the sheet
@@ -21,7 +21,7 @@ export type Invoice = {
   buyer: { name: string; mobile: string; email: string | null; company?: { name: string; tax_code: string } | null };
   discount?: number; // organisation discount: item/lines show the list price, this line takes it off
   item: { title: string; detail: string; amount: number };
-  paid: { how: string; at: string };
+  paid: { how: string; card?: { bank: string; number: string }; at: string }; // how: a key to translate; card: the one used, masked
   refund?: { amount: number; reason: string; at: string };
   net: number; // what the customer paid in the end
   state: AccountOrder["state"];
@@ -32,10 +32,24 @@ export type Invoice = {
   label?: string;
 };
 
+// How it was paid, for the invoice: online with the card used, from the wallet, or to support outside the site.
+function paidOf(paidWith: string, store: Store, at: string): Invoice["paid"] {
+  if (paidWith === "outside") return { how: "Paid to support", at };
+  if (paidWith === "wallet") return { how: "Wallet balance", at };
+  const c = store.cardOf(paidWith);
+  return { how: "Online payment", card: c ? { bank: c.bank, number: `${c.first6.slice(0, 4)} ${c.first6.slice(4)}** **** ${c.last4}` } : undefined, at };
+}
+// "Online payment · Bank Mellat 6104 33** **** 9899": the number in one piece, left to right.
+export const paidText = (inv: Invoice, t: (k: string) => string = (k) => k): ReactNode => (
+  <>
+    {t(inv.paid.how)}
+    {inv.paid.card && <> · {inv.paid.card.bank} <span dir="ltr" className="inline-block whitespace-nowrap tabular-nums">{inv.paid.card.number}</span></>}
+  </>
+);
+
 // One invoice for a cart order: the services bought together (AccountOrder.cart), each a line.
 export function toCartInvoice(items: AccountOrder[], store: Store): Invoice {
   const cart = items[0].cart!;
-  const c = cart.paidWith === "wallet" ? null : store.cardOf(cart.paidWith);
   const total = items.reduce((s, o) => s + o.price, 0);
   const refunds = items.filter((o) => o.refund).map((o) => ({ title: o.title, amount: o.refund!.amount, reason: o.refund!.reason }));
   const back = refunds.reduce((s, r) => s + r.amount, 0);
@@ -45,7 +59,7 @@ export function toCartInvoice(items: AccountOrder[], store: Store): Invoice {
     item: { title: items[0].title, detail: items[0].detail, amount: total },
     lines: items.map((o) => ({ title: o.title, detail: o.detail, amount: o.price })),
     refunds,
-    paid: { how: c ? cardShort(c) : "Wallet balance", at: cart.at },
+    paid: paidOf(cart.paidWith, store, cart.at),
     net: total - back,
     state: items[0].state,
     payment: back >= total ? "refunded" : "paid",
@@ -53,7 +67,6 @@ export function toCartInvoice(items: AccountOrder[], store: Store): Invoice {
 }
 
 export function toInvoice(o: AccountOrder, store: Store): Invoice {
-  const c = o.paidWith === "wallet" ? null : store.cardOf(o.paidWith);
   return {
     no: o.id, issued: o.at,
     buyer: store.user,
@@ -62,7 +75,7 @@ export function toInvoice(o: AccountOrder, store: Store): Invoice {
     // An order support made: every line on its own, its note under it (never in the amount column).
     // An account with paid add-ons (o.bill): its plan, then each add-on, the same way.
     lines: (o.lines?.length ? o.lines : o.bill?.length ? o.bill : null)?.map((l) => ({ title: l.title, detail: l.note, amount: l.price })),
-    paid: { how: c ? cardShort(c) : "Wallet balance", at: o.at },
+    paid: paidOf(o.paidWith, store, o.at),
     refund: o.refund,
     net: o.price - (o.refund?.amount ?? 0),
     state: o.state,
@@ -220,7 +233,7 @@ function SheetA({ inv }: { inv: Invoice }) {
       <p className={`${box} mt-3 px-3 py-2`}><span className="text-slate-600">{t("Amount in words")}: </span><b>{inWords(inv.net, t.locale === "fa" ? "fa" : "en")}</b></p>
 
       <section className="mt-3 grid grid-cols-3 gap-3">
-        <dl className={`${box} px-3 py-2`}><dt className="text-slate-600">{t("Paid with")}</dt><dd className="font-semibold">{t(inv.paid.how)}</dd></dl>
+        <dl className={`${box} px-3 py-2`}><dt className="text-slate-600">{t("Paid with")}</dt><dd className="font-semibold">{paidText(inv, t)}</dd></dl>
         <dl className={`${box} px-3 py-2`}><dt className="text-slate-600">{t("Paid on")}</dt><dd className="font-semibold">{f.when(inv.paid.at)}</dd></dl>
         <dl className={`${box} flex items-center justify-center px-3 py-2`}><dt className="sr-only">{t("Payment")}</dt><dd><Stamp inv={inv} /></dd></dl>
       </section>
@@ -247,7 +260,7 @@ function SheetB({ inv }: { inv: Invoice }) {
         </div>
         <p className="mt-10 text-sm text-indigo-200">{inv.refund ? t("You paid in the end") : t("Amount paid")}</p>
         <p className="font-display text-5xl font-bold tabular-nums">{f.money(inv.net)}</p>
-        <p className="mt-2 text-sm text-indigo-200">{f.when(inv.paid.at)} · {t(inv.paid.how)}</p>
+        <p className="mt-2 text-sm text-indigo-200">{f.when(inv.paid.at)} · {paidText(inv, t)}</p>
       </header>
       <div className="px-[12mm] py-9">
         <div className="grid grid-cols-2 gap-8 text-sm">
@@ -309,7 +322,7 @@ function SheetC({ inv }: { inv: Invoice }) {
       <p className="mt-2 font-sans text-xs text-slate-600">{inWords(inv.net, t.locale === "fa" ? "fa" : "en")}</p>
       <hr className={rule} />
       <div className="space-y-1">
-        <Row k={t("Paid with")} v={t(inv.paid.how)} />
+        <Row k={t("Paid with")} v={paidText(inv, t)} />
         <Row k={t("Payment")} v={usePaymentWord()(inv.payment)} />
       </div>
       <hr className={rule} />
@@ -344,7 +357,7 @@ function SheetD({ inv }: { inv: Invoice }) {
         <div><dt className="text-slate-500">{t("Billed to")}</dt>
           {inv.buyer.company && <><dd className="mt-1 font-semibold">{inv.buyer.company.name}</dd><dd className="text-slate-600">{t("Tax code")}: <span className="tabular-nums" dir="ltr">{inv.buyer.company.tax_code}</span></dd></>}
           <dd className={inv.buyer.company ? "text-slate-600" : "mt-1 font-semibold"}>{t(inv.buyer.name)}</dd><dd className="tabular-nums text-slate-600" dir="ltr">{inv.buyer.mobile}</dd></div>
-        <div><dt className="text-slate-500">{t("Paid with")}</dt><dd className="mt-1 font-semibold">{t(inv.paid.how)}</dd><dd className="text-slate-600">{f.when(inv.paid.at)}</dd></div>
+        <div><dt className="text-slate-500">{t("Paid with")}</dt><dd className="mt-1 font-semibold">{paidText(inv, t)}</dd><dd className="text-slate-600">{f.when(inv.paid.at)}</dd></div>
         <div><dt className="text-slate-500">{t("Issued by")}</dt><dd className="mt-1 font-semibold">{t("ShopMajazi")}</dd><dd className="text-slate-600" dir="ltr">{SELLER.email}</dd></div>
       </dl>
       <table className="mt-8 w-full text-sm">
@@ -416,7 +429,7 @@ function SheetE({ inv }: { inv: Invoice }) {
         <p dir="rtl" lang="fa"><span className="text-slate-500">{fa("Amount in words")}: </span><b>{inWords(inv.net, "fa")}</b></p>
       </div>
       <div className="mt-4 grid grid-cols-3 gap-4" dir="ltr">
-        <div><L k="Paid with" /><p className="mt-1">{inv.paid.how}</p></div>
+        <div><L k="Paid with" /><p className="mt-1">{paidText(inv)}</p></div>
         <div><L k="Paid on" /><p className="mt-1 tabular-nums">{new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(inv.paid.at))}</p></div>
         <div className="flex items-start justify-end"><Stamp inv={inv} /></div>
       </div>

@@ -21,6 +21,7 @@ export const invoice: Record<string, string> = {
   "Issued by": "صادرکننده",
   "Status": "وضعیت",
   "Wallet balance": "موجودی کیف پول",
+  "Online payment": "پرداخت آنلاین",
   "Paid · delivered": "پرداخت‌شده · تحویل‌شده",
   "Paid · in progress": "پرداخت‌شده · در حال انجام",
   "Thank you for your order": "از خرید شما سپاسگزاریم",
