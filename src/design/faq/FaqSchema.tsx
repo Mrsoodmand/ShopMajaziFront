@@ -10,7 +10,7 @@ export default function FaqSchema() {
   const data = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: t.tr(faqs).map((f) => ({ "@type": t("Question"), name: f.q, acceptedAnswer: { "@type": t("Answer"), text: f.a } })),
+    mainEntity: t.tr(faqs).map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
   };
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
 }

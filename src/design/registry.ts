@@ -9,6 +9,7 @@ import { OrderPayA, OrderPayB, OrderPayC } from "./account/orderPay";
 import { BusinessOfferA, BusinessOfferB, BusinessOfferC } from "./account/organization";
 import { NightCallA, NightCallB, NightCallC } from "./checkout/nightCall";
 import { VerifyA, VerifyB, VerifyC, VerifyD, VerifyE, VerifyFormA, VerifyFormB, VerifyFormC, VerifyFormD } from "./verify/offers";
+import { AboutA, AboutB, AboutC, ContactA, ContactB, ContactC, FaqPageA, FaqPageB, FaqPageC } from "./info/offers";
 import ErrorsA from "./errors/ErrorsA";
 import ErrorsB from "./errors/ErrorsB";
 import ErrorsC from "./errors/ErrorsC";
@@ -805,6 +806,36 @@ export const sections: Section[] = [
       { id: "H", name: "Dropdown", summary: "Smallest: the plan is a select (name — price), the field, and Continue with the price.", Component: SubsPanelH },
       { id: "I", name: "Mini Tiles", summary: "Smaller: compact tiles in one row with name and price in small type and a check on the chosen one.", Component: SubsPanelI },
       { id: "J", name: "Filled Rows", summary: "Smaller: short rows where the chosen plan fills violet; Continue carries the price.", Component: SubsPanelJ },
+    ],
+  },
+  {
+    id: "page-contact",
+    title: "Page · Contact us",
+    kind: "page",
+    offers: [
+      { id: "A", name: "Channels First", summary: "Three big cards (Telegram, email, phone) up top, then the message form beside the Mashhad office card.", Component: ContactA },
+      { id: "B", name: "Split Form", summary: "The form is the page; heading, channels and office sit in a column beside it that stays put on desktop.", Component: ContactB },
+      { id: "C", name: "Help Desk", summary: "Pick a topic first (order, payment, account, other); its common answers open right there, with the form underneath for anything left.", Component: ContactC },
+    ],
+  },
+  {
+    id: "page-faq",
+    title: "Page · FAQ",
+    kind: "page",
+    offers: [
+      { id: "A", name: "Search + Groups", summary: "One calm column: a big search box that highlights matches, topic chips that jump down, every question grouped by topic.", Component: FaqPageA },
+      { id: "B", name: "Help Center", summary: "Search in a soft band, topic cards with icons and counts; the chosen topic's questions open as boxed cards.", Component: FaqPageB },
+      { id: "C", name: "Side Index", summary: "Search and a topic list in a sticky side column (chips on phones), the questions in one card beside it, support card under the list.", Component: FaqPageC },
+    ],
+  },
+  {
+    id: "page-about",
+    title: "Page · About us",
+    kind: "page",
+    offers: [
+      { id: "A", name: "Story Column", summary: "A calm reading column: the story, three facts in a strip (1400, 50,000+, 24/7) and what we care about, numbered.", Component: AboutA },
+      { id: "B", name: "Bento", summary: "The story and the proof as tiles: a blue story tile, delivered count, start year, Enamad and the office; values below.", Component: AboutB },
+      { id: "C", name: "Timeline", summary: "Heading and facts on one side; four moments (the problem, 1400, Enamad, today) on a line that lights up as you go.", Component: AboutC },
     ],
   },
   {

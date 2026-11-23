@@ -10,7 +10,8 @@ import { storefront } from "@/lib/backend";
 export type SeoKey =
   | "virtual-number" | "google-voice" | "rent-number"
   | "apple-id" | "apple-id-usa" | "apple-id-custom"
-  | "accounts" | "telegram-stars" | "telegram-premium" | "telegram-ads" | "virtual-service";
+  | "accounts" | "telegram-stars" | "telegram-premium" | "telegram-ads" | "virtual-service"
+  | "contact-us" | "faq" | "about-us";
 
 export type PageSeo = { h1?: string; title?: string; description?: string; image?: string };
 

@@ -6,7 +6,7 @@ import Link from "@/i18n/Link";
 import { ChevronDown, Search, Menu, House, AlignLeft, BookOpen, Info } from "lucide-react";
 import { aboutLinks } from "@/content/nav-en";
 import { navFor } from "@/i18n/nav";
-import { LangSwitch, Logo, MobileMenu, SearchPalette, ThemeToggle, useScrolled, useSearchHotkey } from "./shared";
+import { Logo, MobileMenu, SearchPalette, ThemeToggle, useScrolled, useSearchHotkey } from "./shared";
 import { useT } from "@/i18n/client";
 import { stripLocale } from "@/i18n/config";
 import { AccountButton } from "./AccountMenu";
@@ -96,7 +96,6 @@ export default function HeaderG({ overDark = false }: { overDark?: boolean; bare
 
           <div className="ms-auto flex items-center gap-2 lg:ms-0">
             <button onClick={() => setSearch(true)} aria-label={t("Search services (Ctrl K)")} title={t("Search (Ctrl K)")} className={round}><Search className="h-[18px] w-[18px]" /></button>
-            <div className="hidden sm:block"><LangSwitch variant="pill" /></div>
             <ThemeToggle className="border border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:hover:border-white/20 dark:hover:bg-white/[.04]" />
             <CartButton className={round} />
             <AccountButton outline label={t("Sign in / Sign up")} />

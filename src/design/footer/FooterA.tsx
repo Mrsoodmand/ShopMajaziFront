@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { copyright, footerBlurb, legalLinks } from "@/content/footer-en";
-import { LangSwitch, Logo, ThemeToggle } from "../header/shared";
+import { Logo, ThemeToggle } from "../header/shared";
 import { Columns, Payments, Socials } from "./parts";
 
 // Offer A — "Classic Columns": logo, short blurb and socials on the left, four link columns on the right,
@@ -24,7 +24,6 @@ export default function FooterA() {
           </div>
           <div className="flex items-center gap-3">
             <Payments />
-            <LangSwitch />
             <ThemeToggle />
           </div>
         </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MessageCircle, Send, Mail, ArrowUpRight } from "lucide-react";
 import { copyright, footerBlurb, legalLinks, supportEmail } from "@/content/footer-en";
-import { LangSwitch, Logo, ThemeToggle } from "../header/shared";
+import { Logo, ThemeToggle } from "../header/shared";
 import { Columns, Payments, Socials, TrustSeals } from "./parts";
 
 const channels = [
@@ -50,7 +50,7 @@ export default function FooterE() {
               <div className="mt-2"><Payments /></div>
             </div>
           </div>
-          <div className="flex items-center gap-1"><LangSwitch /><ThemeToggle /></div>
+          <div className="flex items-center gap-1"><ThemeToggle /></div>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 pb-8 text-xs text-slate-500 dark:text-slate-400">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { copyright, legalLinks } from "@/content/footer-en";
 import { aboutLinks, navGroups } from "@/content/nav-en";
-import { LangSwitch, Logo, ThemeToggle } from "../header/shared";
+import { Logo, ThemeToggle } from "../header/shared";
 import { Socials } from "./parts";
 
 // Offer D — "Compact Centered": everything centered in a few lines: logo, one row of key links, socials, and a
@@ -23,7 +23,7 @@ export default function FooterD() {
         <div className="mt-10 flex w-full flex-wrap items-center justify-center gap-x-5 gap-y-3 border-t border-slate-100 pt-6 text-xs text-slate-500 dark:border-white/10 dark:text-slate-400">
           <span>{copyright}</span>
           {legalLinks.map((l) => <Link key={l.href} href={l.href} className="hover:text-slate-900 dark:hover:text-white">{l.label}</Link>)}
-          <span className="flex items-center gap-1"><LangSwitch /><ThemeToggle /></span>
+          <span className="flex items-center gap-1"><ThemeToggle /></span>
         </div>
       </div>
     </footer>

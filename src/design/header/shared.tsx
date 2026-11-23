@@ -204,7 +204,6 @@ export function MobileMenu({ open, onClose, dark = false, withAbout = false }: {
           )}
         </nav>
         <div className={`space-y-3 border-t p-5 ${line}`}>
-          <div className="flex items-center justify-between text-sm"><span className={muted}>{tx("Language")}</span><LangSwitch variant="toggle" dark={dark} /></div>
           <AccountMobile onClose={onClose} label={withAbout ? tx("Sign in / Sign up") : tx("Sign in")} />
         </div>
       </div>

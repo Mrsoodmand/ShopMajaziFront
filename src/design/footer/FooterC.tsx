@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, Mail } from "lucide-react";
 import { copyright, legalLinks } from "@/content/footer-en";
-import { LangSwitch, Logo } from "../header/shared";
+import { Logo } from "../header/shared";
 import { Columns, Payments, Socials, TrustSeals } from "./parts";
 
 // Offer C — "Dark Newsletter": always dark, like hero A. A newsletter signup for deals and guides, a live
@@ -53,7 +53,7 @@ export default function FooterC() {
             <span>{copyright}</span>
             {legalLinks.map((l) => <Link key={l.href} href={l.href} className="hover:text-white">{l.label}</Link>)}
           </div>
-          <div className="flex items-center gap-3"><Payments dark /><LangSwitch dark /></div>
+          <div className="flex items-center gap-3"><Payments dark /></div>
         </div>
       </div>
     </footer>

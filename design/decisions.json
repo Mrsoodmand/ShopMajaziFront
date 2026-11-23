@@ -250,5 +250,17 @@
   "subs-popular-badge": {
     "offer": "F",
     "savedAt": "2026-11-23T12:00:00.000Z"
+  },
+  "page-contact": {
+    "offer": "B",
+    "savedAt": "2026-11-23T17:14:55.000Z"
+  },
+  "page-faq": {
+    "offer": "C",
+    "savedAt": "2026-11-23T17:14:55.000Z"
+  },
+  "page-about": {
+    "offer": "B",
+    "savedAt": "2026-11-23T17:14:55.000Z"
   }
 }
