@@ -32,7 +32,7 @@ export type Clock = { msLeft: number; text: string; fraction: number };
 export type Store = {
   live?: boolean;
   orders: AccountOrder[]; tickets: Ticket[]; cards: BankCard[]; wallet: number; statement: Line[];
-  user: { name: string; mobile: string; email: string | null; since: string };
+  user: { name: string; mobile: string; email: string | null; since: string; company?: { name: string; tax_code: string } | null };
   arrived: number[]; // orders whose code came in while the page was open
   limits: { min: number; max: number }; // top-up, Toman
   clockOf: (o: AccountOrder) => Clock; // time left for a number waiting for its code
@@ -70,6 +70,8 @@ export function useFmt() {
     const dayStart = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
     return {
       num: n,
+      // A percent with up to two decimals (12.5), e.g. an organisation's discount.
+      pct: (v: number) => v.toLocaleString(t.locale === "fa" ? "fa-IR" : "en-US", { maximumFractionDigits: 2 }),
       money: (v: number) => t("{0} Toman", { 0: n(v) }),
       signed: (v: number) => `${v < 0 ? "−" : "+"}${n(Math.abs(v))}`,
       time: (iso: string) => d(iso, { hour: "2-digit", minute: "2-digit" }),

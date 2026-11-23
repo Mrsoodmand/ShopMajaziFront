@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { usePathname } from "next/navigation";
 import { Gift, Star, User } from "lucide-react";
 import { useMoney } from "@/lib/money";
+import { useOrgPrice } from "@/lib/account";
 import { perMonth, premiumFeatures } from "@/content/telegram-en";
 import { primary } from "../googleVoice/clean";
 import { Avatar, ring, useTween, type PremiumState } from "./parts";
@@ -114,6 +115,8 @@ function RollingPrice({ value, className = "" }: { value: number; className?: st
 // button of the page's form). Follows the site theme below the profile.
 export function OrderCardGlow({ pm, who, className = "" }: { pm: PremiumState; who: Who; className?: string }) {
   const t = useT();
+  const { format } = useMoney();
+  const business = useOrgPrice()(pm.total, "telegram");
   const u = pm.r.user;
   const sample = usePathname()?.startsWith("/design") ?? false;
   return (
@@ -137,8 +140,11 @@ export function OrderCardGlow({ pm, who, className = "" }: { pm: PremiumState; w
           {([[t("Plan"), t("Premium · {0}", { 0: pm.plan.label })], [t("Per month"), <RollingPrice key="pm" value={perMonth(pm.plan)} />], [who === "gift" ? t("From") : t("For"), who === "gift" ? t("You, as a gift") : t("Your account")], [t("Activation"), t("A few minutes")]] as const).map(([k, v]) => (
             <div key={k} className="flex justify-between gap-4 py-2.5"><dt className="text-slate-600 dark:text-slate-400">{k}</dt><dd className="min-w-0 truncate text-end font-medium tabular-nums text-slate-900 dark:text-white">{v}</dd></div>
           ))}
+          {business.was !== null && (
+            <div className="flex justify-between gap-4 py-2.5"><dt className="text-slate-600 dark:text-slate-400">{t("Business discount ({0}%)", { 0: business.percent })}</dt><dd className="text-end font-medium tabular-nums text-emerald-700 dark:text-emerald-400">−{format(business.was - business.price)}</dd></div>
+          )}
         </dl>
-        <div aria-live="polite" className="mt-2 flex items-baseline justify-between border-t border-slate-200 pt-4 dark:border-white/10"><span className="text-slate-600 dark:text-slate-400">{t("Total")}</span><RollingPrice value={pm.total} className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white" /></div>
+        <div aria-live="polite" className="mt-2 flex items-baseline justify-between border-t border-slate-200 pt-4 dark:border-white/10"><span className="text-slate-600 dark:text-slate-400">{t("Total")}</span><RollingPrice value={business.price} className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white" /></div>
         <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{t("Continue")}</button>
         <p role="status" className="mt-2.5 text-center text-sm font-semibold text-red-700 empty:hidden dark:text-red-400">{pm.blocker ?? ""}</p>
         {sample && <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">{t("Sample prices and account lookup (design preview)")}</p>}
@@ -164,10 +170,11 @@ export function useJump(pm: PremiumState) {
 
 export function JumpBarGlow({ pm, inView, go }: { pm: PremiumState; inView: boolean; go: () => void }) {
   const t = useT();
+  const orgTotal = useOrgPrice()(pm.total, "telegram").price;
   return (
     <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-violet-200 bg-white px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,.25)] transition-transform duration-300 lg:hidden dark:border-white/10 dark:bg-[#0E1424] ${inView ? "translate-y-full" : "translate-y-0"}`} aria-hidden={inView} inert={inView}>
       <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
-        <span className="min-w-0"><span className={`block truncate text-sm ${pm.r.user ? "text-slate-600 dark:text-slate-400" : "font-semibold text-violet-800 dark:text-violet-300"}`}>{pm.r.user ? t("Premium · {0} for @{1}", { 0: pm.plan.label, 1: pm.r.user.username }) : t("Add a username to continue")}</span><RollingPrice value={pm.total} className="font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white" /></span>
+        <span className="min-w-0"><span className={`block truncate text-sm ${pm.r.user ? "text-slate-600 dark:text-slate-400" : "font-semibold text-violet-800 dark:text-violet-300"}`}>{pm.r.user ? t("Premium · {0} for @{1}", { 0: pm.plan.label, 1: pm.r.user.username }) : t("Add a username to continue")}</span><RollingPrice value={orgTotal} className="font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white" /></span>
         <button type="button" onClick={go} className={`shrink-0 whitespace-nowrap rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-900 dark:border-white/20 dark:text-white ${ring}`}>{t("Review order")}</button>
       </div>
     </div>

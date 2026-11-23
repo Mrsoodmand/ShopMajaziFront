@@ -12,6 +12,7 @@ import { useSpotlight } from "@/design/service/spotlight";
 import { useLiveSocial } from "./live";
 import { useT } from "@/i18n/client";
 import { useMoney } from "@/lib/money";
+import { useOrgFormat } from "@/components/OrgPrice";
 
 // List F — "Colour Grid" (A × E): A's cards (logo, one-liner, top services as direct links, number of services and
 // the lowest price) washed in each platform's own brand colour like E. Featured platforms take E's big tiles in
@@ -27,6 +28,7 @@ const enter = (i: number): CSSProperties => ({ animationName: "card-in", animati
 function Card({ c, big = false, i }: { c: SocialCategory; big?: boolean; i: number }) {
   const tx = useT();
   const money = useMoney();
+  const orgFmt = useOrgFormat("services", money.format);
   return (
     <li style={{ ...wash(c, big ? 14 : 9), ...enter(i) }}
       className={`group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition-[translate,scale,rotate,box-shadow,border-color] duration-700 ${ease} hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_40px_-18px_rgba(15,23,42,.28)] dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-white/25 dark:hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,.8)] has-[a.main:focus-visible]:ring-2 has-[a.main:focus-visible]:ring-emerald-600 dark:has-[a.main:focus-visible]:ring-emerald-400 ${big ? "p-6 sm:p-7" : "p-5"}`}>
@@ -48,7 +50,7 @@ function Card({ c, big = false, i }: { c: SocialCategory; big?: boolean; i: numb
       </ul>
       <p className="relative mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-slate-900/10 pt-4 text-sm dark:border-white/10 [&>span]:whitespace-nowrap">
         <span className="text-slate-700 dark:text-slate-300">{c.services.length === 1 ? tx("1 service") : tx("{0} services", { 0: c.services.length })}</span>
-        <span className="flex items-center gap-2 font-semibold tabular-nums text-slate-900 dark:text-white">{fmtFrom(tx, categoryFrom(c), money.format)}{big && <ArrowRight aria-hidden className={`h-4 w-4 text-slate-500 transition-[translate,scale,rotate,color] duration-700 ${ease} group-hover:translate-x-1 group-hover:text-slate-900 rtl:rotate-180 rtl:group-hover:-translate-x-1 dark:group-hover:text-white`} />}</span>
+        <span className="flex items-center gap-2 font-semibold tabular-nums text-slate-900 dark:text-white">{fmtFrom(tx, categoryFrom(c), orgFmt)}{big && <ArrowRight aria-hidden className={`h-4 w-4 text-slate-500 transition-[translate,scale,rotate,color] duration-700 ${ease} group-hover:translate-x-1 group-hover:text-slate-900 rtl:rotate-180 rtl:group-hover:-translate-x-1 dark:group-hover:text-white`} />}</span>
       </p>
     </li>
   );

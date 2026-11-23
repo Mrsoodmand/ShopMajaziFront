@@ -11,7 +11,7 @@ export type ApiTestimonial = { id: number; name: string; text: string; date: str
 // Which comments each service page shows. The keys match the old site's (page ids 1, 4, 6 …), so comments posted
 // there over the years show up here, and the admin's comment queue keeps moderating both.
 export function commentKey(service: string, productId?: number): string | null {
-  if (service.startsWith("subs:")) return productId ? `service:${productId}` : null;
+  if (service.startsWith("subs:") || service.startsWith("verify:")) return productId ? `service:${productId}` : null;
   const pages: Record<string, string> = {
     "virtual-number": "virtual-number",
     "rent-number": "rent-number",

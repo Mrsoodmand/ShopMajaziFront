@@ -9,6 +9,7 @@ import { NowContext, secondary } from "@/design/account/kit";
 import { ListD as OrdersByDay } from "@/design/account/orders";
 import { BannerAside, BannerTop } from "@/design/account/orderPay";
 import { cartEntry, CartOrderPage } from "@/design/account/cartKit";
+import { BusinessB } from "@/design/account/organization";
 import { Empty } from "@/design/account/kit";
 import type { Go } from "@/design/account/AccountC";
 import type { Store } from "@/design/account/kit";
@@ -16,7 +17,7 @@ import { useLiveAccount } from "@/lib/account-panel";
 import { useLocalePath } from "@/i18n/Link";
 import { useT } from "@/i18n/client";
 
-const PAGES: Page[] = ["orders", "funds", "support", "profile", "password"];
+const PAGES: Page[] = ["orders", "funds", "support", "profile", "password", "business"];
 
 // URL segments → the page and its id, and back.
 function viewOf(slug: string[], newFor: string | null): View {
@@ -82,7 +83,7 @@ export default function AccountApp({ slug }: { slug: string[] }) {
   return (
     <PageShell>
       <NowContext.Provider value={null}>
-        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersByDay} CartOrder={CartOrder} OrderPay={ORDER_PAY}
+        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersByDay} CartOrder={CartOrder} OrderPay={ORDER_PAY} Business={BusinessB}
           onSignOut={async () => { await store.signOut(); router.replace(lp("/")); }} />
       </NowContext.Provider>
     </PageShell>

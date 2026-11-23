@@ -3,6 +3,7 @@ import { storefront } from "./backend";
 import { applePaths } from "@/content/apple-en";
 import { tgPaths } from "@/content/telegram-en";
 import type { ApiSub } from "./subs";
+import type { ApiVerify } from "./verify";
 import type { ApiVirtualServices } from "./social";
 import type { ApiBlogPost } from "./blog";
 
@@ -39,9 +40,10 @@ async function safe<T>(what: string, load: () => Promise<T>): Promise<T | null> 
 }
 
 export async function pagesSitemap(): Promise<MetadataRoute.Sitemap> {
-  const [subs, services] = await Promise.all([
+  const [subs, services, verify] = await Promise.all([
     safe("accounts", () => storefront<{ accounts: ApiSub[] }>("accounts", 600)),
     safe("virtual-services", () => storefront<ApiVirtualServices>("virtual-services", 600)),
+    safe("verifications", () => storefront<{ products: ApiVerify[] }>("verifications", 600)),
   ]);
 
   return [
@@ -53,6 +55,8 @@ export async function pagesSitemap(): Promise<MetadataRoute.Sitemap> {
     ...Object.values(applePaths).map((p) => page(p, 0.8)),
     page("/accounts", 0.9),
     ...(subs?.accounts ?? []).map((s) => page(`/accounts/${encodeURIComponent(s.slug)}`, 0.8)),
+    page("/verify", 0.9),
+    ...(verify?.products ?? []).map((v) => page(`/verify/${encodeURIComponent(v.slug)}`, 0.8)),
     page("/virtual-service", 0.9),
     ...(services?.categories ?? []).flatMap((c) => [
       page(`/virtual-service/${encodeURIComponent(c.slug)}`, 0.8),

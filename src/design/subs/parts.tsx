@@ -1,20 +1,22 @@
 "use client";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "@/i18n/Link";
-import { Bot, Briefcase, Check, LayoutGrid, ChevronRight, Clapperboard, Clock, Eye, EyeOff, KeyRound, LineChart, LogIn, MessageCircle, Music2, Palette, PhoneCall, Shapes, ShoppingBag, Star, UserCheck, X, type LucideIcon } from "lucide-react";
+import { BadgeCheck, Bot, Briefcase, Check, FileText, Lock, Trash2, Upload, LayoutGrid, ChevronRight, Clapperboard, Clock, Eye, EyeOff, KeyRound, LineChart, LogIn, MessageCircle, Music2, Palette, PhoneCall, Shapes, ShoppingBag, Star, UserCheck, X, type LucideIcon } from "lucide-react";
 import CheckoutModal, { type PayMethod } from "@/components/checkout/CheckoutModal";
 import { nightCallBody } from "@/components/checkout/NightCall";
 import { useMoney } from "@/lib/money";
-import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
+import { OrgPrice } from "@/components/OrgPrice";
+import { accountApi, accountForm, ApiError, TOP_UP_HREF, useAccount, useOrgPrice } from "@/lib/account";
+import { ACCEPT_MIME } from "@/lib/verify";
 import { useCart } from "@/lib/cart";
 import type { ApiSubOrder } from "@/lib/subs";
 import { formatNum } from "@/i18n/translate";
-import { fromPrice, monthly, perMonth, savePct, subCats, subs, subsFaq, type SubCat, type SubPlan, type SubProduct } from "@/content/subs-en";
+import { fromPrice, monthly, perMonth, savePct, subs, subsFaq, type SubCat, type SubField, type SubPlan, type SubProduct } from "@/content/subs-en";
 import { CopyButton } from "../otp/parts";
 import { field, primary, ring, secondary } from "../googleVoice/clean";
 import { useT } from "@/i18n/client";
 import { SearchInput } from "../search";
-import { useLiveSubs, useSubsList } from "./live";
+import { useFlavor, useLiveSubs, useSubsList } from "./live";
 import { ReviewCard } from "../account/ReviewCard";
 
 // Pieces shared by the Subscriptions page offers. Accessible like the other product pages: real radio groups,
@@ -50,10 +52,19 @@ export function PopularBadge({ on = false, className = "" }: { on?: boolean; cla
   return <span className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-gradient-to-l from-amber-300 to-yellow-200 py-0.5 pe-2.5 ps-1.5 text-[11px] font-bold leading-4 text-amber-950 ring-1 ring-inset ring-amber-500/50 ${on ? "shadow-md shadow-violet-950/30" : "shadow-sm shadow-amber-500/20"} ${className}`}><Star aria-hidden className="h-3 w-3 fill-amber-600 text-amber-600" />{tx("Most popular plan")}</span>;
 }
 
+// «محبوب‌ترین» when the row also shows a business price (gallery subs-popular-badge F · Gold band): a thin gold strip
+// across the top inside the row, so the crossed-out and the company price keep the row's whole width. The row needs
+// `relative` and room on top; `radius` matches the row's inner top corners.
+export function PopularBand({ radius = "rounded-t-[7px]" }: { radius?: string }) {
+  const tx = useT();
+  return <span className={`absolute inset-x-0 top-0 flex h-5 items-center gap-1 bg-gradient-to-l from-amber-300 to-yellow-200 px-3 text-[11px] font-bold leading-4 text-amber-950 ${radius}`}><Star aria-hidden className="h-3 w-3 fill-amber-600 text-amber-600" />{tx("Most popular plan")}</span>;
+}
+
 export function useSubs(initial?: string) {
   const tx = useT();
   const list = useSubsList();
   const live = useLiveSubs();
+  const flavor = useFlavor();
   const { setWallet } = useAccount();
   const [product, setProduct] = useState<SubProduct | null>(list.find((s) => s.slug === initial) ?? null);
   const [plan, setPlan] = useState<SubPlan | null>(product ? firstPlan(product) : null);
@@ -63,7 +74,10 @@ export function useSubs(initial?: string) {
   const [submitted, setSubmitted] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   // "Available for a call 21:00–07:00?", asked in the form (components/checkout/NightCall.tsx). null = no answer yet.
-  const [night, setNight] = useState<boolean | null>(null);
+  // Verification doesn't ask it (support works by message there): answered "no" from the start.
+  const [night, setNight] = useState<boolean | null>(flavor.verify ? false : null);
+  // Files the buyer chose for a verification product's file fields, by field id (sent as multipart).
+  const [files, setFiles] = useState<Record<string, File | null>>({});
   const [order, setOrder] = useState<SubOrder | null>(null);
   const [notice, setNotice] = useState<SubsNotice | null>(null);
   const [changedTo, setChangedTo] = useState<number | null>(null);
@@ -73,6 +87,7 @@ export function useSubs(initial?: string) {
     setPlan(p ? firstPlan(p) : null);
     setValues(selectDefaults(p));
     setPicks(addonDefaults(p));
+    setFiles({});
     setTouched({}); setSubmitted(false); setChangedTo(null);
   };
 
@@ -82,9 +97,23 @@ export function useSubs(initial?: string) {
     // "Your Discord username" → "Enter your Discord username"; "Email of your Canva account" → "Enter the email of…"
     const what = /^your /i.test(f.label) ? `y${f.label.slice(1)}` : `the ${f.label.charAt(0).toLowerCase()}${f.label.slice(1)}`;
     // Persian reads the label as written ("آیدی تلگرام را وارد کنید"); the English sentence above doesn't carry over.
+    if (f.type === "file") {
+      // Same checks as the backend (VerificationOrders::spec): a file of an allowed kind, not over the size.
+      const file = files[f.id];
+      const kinds = f.accept ?? ["image"];
+      if (!file && !f.optional) all[f.id] = tx.locale === "fa" ? tx("Attach {0}", { 0: f.label }) : `Attach ${what}`;
+      else if (file && !kinds.some((k) => ACCEPT_MIME[k].includes(file.type))) all[f.id] = tx(kinds.includes("pdf") ? "Choose a photo (JPG, PNG, WEBP or HEIC) or a PDF" : "Choose a photo (JPG, PNG, WEBP or HEIC)");
+      else if (file && file.size > (f.maxMb ?? 5) * 1024 * 1024) all[f.id] = tx("The file must be {0} MB or smaller", { 0: tx.num(f.maxMb ?? 5) });
+      continue;
+    }
+    const plain = v.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
     if (!v && !f.optional) all[f.id] = tx.locale === "fa" ? tx(f.type === "select" ? "Choose {0}" : "Enter {0}", { 0: f.label }) : `${f.type === "select" ? tx("Choose") : tx("Enter")} ${what}`;
     else if (v && f.type === "email" && !EMAIL.test(v)) all[f.id] = tx("Enter an email address in the correct format, like name@example.com");
-    else if (v && live && f.type !== "select" && (v.length < 3 || v.length > 150)) all[f.id] = tx("Use 3 to 150 characters");
+    else if (v && f.type === "phone" && (!/^\+?[\d\s\-()]{6,24}$/.test(plain) || plain.replace(/\D/g, "").length < 6)) all[f.id] = tx("Enter a phone number with at least 6 digits");
+    else if (v && f.type === "date" && !/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(plain)) all[f.id] = tx("Write the date like 1370/05/12");
+    else if (v && f.type === "textarea" && v.length > 3000) all[f.id] = tx("Use 3,000 characters or fewer");
+    else if (v && f.type === "text" && flavor.verify && v.length > 300) all[f.id] = tx("Use 300 characters or fewer");
+    else if (v && live && !flavor.verify && f.type !== "select" && (v.length < 3 || v.length > 150)) all[f.id] = tx("Use 3 to 150 characters");
   }
   const errors = Object.fromEntries(Object.entries(all).filter(([k]) => submitted || touched[k]));
 
@@ -129,7 +158,8 @@ export function useSubs(initial?: string) {
   const addonBody = product?.addons?.length ? { addons: picks } : {};
 
   const cart = useCart();
-  const addToCart = live && cart && product && plan ? () => cart.add("subscription", {
+  // Verification isn't in the cart (its files can't wait there): Buy now only.
+  const addToCart = live && cart && product && plan && !flavor.verify ? () => cart.add("subscription", {
     ...nightCallBody(night), ...addonBody, product_id: product.id, plan_id: Number(plan.id),
     fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
   }) : undefined;
@@ -141,13 +171,26 @@ export function useSubs(initial?: string) {
       ...nightCallBody(night), ...addonBody, product_id: product.id, plan_id: Number(plan.id), price: total,
       fields: Object.fromEntries(product.fields.map((f) => [f.id, (values[f.id] ?? "").trim()])),
     };
+    // Verification: multipart, so the chosen files go along (fields[name] = text or file).
+    const send = <T,>(path: string, extra: Record<string, unknown> = {}): Promise<T> => {
+      if (!flavor.verify) return accountApi<T>(`${flavor.api}/${path}`, { ...body, ...extra });
+      const form = new FormData();
+      form.append("product_id", String(product.id)); form.append("plan_id", plan.id); form.append("price", String(total));
+      for (const [k, x] of Object.entries(extra)) form.append(k, String(x));
+      for (const f of product.fields) {
+        const file = files[f.id];
+        if (f.type === "file") { if (file) form.append(`fields[${f.id}]`, file, file.name); }
+        else form.append(`fields[${f.id}]`, (values[f.id] ?? "").trim());
+      }
+      return accountForm<T>(`${flavor.api}/${path}`, form);
+    };
     try {
       if (m === "card") {
-        const r = await accountApi<{ url: string }>("subscriptions/pay-card", { ...body, return: window.location.pathname });
+        const r = await send<{ url: string }>("pay-card", { return: window.location.pathname });
         window.location.assign(r.url);
         return new Promise<void>(() => {}); // the page is leaving; keep the modal busy
       }
-      const r = await accountApi<{ order: ApiSubOrder; wallet: number }>("subscriptions/buy", body);
+      const r = await send<{ order: ApiSubOrder; wallet: number }>("buy");
       setWallet(r.wallet);
       show(product, plan, values, m, r.order);
     } catch (e) {
@@ -170,7 +213,7 @@ export function useSubs(initial?: string) {
     window.history.replaceState(null, "", window.location.pathname + (q.size ? `?${q}` : "") + window.location.hash);
     const received = { good: true, text: tx("Payment received. You'll find the order in your orders.") };
     if (pay === "ok" && id) {
-      accountApi<{ order: ApiSubOrder; wallet: number }>(`subscriptions/orders/${id}`)
+      accountApi<{ order: ApiSubOrder; wallet: number }>(`${flavor.api}/orders/${id}`)
         .then((r) => {
           setWallet(r.wallet);
           const p = list.find((x) => x.slug === r.order.product?.slug);
@@ -192,7 +235,7 @@ export function useSubs(initial?: string) {
   useEffect(() => {
     if (!followId) return;
     const timer = setInterval(() => {
-      accountApi<{ order: ApiSubOrder; wallet: number }>(`subscriptions/orders/${followId}`)
+      accountApi<{ order: ApiSubOrder; wallet: number }>(`${flavor.api}/orders/${followId}`)
         .then((r) => setOrder((o) => (o?.live?.id === r.order.id ? { ...o, live: r.order } : o)))
         .catch(() => {}); // try again on the next tick
     }, 30000);
@@ -201,6 +244,7 @@ export function useSubs(initial?: string) {
 
   return {
     product, select, plan, setPlan, values, set: (k: string, v: string) => setValues((x) => ({ ...x, [k]: v })),
+    files, setFile: (k: string, f: File | null) => { setFiles((x) => ({ ...x, [k]: f })); setTouched((t) => ({ ...t, [k]: true })); },
     touch: (k: string) => setTouched((t) => ({ ...t, [k]: true })), errors, proceed, quickBuy, night, setNight, nightMissing: submitted && night === null, inCart: !!addToCart,
     // Buying another opens the page's own product again (a product page has nothing to show without one).
     payOpen, closePay: () => setPayOpen(false), order, buy, addToCart, reset: () => { setOrder(null); select(list.find((x) => x.slug === initial) ?? null); },
@@ -257,11 +301,12 @@ export function ActivationBadge({ p }: { p: SubProduct }) {
 export function CatChips({ c }: { c: ReturnType<typeof useCatalog> }) {
   const tx = useT();
   const name = useId();
+  const { cats } = useFlavor();
   return (
     <fieldset>
       <legend className="sr-only">{tx("Category")}</legend>
       <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-        {[{ id: "all" as const, label: tx("All") }, ...tx.tr(subCats)].map((x) => {
+        {[{ id: "all" as const, label: tx("All") }, ...tx.tr(cats)].map((x) => {
           const on = c.cat === x.id;
           return (
             <label key={x.id} className={`shrink-0 cursor-pointer rounded-full border-2 px-4 py-2 text-[15px] font-semibold transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-violet-600 has-[:focus-visible]:ring-offset-2 dark:has-[:focus-visible]:ring-violet-400 dark:has-[:focus-visible]:ring-offset-[#070B14] ${on ? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900" : "border-slate-300 bg-white text-slate-800 hover:border-slate-500 dark:border-white/20 dark:bg-transparent dark:text-slate-100"}`}>
@@ -278,13 +323,14 @@ export function CatChips({ c }: { c: ReturnType<typeof useCatalog> }) {
 export function SearchBox({ c, className = "", hero = false }: { c: ReturnType<typeof useCatalog>; className?: string; hero?: boolean }) {
   const tx = useT();
   const live = useLiveSubs();
+  const flavor = useFlavor();
   // Live: the first few real names, so the hint never offers something the shop doesn't sell.
   const names = c.all.slice(0, 3).map((p) => p.name).join(tx.locale === "fa" ? "، " : ", ");
-  const placeholder = live ? (names ? tx("Search {0}…", { 0: names }) : tx("Search subscriptions")) : tx("Search ChatGPT, Netflix, Canva…");
+  const placeholder = live ? (names ? tx("Search {0}…", { 0: names }) : tx(flavor.search)) : tx("Search ChatGPT, Netflix, Canva…");
   return (
     <div className={className}>
-      <SearchInput tone={hero ? "hero" : "page"} value={c.q} onChange={c.setQ} label={tx("Search subscriptions")} placeholder={placeholder} />
-      <p aria-live="polite" className="sr-only">{c.list.length}{" "}{tx("subscriptions")}</p>
+      <SearchInput tone={hero ? "hero" : "page"} value={c.q} onChange={c.setQ} label={tx(flavor.search)} placeholder={placeholder} />
+      <p aria-live="polite" className="sr-only">{c.list.length}{" "}{tx(flavor.noun)}</p>
     </div>
   );
 }
@@ -294,13 +340,17 @@ export function SearchBox({ c, className = "", hero = false }: { c: ReturnType<t
 // is a box with a full-size select button layered under its content and the link on top of it.
 export function ProductButton({ p, on, onPick, layout = "card", more = false }: { p: SubProduct; on: boolean; onPick: () => void; layout?: "card" | "row"; more?: boolean }) {
   const usd = useMoney().format;
+  const { base, org: orgOf } = useFlavor();
+  const org = orgOf(p.slug);
   const tx = useT();
   const from = fromPrice(p);
+  const fromLabel = usd(useOrgPrice()(from, org).price);
+  const fromEl = <OrgPrice value={from} family={org} format={usd} />;
   const mo = monthly(p) ? tx("/mo") : "";
   if (layout === "row") return (
     <button onClick={onPick} aria-pressed={on} className={`flex w-full items-center gap-3 rounded-2xl border-2 bg-white px-3 py-3 text-start transition-colors dark:bg-[#0E1424] ${on ? "border-violet-700 dark:border-violet-400" : "border-transparent hover:border-slate-300 dark:hover:border-white/20"} ${ring}`}>
       <Tile p={p} size="sm" />
-      <span className="min-w-0 flex-1"><span className="block truncate font-semibold text-slate-900 dark:text-white">{p.name}</span><span className="text-sm text-slate-600 dark:text-slate-400">{tx("from")}{" "}{usd(from)}{mo}</span></span>
+      <span className="min-w-0 flex-1"><span className="block truncate font-semibold text-slate-900 dark:text-white">{p.name}</span><span className="text-sm text-slate-600 dark:text-slate-400">{tx("from")}{" "}{fromEl}{mo}</span></span>
       <ChevronRight aria-hidden className="h-4 w-4 text-slate-400 rtl:rotate-180" />
     </button>
   );
@@ -314,7 +364,7 @@ export function ProductButton({ p, on, onPick, layout = "card", more = false }: 
     return (
       <div style={wash} className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border-2 bg-white p-5 transition-[translate,box-shadow,border-color] duration-700 ${ease} hover:-translate-y-1 hover:shadow-[0_18px_40px_-18px_rgba(15,23,42,.28)] has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-violet-600 has-[button:focus-visible]:ring-offset-2 dark:bg-[#0E1424] dark:hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,.8)] dark:has-[button:focus-visible]:ring-violet-400 dark:has-[button:focus-visible]:ring-offset-[#070B14] ${on ? "border-violet-700 dark:border-violet-400" : "border-slate-200 hover:border-slate-300 dark:border-white/10 dark:hover:border-white/25"}`}>
         <span aria-hidden style={{ backgroundColor: hex }} className={`pointer-events-none absolute -end-10 -top-10 h-32 w-32 rounded-full opacity-15 blur-2xl transition-[scale,opacity] duration-1000 ${ease} group-hover:scale-150 group-hover:opacity-30`} />
-        <button onClick={onPick} aria-pressed={on} className="absolute inset-0 z-[1] rounded-3xl outline-none"><span className="sr-only">{monthly(p) ? tx("Choose {0}, from {1} a month", { 0: p.name, 1: usd(from) }) : tx("Choose {0}, from {1}", { 0: p.name, 1: usd(from) })}</span></button>
+        <button onClick={onPick} aria-pressed={on} className="absolute inset-0 z-[1] rounded-3xl outline-none"><span className="sr-only">{monthly(p) ? tx("Choose {0}, from {1} a month", { 0: p.name, 1: fromLabel }) : tx("Choose {0}, from {1}", { 0: p.name, 1: fromLabel })}</span></button>
         <span aria-hidden className="pointer-events-none relative flex items-start justify-between gap-3">
           <span className={`block transition-[translate,scale] duration-700 ${ease} group-hover:-translate-y-0.5 group-hover:scale-[1.06]`}><Tile p={p} /></span>
           {on
@@ -325,8 +375,8 @@ export function ProductButton({ p, on, onPick, layout = "card", more = false }: 
         <span className="pointer-events-none relative mt-1 block text-sm text-slate-700 dark:text-slate-300">{p.tagline}</span>
         <span className="pointer-events-none relative mb-5 mt-4 flex"><ActivationBadge p={p} /></span>
         <span className="relative mt-auto flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t border-slate-900/10 pt-4 text-sm dark:border-white/10">
-          <span className="pointer-events-none whitespace-nowrap text-slate-700 dark:text-slate-300">{tx("from")}{" "}<b className="font-display text-base tabular-nums text-slate-900 dark:text-white">{usd(from)}</b>{mo}</span>
-          <Link href={`/accounts/${p.slug}`} className={`relative z-[2] inline-flex items-center gap-1 whitespace-nowrap rounded-lg font-semibold text-violet-800 underline-offset-4 hover:underline dark:text-violet-300 ${ring}`}>
+          <span className="pointer-events-none whitespace-nowrap text-slate-700 dark:text-slate-300">{tx("from")}{" "}<b className="font-display text-base tabular-nums text-slate-900 dark:text-white">{fromEl}</b>{mo}</span>
+          <Link href={`${base}/${p.slug}`} className={`relative z-[2] inline-flex items-center gap-1 whitespace-nowrap rounded-lg font-semibold text-violet-800 underline-offset-4 hover:underline dark:text-violet-300 ${ring}`}>
             {tx("Read more")}<span className="sr-only">{" "}{tx("about")}{" "}{p.name}</span><ChevronRight aria-hidden className={`h-4 w-4 transition-[translate] duration-700 ${ease} group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1`} />
           </Link>
         </span>
@@ -338,7 +388,7 @@ export function ProductButton({ p, on, onPick, layout = "card", more = false }: 
       <span className="flex items-start justify-between gap-3"><Tile p={p} />{p.popular && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">{tx("Popular")}</span>}</span>
       <span className="mt-4 block font-display text-lg font-semibold text-slate-900 dark:text-white">{p.name}</span>
       <span className="mt-1 block flex-1 text-[15px] text-slate-600 dark:text-slate-400">{p.tagline}</span>
-      <span className="mt-4 flex flex-wrap items-center justify-between gap-2"><ActivationBadge p={p} /><span className="text-sm text-slate-700 dark:text-slate-300">{tx("from")}{" "}<b className="text-base text-slate-900 dark:text-white">{usd(from)}</b>{mo}</span></span>
+      <span className="mt-4 flex flex-wrap items-center justify-between gap-2"><ActivationBadge p={p} /><span className="text-sm text-slate-700 dark:text-slate-300">{tx("from")}{" "}<b className="text-base text-slate-900 dark:text-white">{fromEl}</b>{mo}</span></span>
     </button>
   );
 }
@@ -362,6 +412,8 @@ export function ProductHeader({ p, as = "h2", focusable = false }: { p: SubProdu
 
 export function PlanRadios({ s, cols = 2 }: { s: Subs; cols?: 1 | 2 | 3 }) {
   const usd = useMoney().format;
+  const org = useFlavor().org(s.product?.slug);
+  const orgOn = useOrgPrice()(1000, org).percent > 0;
   const tx = useT();
   const name = useId();
   const p = s.product!;
@@ -372,17 +424,19 @@ export function PlanRadios({ s, cols = 2 }: { s: Subs; cols?: 1 | 2 | 3 }) {
         {p.plans.map((pl) => {
           const on = s.plan?.id === pl.id;
           const save = savePct(pl);
+          const band = pl.popular && orgOn;
           return (
-            <label key={pl.id} className={`relative flex cursor-pointer items-center gap-3 rounded-2xl border-2 bg-white px-4 py-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-violet-600 has-[:focus-visible]:ring-offset-2 dark:bg-[#0E1424] dark:has-[:focus-visible]:ring-violet-400 dark:has-[:focus-visible]:ring-offset-[#070B14] ${on ? "border-violet-700 dark:border-violet-400" : "border-slate-200 hover:border-slate-400 dark:border-white/15 dark:hover:border-white/40"}`}>
+            <label key={pl.id} className={`relative flex cursor-pointer items-center gap-3 rounded-2xl border-2 bg-white px-4 py-3 ${band ? "pt-8" : ""} transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-violet-600 has-[:focus-visible]:ring-offset-2 dark:bg-[#0E1424] dark:has-[:focus-visible]:ring-violet-400 dark:has-[:focus-visible]:ring-offset-[#070B14] ${on ? "border-violet-700 dark:border-violet-400" : "border-slate-200 hover:border-slate-400 dark:border-white/15 dark:hover:border-white/40"}`}>
               <input type="radio" autoComplete="off" name={name} checked={on} onChange={() => s.setPlan(pl)} className="sr-only" />
+              {band && <PopularBand radius="rounded-t-[14px]" />}
               <span aria-hidden className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ${on ? "border-violet-700 bg-violet-700 dark:border-violet-400 dark:bg-violet-400" : "border-slate-400 dark:border-white/30"}`}>{on && <Check className="h-3.5 w-3.5 text-white dark:text-violet-950" strokeWidth={3} />}</span>
               <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2 font-semibold text-slate-900 dark:text-white">{pl.name}{pl.popular && <PopularBadge />}</span>
+                <span className="flex flex-wrap items-center gap-2 font-semibold text-slate-900 dark:text-white">{pl.name}{pl.popular && !band && <PopularBadge />}</span>
                 <span className="text-sm text-slate-600 dark:text-slate-400">{pl.months > 0 && <>{usd(perMonth(pl))}{tx("/mo")}</>}{save > 0 && <span className="font-semibold text-amber-800 dark:text-amber-300">{" "}{tx("· save")}{" "}{save}%</span>}</span>
               </span>
               <span className="text-end">
-                {pl.was && <span className="block text-sm text-slate-500 line-through dark:text-slate-400"><span className="sr-only">{tx("Was")}{" "}</span>{usd(pl.was)}</span>}
-                <span className="font-bold text-slate-900 dark:text-white">{usd(pl.price)}</span>
+                {pl.was && !orgOn && <span className="block text-sm text-slate-500 line-through dark:text-slate-400"><span className="sr-only">{tx("Was")}{" "}</span>{usd(pl.was)}</span>}
+                <span className="font-bold text-slate-900 dark:text-white"><OrgPrice value={pl.price} was={pl.was} family={org} format={usd} /></span>
               </span>
             </label>
           );
@@ -409,7 +463,15 @@ export function FieldsForm({ s }: { s: Subs }) {
             <label htmlFor={id} className="block text-base font-semibold text-slate-900 dark:text-white">{f.label}{f.optional && <span className="font-normal text-slate-600 dark:text-slate-400">{" "}{tx("(optional)")}</span>}</label>
             {f.hint && <p id={`${id}-hint`} className="text-sm text-slate-600 dark:text-slate-400">{f.hint}</p>}
             {err && <p id={`${id}-error`} className="mt-1 flex items-start gap-1.5 text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" /><span><span className="sr-only">{tx("Error:")}{" "}</span>{err}</span></p>}
-            {f.type === "select" ? (
+            {f.type === "file" ? (
+              <FileField s={s} f={f} id={id} describedBy={describedBy} invalid={!!err} />
+            ) : f.type === "textarea" ? (
+              <textarea id={id} rows={3} value={s.values[f.id] ?? ""} onChange={(e) => s.set(f.id, e.target.value)} onBlur={() => s.touch(f.id)} aria-invalid={!!err} aria-describedby={describedBy} dir="auto" className={cls} />
+            ) : f.type === "date" || f.type === "phone" ? (
+              <input id={id} type={f.type === "phone" ? "tel" : "text"} inputMode={f.type === "phone" ? "tel" : "numeric"} autoComplete={f.type === "phone" ? "tel" : "off"} dir="ltr"
+                placeholder={f.type === "date" ? (tx.locale === "fa" ? "۱۳۷۰/۰۵/۱۲" : "1990/08/03") : undefined}
+                value={s.values[f.id] ?? ""} onChange={(e) => s.set(f.id, e.target.value)} onBlur={() => s.touch(f.id)} aria-invalid={!!err} aria-describedby={describedBy} className={`${cls} text-start`} />
+            ) : f.type === "select" ? (
               <select id={id} value={s.values[f.id] ?? ""} onChange={(e) => s.set(f.id, e.target.value)} aria-invalid={!!err} aria-describedby={describedBy} className={`${cls} appearance-auto`}>
                 {f.options!.map((o) => <option key={o}>{o}</option>)}
               </select>
@@ -421,8 +483,57 @@ export function FieldsForm({ s }: { s: Subs }) {
           </div>
         );
       })}
+      {p.fields.some((f) => f.type === "file") && (
+        <p className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"><Lock aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />{tx("Your files are private: only our support team sees them, and they are deleted 30 days after the order is done.")}</p>
+      )}
       <AddonQuestions s={s} />
     </div>
+  );
+}
+
+const fileSize = (tx: ReturnType<typeof useT>, n: number) => (n >= 1024 * 1024 ? tx("{0} MB", { 0: tx.num(Math.round((n / 1048576) * 10) / 10) }) : tx("{0} KB", { 0: tx.num(Math.max(1, Math.round(n / 1024))) }));
+
+// A verification product's file field: a drop zone you can tap or drop onto; once chosen, the file's preview (images),
+// name and size with Change and Remove. The real <input type=file> stays in the page for keyboards and screen readers.
+function FileField({ s, f, id, describedBy, invalid }: { s: Subs; f: SubField; id: string; describedBy?: string; invalid: boolean }) {
+  const tx = useT();
+  const file = s.files[f.id] ?? null;
+  const input = useRef<HTMLInputElement>(null);
+  const [over, setOver] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const kinds = f.accept ?? ["image"];
+  const types = `${kinds.map((k) => (k === "image" ? tx("Photo (JPG, PNG, WEBP or HEIC)") : "PDF")).join(` ${tx("or")} `)} · ${tx("up to {0} MB", { 0: tx.num(f.maxMb ?? 5) })}`;
+  useEffect(() => {
+    if (!file || !file.type.startsWith("image/") || file.type.includes("hei")) { setPreview(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  const pick = (list: FileList | null) => s.setFile(f.id, list?.[0] ?? null);
+  const hidden = <input ref={input} id={id} type="file" accept={kinds.flatMap((k) => ACCEPT_MIME[k]).join(",")} className="sr-only" aria-describedby={describedBy} aria-invalid={invalid || undefined} onChange={(e) => { pick(e.target.files); e.target.value = ""; }} />;
+  if (file) return (
+    <div className={`mt-2 flex items-center gap-3 rounded-2xl border p-3 ${invalid ? "border-red-700 dark:border-red-400" : "border-emerald-300 bg-emerald-50/60 dark:border-emerald-400/30 dark:bg-emerald-400/5"}`}>
+      {hidden}
+      {/* eslint-disable-next-line @next/next/no-img-element -- a local preview of the buyer's own file */}
+      {preview ? <img src={preview} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-slate-900/10" /> : <span aria-hidden className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-white text-slate-600 ring-1 ring-slate-900/10 dark:bg-white/10 dark:text-slate-300"><FileText className="h-5 w-5" /></span>}
+      <div className="min-w-0 flex-1">
+        <p dir="ltr" className="truncate text-start text-[15px] font-medium text-slate-900 dark:text-white">{file.name}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{fileSize(tx, file.size)}</p>
+      </div>
+      <button type="button" onClick={() => input.current?.click()} className={`rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-800 hover:bg-white dark:text-slate-100 dark:hover:bg-white/10 ${ring}`}>{tx("Change")}</button>
+      <button type="button" onClick={() => { s.setFile(f.id, null); input.current?.focus(); }} aria-label={tx("Remove {0}", { 0: file.name })} className={`rounded-lg p-2 text-slate-600 hover:bg-white hover:text-red-700 dark:text-slate-400 dark:hover:bg-white/10 ${ring}`}><Trash2 aria-hidden className="h-4 w-4" /></button>
+    </div>
+  );
+  return (
+    <label htmlFor={id}
+      onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
+      onDrop={(e) => { e.preventDefault(); setOver(false); pick(e.dataTransfer.files); }}
+      className={`mt-2 flex cursor-pointer flex-col items-center gap-1.5 rounded-2xl border-2 border-dashed px-4 py-5 text-center transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-emerald-600 ${over ? "border-emerald-600 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-400/10" : invalid ? "border-red-700 dark:border-red-400" : "border-slate-300 bg-white hover:border-slate-500 dark:border-white/20 dark:bg-white/5"}`}>
+      {hidden}
+      <span aria-hidden className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-200"><Upload className="h-5 w-5" /></span>
+      <span className="text-[15px] font-semibold text-slate-900 dark:text-white">{tx("Drop the file here or choose one")}</span>
+      <span className="text-sm text-slate-600 dark:text-slate-400">{types}</span>
+    </label>
   );
 }
 
@@ -441,6 +552,8 @@ function AddonQuestions({ s }: { s: Subs }) {
   const extraOf = (o: { prices: Record<string, number> }) => (s.plan ? o.prices[s.plan.id] ?? 0 : 0);
   const binary = addons.filter((a) => a.options.length === 2);
   const multi = addons.filter((a) => a.options.length !== 2);
+  const { verify } = useFlavor();
+  if (verify && !addons.length) return null;
   return (
     <>
       {multi.map((a) => (
@@ -471,9 +584,9 @@ function AddonQuestions({ s }: { s: Subs }) {
               onChange={(v) => s.pick(a.id, v ? onOpt.id : off.id)} />
           );
         })}
-        <SwitchRow id="night-call" icon={<PhoneCall aria-hidden className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />}
+        {!verify && <SwitchRow id="night-call" icon={<PhoneCall aria-hidden className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />}
           title={tx("Can support call you between 9 pm and 7 am?")} detail={tx("If something about your order needs a quick answer.")}
-          on={night === true} onChange={(v) => setNight(v)} />
+          on={night === true} onChange={(v) => setNight(v)} />}
       </div>
     </>
   );
@@ -502,6 +615,8 @@ function SwitchRow({ id, icon, title, detail, price, on, onChange }: { id?: stri
 export function Receipt({ s }: { s: Subs }) {
   const tx = useT();
   const usd = useMoney().format;
+  const org = useFlavor().org(s.product?.slug);
+  const business = useOrgPrice()(s.total, org);
   const p = s.product, pl = s.plan;
   if (!p || !pl) return null;
   const extras = (p.addons ?? []).flatMap((a) => {
@@ -517,9 +632,12 @@ export function Receipt({ s }: { s: Subs }) {
       {extras.map((e) => (
         <div key={e.id} className="flex items-baseline justify-between gap-3 text-slate-700 dark:text-slate-300"><span className="min-w-0">{e.title}</span><span className="shrink-0 tabular-nums">+{usd(e.v)}</span></div>
       ))}
+      {business.was !== null && (
+        <div className="flex items-baseline justify-between gap-3 font-medium text-emerald-800 dark:text-emerald-300"><span className="min-w-0">{tx("Business discount ({0}%)", { 0: business.percent })}</span><span className="shrink-0 tabular-nums">−{usd(business.was - business.price)}</span></div>
+      )}
       <div className="flex items-baseline justify-between gap-3 border-t border-dashed border-slate-300 pt-2 dark:border-white/15">
         <span className="font-semibold text-slate-900 dark:text-white">{tx("Total")}</span>
-        <span className="font-display text-lg font-bold tabular-nums text-slate-900 dark:text-white">{usd(s.total)}</span>
+        <span className="font-display text-lg font-bold tabular-nums text-slate-900 dark:text-white">{usd(business.price)}</span>
       </div>
     </div>
   );
@@ -542,6 +660,7 @@ export function BuyButton({ s, className = "", label, onBuy }: { s: Subs; classN
 // Plans, fields, notes and buy for the chosen product, in one block.
 export function ProductPanel({ s, heading = "h2", cols = 2, focusable = false, onBuy }: { s: Subs; heading?: "h1" | "h2"; cols?: 1 | 2 | 3; focusable?: boolean; onBuy?: () => void }) {
   const usd = useMoney().format;
+  const flavorOrg = useFlavor().org(s.product?.slug);
   const tx = useT();
   const p = s.product!;
   return (
@@ -552,7 +671,7 @@ export function ProductPanel({ s, heading = "h2", cols = 2, focusable = false, o
       <Notes p={p} />
       <div aria-live="polite" className="flex items-baseline justify-between border-t border-slate-200 pt-5 dark:border-white/10">
         <span className="text-slate-700 dark:text-slate-300">{tx("Total")}</span>
-        <span className="font-display text-3xl font-bold text-slate-900 dark:text-white">{s.plan ? usd(s.total) : "—"}</span>
+        <span className="font-display text-3xl font-bold text-slate-900 dark:text-white">{s.plan ? <OrgPrice value={s.total} family={flavorOrg} format={usd} /> : "—"}</span>
       </div>
       <BuyButton s={s} onBuy={onBuy} />
     </div>
@@ -560,6 +679,9 @@ export function ProductPanel({ s, heading = "h2", cols = 2, focusable = false, o
 }
 
 export function SubsCheckout({ s }: { s: Subs }) {
+  const flavor = useFlavor();
+  const verifyFlavor = flavor.verify;
+  const orgFamily = flavor.org(s.product?.slug);
   const tx = useT();
   const money = useMoney();
   const p = s.product, pl = s.plan;
@@ -573,7 +695,7 @@ export function SubsCheckout({ s }: { s: Subs }) {
   return (
     <>
       {s.notice && <SubsNoticeToast n={s.notice} onClose={s.dismissNotice} />}
-      <CheckoutModal open={s.payOpen && !!p && !!pl} onClose={s.closePay} price={s.total} itemLabel={pl ? `${p?.name} · ${pl.name}` : tx("Subscription")} payLabel={tx("Pay")}
+      <CheckoutModal org={orgFamily} open={s.payOpen && !!p && !!pl} onClose={s.closePay} price={s.total} itemLabel={pl ? `${p?.name} · ${pl.name}` : tx("Subscription")} payLabel={tx("Pay")}
         note={note} onPay={s.buy} onAddToCart={s.addToCart}
         {...(s.live ? { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } } : {})}
         summary={p && pl && <>
@@ -631,22 +753,26 @@ function LiveSubsOrderView({ s }: { s: Subs }) {
   const step = STEP[r.status];
   const stopped = step < 0;
   const target = r.fields.find((f) => f.value)?.value ?? "";
+  const flavor = useFlavor();
+  // Verifying the buyer's own account reads differently from activating a plan.
+  const checking = flavor.verify && how !== "ready";
   const titles: Record<ApiSubOrder["status"], string> = {
     unpaid: tx("Waiting for payment"),
-    queued: how === "ready" ? tx("Preparing your {0} account", { 0: p.name }) : tx("Activating {0}", { 0: p.name }),
-    in_progress: how === "ready" ? tx("Preparing your {0} account", { 0: p.name }) : tx("Activating {0}", { 0: p.name }),
-    done: how === "ready" ? tx("Your {0} account is ready", { 0: p.name }) : tx("{0} is active", { 0: p.name }),
+    queued: how === "ready" ? tx("Preparing your {0} account", { 0: p.name }) : checking ? tx("We're working on {0}", { 0: p.name }) : tx("Activating {0}", { 0: p.name }),
+    in_progress: how === "ready" ? tx("Preparing your {0} account", { 0: p.name }) : checking ? tx("We're working on {0}", { 0: p.name }) : tx("Activating {0}", { 0: p.name }),
+    done: how === "ready" ? tx("Your {0} account is ready", { 0: p.name }) : checking ? tx("{0} is done", { 0: p.name }) : tx("{0} is active", { 0: p.name }),
     cancelled: tx("This order was cancelled"),
     refunded: tx("This order was refunded to your wallet"),
     paused: tx("This order is on hold"),
   };
   const done = r.status === "done";
   const text = stopped ? tx("Questions about it? Message support from your order page.")
+    : checking ? (done ? tx("Done. Any details for you are on your order page.") : tx("Our support team is checking what you sent. You can leave this page; follow the order on your order page."))
     : how === "ready" ? (done ? tx("The login is on your order page, ready to copy.") : tx("We're preparing the account. Its login will be on your order page."))
     : how === "login" ? (done ? tx("Done. The plan is on {0}. If you haven't yet, change your password now.", { 0: target }) : tx("We'll sign in to {0} once to activate the plan. Change your password as soon as it's active.", { 0: target }))
     : done ? <>{tx("Done. Open")}{" "}{p.name}{" "}{tx("with")}{" "}<b dir="ltr">{target}</b>{" "}{tx("and your plan is there.")}</>
     : <>{tx("We're activating the plan on")}{" "}<b dir="ltr">{target}</b>{tx(". You can leave this page; we'll notify you when it's done.")}</>;
-  const steps = [tx("Payment received"), tx(how === "ready" ? "Account being prepared" : "Activation started"), tx(how === "ready" ? "Login delivered" : "Plan active")];
+  const steps = [tx("Payment received"), tx(how === "ready" ? "Account being prepared" : checking ? "Being verified" : "Activation started"), tx(how === "ready" ? "Login delivered" : checking ? "Verified" : "Plan active")];
   return (
     <div className="mx-auto max-w-2xl animate-fade-up">
       {r.status !== "unpaid" && <p className="flex items-center gap-2 font-semibold text-emerald-800 dark:text-emerald-300"><Check aria-hidden className="h-5 w-5" />{tx("Payment received ·")}{" "}{money.format(r.price)}</p>}
@@ -680,7 +806,7 @@ function LiveSubsOrderView({ s }: { s: Subs }) {
       <div className="mt-8 flex flex-wrap gap-3">
         {/* The order page is still the old user panel (served by the backend through the proxy). */}
         <a href={`/user/orders/${r.id}`} className={primary}>{tx("View in my orders")}</a>
-        <button onClick={s.reset} className={secondary}>{tx("Buy another subscription")}</button>
+        <button onClick={s.reset} className={secondary}>{tx(flavor.again)}</button>
       </div>
     </div>
   );
@@ -741,9 +867,10 @@ export function SubsFaq() {
 
 export function SubsTitle({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
   const tx = useT();
+  const { title } = useFlavor();
   return (
     <div>
-      <p className="text-sm font-semibold text-violet-800 dark:text-violet-300">{tx("Subscriptions")}</p>
+      <p className="text-sm font-semibold text-violet-800 dark:text-violet-300">{tx(title)}</p>
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl dark:text-white">{children}</h1>
       {sub && <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-700 dark:text-slate-300">{sub}</p>}
     </div>
@@ -753,7 +880,7 @@ export function SubsTitle({ children, sub }: { children: ReactNode; sub?: ReactN
 
 // ---------- Shared by F–J ----------
 
-export const catIcon: Record<SubCat, LucideIcon> = { ai: Bot, video: Clapperboard, music: Music2, design: Palette, work: Briefcase, trading: LineChart, social: MessageCircle, other: Shapes };
+export const catIcon: Record<SubCat, LucideIcon> = { ai: Bot, video: Clapperboard, music: Music2, design: Palette, work: Briefcase, trading: LineChart, social: MessageCircle, other: Shapes, verified: BadgeCheck, verify: UserCheck };
 export const countIn = (cat: SubCat, list: SubProduct[] = subs) => list.filter((p) => p.cat === cat).length;
 
 // The product's plans, fields and Buy in a native <dialog>: focus stays inside, Escape closes it and focus returns
@@ -783,7 +910,8 @@ export function CatTabs({ c }: { c: ReturnType<typeof useCatalog> }) {
   const refs = useRef<Partial<Record<string, HTMLLabelElement | null>>>({});
   const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0, ready: false });
   // Only categories that have something in them.
-  const items = [{ id: "all" as const, label: tx("All"), icon: LayoutGrid, n: c.all.length }, ...tx.tr(subCats).map((x) => ({ ...x, icon: catIcon[x.id], n: countIn(x.id, c.all) })).filter((x) => x.n > 0)];
+  const { cats, noun } = useFlavor();
+  const items = [{ id: "all" as const, label: tx("All"), icon: LayoutGrid, n: c.all.length }, ...tx.tr(cats).map((x) => ({ ...x, icon: catIcon[x.id], n: countIn(x.id, c.all) })).filter((x) => x.n > 0)];
   useLayoutEffect(() => {
     const measure = () => {
       const el = refs.current[c.cat];
@@ -834,7 +962,7 @@ export function CatTabs({ c }: { c: ReturnType<typeof useCatalog> }) {
               className={`relative z-10 flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-[15px] font-semibold sm:px-2.5 sm:text-sm transition-colors duration-300 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-violet-600 has-[:focus-visible]:ring-offset-2 dark:has-[:focus-visible]:ring-violet-400 dark:has-[:focus-visible]:ring-offset-[#070B14] ${on ? "text-white dark:text-slate-900" : "text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"}`}>
               <input type="radio" autoComplete="off" name={name} checked={on} onChange={() => c.setCat(x.id)} className="sr-only" />
               <Icon aria-hidden className="h-4 w-4" />{x.label}
-              <span className={`rounded-full px-1.5 text-xs font-semibold ${on ? "bg-white/20 dark:bg-slate-900/10" : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-400"}`}>{x.n}<span className="sr-only">{" "}{tx("subscriptions")}</span></span>
+              <span className={`rounded-full px-1.5 text-xs font-semibold ${on ? "bg-white/20 dark:bg-slate-900/10" : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-400"}`}>{x.n}<span className="sr-only">{" "}{tx(noun)}</span></span>
             </label>
           );
         })}

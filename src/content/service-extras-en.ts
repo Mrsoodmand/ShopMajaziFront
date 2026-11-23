@@ -13,7 +13,7 @@ import { adSteps, tgFaq } from "./telegram-en";
 
 // "apple-id" is the general Apple ID page; "apple-id-usa" and "apple-id-custom" have their own content so the three
 // addresses aren't duplicates of each other for search engines.
-export type ServiceId = "virtual-number" | "rent-number" | "google-voice" | "apple-id" | "apple-id-usa" | "apple-id-custom" | "subscriptions" | "telegram-stars" | "telegram-premium" | "telegram-ads";
+export type ServiceId = "virtual-number" | "rent-number" | "google-voice" | "apple-id" | "apple-id-usa" | "apple-id-custom" | "subscriptions" | "verification" | "telegram-stars" | "telegram-premium" | "telegram-ads";
 
 // `verified`: written by the buyer from their delivered order (Back: App\Services\OrderReviews).
 export type ServiceComment = { id: string; name: string; date: string; text: string; verified?: boolean; replies?: { name: string; date: string; text: string; staff?: boolean }[] };
@@ -306,6 +306,30 @@ export const serviceExtras: Record<ServiceId, ServiceExtras> = {
     comments: [],
     blogCat: "telegram",
   },
+  verification: {
+    name: "Verification",
+    howTo: [
+      { title: "Pick a product", text: "A ready verified account, or verifying your own account." },
+      { title: "Choose a plan", text: "Each product shows its plans and price." },
+      { title: "Send what's asked", text: "Only what the form asks for. Files stay private and are deleted 30 days after the order is done." },
+      { title: "Pay and follow it", text: "Our support team does the rest; follow the order on your orders page." },
+    ],
+    content: [
+      { id: "what", title: "Verified accounts and account verification", paragraphs: [
+        "Buy an account that's already verified, or have your own account verified. Each product says which it is, what it needs from you and how long it takes.",
+      ] },
+      { id: "private", title: "Your documents stay private", paragraphs: [
+        "Files you send are kept in private storage, never on the website. Only our support team opens them while working on your order, and they are deleted automatically 30 days after it is done.",
+      ] },
+    ],
+    faq: [
+      { q: "Who sees my documents?", a: "Only our support team, while they work on your order. They are kept in private storage, never on the website." },
+      { q: "When are my files deleted?", a: "30 days after your order is done or cancelled, automatically." },
+      { q: "What if it can't be done?", a: "We tell you why, and your money goes back to your wallet." },
+    ],
+    comments: [],
+    blogCat: "guides",
+  },
   subscriptions: {
     name: "Subscriptions",
     howTo: [
@@ -402,10 +426,46 @@ function subsExtras(slug: string, t: T, live?: LiveSubsExtras): ServiceExtras | 
   return found ? content : t.tr(content);
 }
 
+// One verification product's own page (/verify/{slug}): its steps, what it needs, and its plans, from the live product.
+function verifyExtras(slug: string, t: T, live?: LiveSubsExtras): ServiceExtras | null {
+  const p = live?.products.find((x) => x.slug === slug);
+  if (!p) return null;
+  const money = live!.format;
+  const ready = p.activation === "ready";
+  const files = p.fields.filter((f) => f.type === "file");
+  const asks = p.fields.filter((f) => !f.optional).map((f) => f.label).join(t.locale === "fa" ? "، " : ", ");
+  const cheapest = p.plans.reduce((a, b) => (b.price < a.price ? b : a));
+  const sentence = (...parts: string[]) => parts.filter(Boolean).join(t.locale === "fa" ? "، " : ". ") + ".";
+  return {
+    name: p.name,
+    howTo: [
+      { title: t("Choose a {0} plan", { 0: p.name }), text: t("See the plans in the buy box and pick one.") },
+      { title: t("Send what's asked"), text: asks ? t("This product needs: {0}.", { 0: asks }) : t("Nothing to fill in.") },
+      { title: t("Pay"), text: t("Wallet or card.") },
+      ready ? { title: t("Get the account"), text: t("The login is on your order page, ready to copy.") }
+        : { title: t("We verify it"), text: t("Follow it on your order page{0}.", { 0: p.delivery ? (t.locale === "fa" ? `؛ ${p.delivery}` : `; ${p.delivery.toLowerCase()}`) : "" }) },
+    ],
+    content: [
+      { id: "what", title: t("What you get with {0}", { 0: p.name }), paragraphs: [sentence(p.tagline, ...p.notes)] },
+      ...(files.length ? [{ id: "private", title: t("Your documents stay private"), paragraphs: [t("Files you send are kept in private storage, never on the website. Only our support team opens them while working on your order, and they are deleted automatically 30 days after it is done.")] }] : []),
+      { id: "plans", title: t("Price"), paragraphs: [p.plans.length > 1 ? t("Plans start at {0}.", { 0: money(cheapest.price) }) : t("{0} comes as {1} for {2}.", { 0: p.name, 1: cheapest.name, 2: money(cheapest.price) })] },
+    ],
+    faq: [
+      { q: t("How long does {0} take?", { 0: p.name }), a: p.delivery || t("It depends on the queue; we start as soon as you pay") },
+      ...(files.length ? [{ q: t("Who sees my documents?"), a: t("Only our support team, while they work on your order. They are kept in private storage, never on the website.") }] : []),
+      ...(ready ? [] : [{ q: t("Do you need my password?"), a: t("No. For your own account we only need what the form asks for.") }]),
+      { q: t("What if it can't be done?"), a: t("We tell you why, and your money goes back to your wallet.") },
+    ],
+    comments: [],
+    blogCat: "guides" as BlogCat,
+  };
+}
+
 // Any extras key: a fixed service, or "subs:{slug}" for a subscription's own page.
 // `t` translates the result (English when left out).
 // `live`: the page's live subscriptions (see design/subs/live.tsx useServiceExtras).
 export function extrasFor(id: string, t: T = makeT("en"), live?: LiveSubsExtras): ServiceExtras {
   if (id.startsWith("subs:")) return subsExtras(id.slice(5), t, live) ?? t.tr(serviceExtras.subscriptions);
+  if (id.startsWith("verify:")) return verifyExtras(id.slice(7), t, live) ?? t.tr(serviceExtras.verification);
   return t.tr(serviceExtras[id as ServiceId]);
 }

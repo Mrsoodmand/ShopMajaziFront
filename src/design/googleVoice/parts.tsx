@@ -155,7 +155,7 @@ export const gvPrice = (n: GvNumber) => n.price ?? GV_PRICE;
 export function GvCheckout({ gv }: { gv: Gv }) {
   const tx = useT();
   return (
-    <CheckoutModal open={gv.payOpen} onClose={gv.closePay} price={gvPrice(gv.selected)} itemLabel={tx("Google Voice number")} payLabel={tx("Pay")}
+    <CheckoutModal org="google_voice" open={gv.payOpen} onClose={gv.closePay} price={gvPrice(gv.selected)} itemLabel={tx("Google Voice number")} payLabel={tx("Pay")}
       note={tx("Login not working? We replace the number or refund you.")} onPay={gv.buy} onAddToCart={gv.addToCart}
       {...(gv.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<>

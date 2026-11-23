@@ -6,7 +6,7 @@ import type { SubProduct } from "@/content/subs-en";
 import { supportEmail } from "@/content/footer-en";
 import { useT } from "@/i18n/client";
 import { Comments, type LiveComments } from "../service/ServiceExtras";
-import { useServiceExtras } from "../subs/live";
+import { useFlavor, useServiceExtras } from "../subs/live";
 import { ring } from "../googleVoice/clean";
 import fq from "../service/faq.module.css";
 import { HowDelivered } from "./parts";
@@ -17,7 +17,8 @@ import { HowDelivered } from "./parts";
 // Keyboard: arrow keys move between tabs (following the page direction), Home / End jump to the ends.
 export function ProductTabs({ p, live }: { p: SubProduct; live?: LiveComments }) {
   const tx = useT();
-  const service = `subs:${p.slug}`;
+  const flavor = useFlavor();
+  const service = flavor.extras(p.slug);
   const s = useServiceExtras(service);
   const count = live ? live.list.length : s.comments.length;
   const base = useId();
@@ -54,7 +55,7 @@ export function ProductTabs({ p, live }: { p: SubProduct; live?: LiveComments })
       </div>
 
       <div role="tabpanel" id={`${base}-p0`} aria-labelledby={`${base}-t0`} hidden={on !== 0} className="mt-6">
-        <HowDelivered p={p} />
+        {flavor.verify ? <VerifySteps steps={s.howTo} /> : <HowDelivered p={p} />}
       </div>
 
       <div role="tabpanel" id={`${base}-p1`} aria-labelledby={`${base}-t1`} hidden={on !== 1} className="mt-6 space-y-3">
@@ -78,5 +79,19 @@ export function ProductTabs({ p, live }: { p: SubProduct; live?: LiveComments })
         <Comments service={service} live={live} embedded />
       </div>
     </section>
+  );
+}
+
+// Verification: the product's own steps (content/service-extras-en.ts verifyExtras) instead of "how it's delivered".
+function VerifySteps({ steps }: { steps: { title: string; text: string }[] }) {
+  return (
+    <ol className="space-y-3">
+      {steps.map((st, i) => (
+        <li key={i} className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-[#0E1424]">
+          <span aria-hidden className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-violet-100 font-bold tabular-nums text-violet-800 dark:bg-violet-500/15 dark:text-violet-200">{i + 1}</span>
+          <span><span className="block font-semibold text-slate-900 dark:text-white">{st.title}</span><span className="mt-0.5 block text-[15px] text-slate-700 dark:text-slate-300">{st.text}</span></span>
+        </li>
+      ))}
+    </ol>
   );
 }

@@ -246,5 +246,9 @@
   "blog-post-hero": {
     "offer": "B",
     "savedAt": "2026-11-20T19:26:01.000Z"
+  },
+  "subs-popular-badge": {
+    "offer": "F",
+    "savedAt": "2026-11-23T12:00:00.000Z"
   }
 }

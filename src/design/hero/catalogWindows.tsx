@@ -31,6 +31,10 @@ export const catalog: Tab[] = [
     ],
   },
   {
+    // Verification (/verify): filled with the live products (picks.home.verify); left out when there are none.
+    id: "verify", name: "Verification", short: "Verify", icon: BadgeCheck, viewAll: "/verify", cards: [],
+  },
+  {
     id: "numbers", name: "Virtual Numbers", short: "Numbers", icon: Smartphone,
     cards: [
       { name: "Virtual Number (OTP)", desc: "One-time numbers to receive a verification code", features: ["150+ countries", "2,000+ apps", "Refund if no SMS"], from: "$0.30", href: "/virtual-number", icon: MessageSquareCode, tint: "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300", hot: true },
@@ -74,7 +78,7 @@ export function catalogFor(tx: T): Tab[] {
   const picks = tx.prices?.picks?.home;
   const fa = tx.locale === "fa";
   out = base.map((tab) => {
-    const chosen = tab.id === "subs" ? picks?.subs : tab.id === "social" ? picks?.social : undefined;
+    const chosen = tab.id === "subs" ? picks?.subs : tab.id === "social" ? picks?.social : tab.id === "verify" ? picks?.verify : undefined;
     if (!chosen?.length) return tab;
     return {
       ...tab,
@@ -86,6 +90,7 @@ export function catalogFor(tx: T): Tab[] {
       }),
     };
   });
+  out = out.filter((tab) => tab.cards.length > 0); // Verification before it has live products
   catalogMemo.set(tx, out);
   return out;
 }
@@ -223,7 +228,7 @@ function Tiles() {
   const { list, tab, tabId, setTabId } = useCatalog();
   return (
     <div className={shell}>
-      <div className="grid grid-cols-5 gap-1 sm:gap-2">
+      <div className="grid gap-1 sm:gap-2" style={{ gridTemplateColumns: `repeat(${list.length}, minmax(0, 1fr))` }}>
         {list.map((t) => {
           const on = t.id === tabId;
           return (
@@ -333,9 +338,9 @@ function Mini() {
   const idx = list.findIndex((t) => t.id === tabId);
   return (
     <div className={shell}>
-      <div className="relative grid grid-cols-5 rounded-2xl bg-slate-100/80 p-1 dark:bg-white/5">
+      <div className="relative grid rounded-2xl bg-slate-100/80 p-1 dark:bg-white/5" style={{ gridTemplateColumns: `repeat(${list.length}, minmax(0, 1fr))` }}>
         <span aria-hidden className="absolute inset-y-1 rounded-xl bg-white shadow-sm transition-[inset-inline-start] duration-500 ease-[cubic-bezier(.3,1.3,.5,1)] dark:bg-white/10"
-          style={{ insetInlineStart: `calc(0.25rem + (100% - 0.5rem) / 5 * ${idx})`, width: "calc((100% - 0.5rem) / 5)" }} />
+          style={{ insetInlineStart: `calc(0.25rem + (100% - 0.5rem) / ${list.length} * ${idx})`, width: `calc((100% - 0.5rem) / ${list.length})` }} />
         {list.map((t) => {
           const on = t.id === tabId;
           return (

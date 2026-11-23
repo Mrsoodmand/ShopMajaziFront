@@ -4,6 +4,7 @@ import { useRef, type ReactNode } from "react";
 import { Check, ChevronDown, Minus, Plus, ShieldCheck } from "lucide-react";
 import { useT } from "@/i18n/client";
 import { useMoney } from "@/lib/money";
+import { OrgPrice, useOrgFormat } from "@/components/OrgPrice";
 import type { LiveService } from "@/lib/social";
 import { PageShell } from "../otp/parts";
 import { Trust } from "../telegram/parts";
@@ -36,7 +37,7 @@ export function ServiceCard({ o, s, className = "", wash = false }: { o: LiveOrd
       </span>
       <span className="mt-4 font-semibold leading-snug text-slate-900 dark:text-white">{s.name}</span>
       {(feature || delivery) && <span className="mt-1 text-sm text-slate-600 dark:text-slate-400">{[delivery, feature].filter(Boolean).join(" · ")}</span>}
-      <span className="mt-auto pt-4 text-sm tabular-nums text-slate-600 dark:text-slate-400">{tx("from")} <span className="font-display text-lg font-bold text-slate-900 dark:text-white">{money.format(s.per1000)}</span> <span className="whitespace-nowrap">/ {o.num(1000)}</span></span>
+      <span className="mt-auto pt-4 text-sm tabular-nums text-slate-600 dark:text-slate-400">{tx("from")} <span className="font-display text-lg font-bold text-slate-900 dark:text-white"><OrgPrice value={s.per1000} family="services" format={money.format} /></span> <span className="whitespace-nowrap">/ {o.num(1000)}</span></span>
     </label>
   );
 }
@@ -137,7 +138,7 @@ function Compare({ o }: { o: LiveOrder }) {
             })}
           </div>
           <Row label={tx("From, per {0}", { 0: o.num(1000) })} cell={cell}>
-            {services.map((s) => <span key={s.id} role="cell" className={`${cell} font-display text-lg font-bold tabular-nums text-slate-900 dark:text-white ${colBg(s)}`}>{money.format(s.per1000)}</span>)}
+            {services.map((s) => <span key={s.id} role="cell" className={`${cell} font-display text-lg font-bold tabular-nums text-slate-900 dark:text-white ${colBg(s)}`}><OrgPrice value={s.per1000} family="services" format={money.format} /></span>)}
           </Row>
           {labels.map((l) => (
             <Row key={l} label={l} cell={cell}>
@@ -393,6 +394,7 @@ function ConsoleAmount({ o }: { o: LiveOrder }) {
 function BodyJ() {
   const tx = useT();
   const money = useMoney();
+  const orgFmt = useOrgFormat("services", money.format);
   const { d, o } = usePlatform();
   const t = useTotal(o);
   const [payRef, payOn] = useOnScreen<HTMLDivElement>();
@@ -452,7 +454,7 @@ function BodyJ() {
                         {notesOf(s).slice(0, 3).map((n) => <div key={n.label} className="flex gap-1"><dt className="text-slate-600 dark:text-slate-400">{n.label}:</dt><dd className="font-medium text-slate-800 dark:text-slate-200">{n.value}</dd></div>)}
                       </dl>
                       <div className="mt-3 flex items-center justify-between gap-3">
-                        <span className="text-sm tabular-nums text-slate-700 dark:text-slate-300">{tx("from {0} / 1,000", { 0: money.format(s.per1000) })}</span>
+                        <span className="text-sm tabular-nums text-slate-700 dark:text-slate-300">{tx("from {0} / 1,000", { 0: orgFmt(s.per1000) })}</span>
                         <button type="button" onClick={() => { o.setService(s.id); window.scrollTo({ top: 0, behavior: "smooth" }); }} disabled={on}
                           className={`rounded-full px-3.5 py-1.5 text-sm font-semibold ${ring} ${on ? "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300" : "border border-slate-300 text-slate-900 hover:border-slate-400 dark:border-white/20 dark:text-white"}`}>
                           {on ? tx("In the order") : tx("Order this")}

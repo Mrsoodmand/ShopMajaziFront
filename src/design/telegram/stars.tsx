@@ -2,6 +2,8 @@
 import { useId, type ReactNode } from "react";
 import { Bot, Check, Gift, Heart, Image as ImageIcon } from "lucide-react";
 import { useMoney } from "@/lib/money";
+import { useOrgPrice } from "@/lib/account";
+import { OrgPrice } from "@/components/OrgPrice";
 import { POPULAR_PACK, starEach, starPacks, starPrice, starTiers, starUses } from "@/content/telegram-en";
 import { accent, card, Shine, StarGlyph, SumRows, Tweened, type StarsState } from "./parts";
 import { useT } from "@/i18n/client";
@@ -35,7 +37,7 @@ export function PackRadios({ st, cols = 4, legend = "How many Stars?", dark = fa
               {on && <span aria-hidden className="absolute end-2.5 top-2.5 grid h-5 w-5 place-items-center rounded-full bg-amber-500 text-white dark:bg-amber-400 dark:text-amber-950"><Check className="h-3 w-3" strokeWidth={3} /></span>}
               {n === tx.tr(POPULAR_PACK) && <span className="absolute -top-2.5 start-3 rounded-full bg-amber-400 px-2 py-0.5 text-[11px] font-bold text-amber-950">{tx("Popular")}</span>}
               <span className={`flex items-center gap-1.5 font-display text-lg font-bold ${dark ? "text-white" : "text-slate-900 dark:text-white"}`}><StarGlyph className={`h-4 w-4 transition-transform duration-500 ${on ? "rotate-[144deg] scale-125" : ""}`} />{fmt(n)}<span className="sr-only">{" "}{tx("Stars")}</span></span>
-              <span className={`text-sm tabular-nums ${dark ? "text-white/70" : "text-slate-600 dark:text-slate-400"}`}>{st.priceOf(n) ? usd(st.priceOf(n)) : "—"}</span>
+              <span className={`text-sm tabular-nums ${dark ? "text-white/70" : "text-slate-600 dark:text-slate-400"}`}>{st.priceOf(n) ? <OrgPrice value={st.priceOf(n)} family="telegram" format={usd} /> : "—"}</span>
               {savings && <span className={`text-xs font-semibold ${save > 0 ? "text-emerald-700 dark:text-emerald-400" : "invisible"}`}>{tx("Save")}{" "}{save}%</span>}
             </label>
           );
@@ -145,6 +147,7 @@ export function UsesList() {
 export function StarsSummary({ st, children, title = "Your order", className = card }: { st: StarsState; children?: ReactNode; title?: string; className?: string }) {
   const usd = useMoney().format;
   const tx = useT();
+  const business = useOrgPrice()(st.total, "telegram");
   title = tx(title);
   return (
     <section aria-labelledby="stars-sum" className={`${className} p-6`}>
@@ -155,10 +158,11 @@ export function StarsSummary({ st, children, title = "Your order", className = c
           [tx("To"), st.r.user ? `@${st.r.user.username}` : "—"],
           ...(!st.live && st.valid && savePct(st.amount) > 0 ? [[tx("You save"), <span key="v" className="tabular-nums text-emerald-700 dark:text-emerald-400">{savePct(st.amount)}% · {usd(st.amount * tx.tr(starTiers)[0].each - st.total)}</span>] as [string, ReactNode]] : []),
           [tx("Delivery"), tx("1–5 minutes")],
+          ...(st.valid && business.was !== null ? [[tx("Business discount ({0}%)", { 0: business.percent }), <span key="b" className="tabular-nums text-emerald-700 dark:text-emerald-400">−{usd(business.was - business.price)}</span>] as [string, ReactNode]] : []),
         ]} />
       </div>
       <div aria-live="polite" className="mt-3 flex items-baseline justify-between border-t border-slate-200 pt-4 dark:border-white/10">
-        <span className="text-slate-600 dark:text-slate-400">{tx("Total")}</span><span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{st.valid ? <Tweened value={st.total} /> : "—"}</span>
+        <span className="text-slate-600 dark:text-slate-400">{tx("Total")}</span><span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{st.valid ? <Tweened value={business.price} /> : "—"}</span>
       </div>
       {children}
     </section>
@@ -167,7 +171,8 @@ export function StarsSummary({ st, children, title = "Your order", className = c
 
 // What the buy button says: the price when the order is valid, otherwise what to change.
 // (When the order is invalid the button just names its action; the field error and the line under it explain.)
-export const starsLabel = (st: StarsState, ok: string, usd: (n: number) => string) => (st.valid ? `${ok} · ${usd(st.total)}` : ok);
+// `total` is what the customer pays (a business account's own price; see components/OrgPrice.tsx).
+export const starsLabel = (st: StarsState, ok: string, usd: (n: number) => string, total = st.total) => (st.valid ? `${ok} · ${usd(total)}` : ok);
 
 // The line under the buy button after a failed try: says what is missing. Announced to screen readers.
 export const StarsBlocker = ({ st }: { st: StarsState }) => (

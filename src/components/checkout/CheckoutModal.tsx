@@ -5,7 +5,7 @@ import { X, Wallet, CreditCard, Bitcoin, Check, AlertCircle, Lock, Loader2, Plus
 import type { ReactNode } from "react";
 import { useMoney } from "@/lib/money";
 import { useT } from "@/i18n/client";
-import { useAccount } from "@/lib/account";
+import { useAccount, useOrgPrice, type OrgFamily } from "@/lib/account";
 import SignInForm from "@/components/account/SignInForm";
 import { errorText } from "@/components/account/errors";
 
@@ -28,11 +28,13 @@ const methods: { id: PayMethod; label: string; desc: string; icon: typeof Wallet
 // description; `busyLabels` the waiting text per method (default `busyLabel`).
 // `onAddToCart`: products that go through the cart (lib/cart.tsx). Opening then asks nothing: the purchase goes
 // straight into the cart, which opens, and the buyer pays there. Only a slow or failed add shows a small dialog.
-export default function CheckoutModal({ open, onClose, summary, price, itemLabel = "Item", payLabel = "Pay", note, onPay, signIn = false, only, topUpHref, busyLabel = "Processing…", fees, notes, busyLabels, onAddToCart }: {
+// `org`: the product family, so an organisation account sees its own percent taken off (the server charges the same).
+export default function CheckoutModal({ open, onClose, summary, price, itemLabel = "Item", payLabel = "Pay", note, onPay, signIn = false, only, topUpHref, busyLabel = "Processing…", fees, notes, busyLabels, onAddToCart, org }: {
   open: boolean; onClose: () => void; summary?: ReactNode; price: number; itemLabel?: string; payLabel?: string; note?: string;
   onPay: (method: PayMethod) => unknown; signIn?: boolean; only?: PayMethod[]; topUpHref?: string; busyLabel?: string;
   fees?: Partial<Record<PayMethod, number>>; notes?: Partial<Record<PayMethod, string>>; busyLabels?: Partial<Record<PayMethod, string>>;
   onAddToCart?: () => Promise<unknown>;
+  org?: OrgFamily;
 }) {
   const t = useT();
   itemLabel = t(itemLabel);
@@ -40,6 +42,10 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
   const money = useMoney();
   const usd = money.format;
   const account = useAccount();
+  const orgPrice = useOrgPrice();
+  const listPrice = price;
+  const business = org ? orgPrice(listPrice, org) : null;
+  if (business?.was) price = business.price;
   const [pay, setPay] = useState<PayMethod>("wallet");
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -160,7 +166,8 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
         </div>
 
         <dl className="mt-5 space-y-2 border-t border-slate-100 pt-4 text-sm dark:border-white/10">
-          <div className="flex justify-between"><dt className="text-slate-500 dark:text-slate-400">{itemLabel}</dt><dd className="text-slate-900 dark:text-white">{usd(price)}</dd></div>
+          <div className="flex justify-between"><dt className="text-slate-500 dark:text-slate-400">{itemLabel}</dt><dd className="text-slate-900 dark:text-white">{usd(listPrice)}</dd></div>
+          {business?.was != null && <div className="flex justify-between"><dt className="text-emerald-700 dark:text-emerald-400">{t("Business discount ({0}%)", { 0: t.num(business.percent, { maximumFractionDigits: 2 }) })}</dt><dd className="text-emerald-700 dark:text-emerald-400">−{usd(listPrice - business.price)}</dd></div>}
           <div className="flex justify-between"><dt className="text-slate-500 dark:text-slate-400">{t("Payment fee")}</dt><dd className="text-slate-900 dark:text-white">{fee ? usd(fee) : t("Free")}</dd></div>
           <div className="flex items-baseline justify-between pt-2"><dt className="font-semibold text-slate-900 dark:text-white">{t("Total")}</dt><dd className="font-display text-3xl font-bold text-slate-900 dark:text-white">{usd(total)}</dd></div>
         </dl>

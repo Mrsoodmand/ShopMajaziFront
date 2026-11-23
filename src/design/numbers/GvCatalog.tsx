@@ -16,6 +16,8 @@ import { useSteadyPanel } from "./steadyPanel";
 import { QuickPicks } from "../quickPicks";
 import { cityCards, cityGrid, type City } from "./gvCityCards";
 import { useMoney } from "@/lib/money";
+import { useOrgPrice } from "@/lib/account";
+import { OrgPrice } from "@/components/OrgPrice";
 import { useT } from "@/i18n/client";
 
 // Google Voice K — "Catalog + Panel": opens like /accounts and /virtual-service (a green and white band, one big
@@ -31,6 +33,9 @@ export default function GvCatalog({ card }: { card?: string }) {
   const t = useT();
   const spot = useSpotlight();
   const money = useMoney();
+  const orgPrice = useOrgPrice();
+  // A business account's own price, as text (labels and sentences).
+  const gvText = (n: number) => money.format(orgPrice(n, "google_voice").price);
   const gv = useGv();
   const live = useLiveGv();
   const extras = useHasExtras();
@@ -74,7 +79,7 @@ export default function GvCatalog({ card }: { card?: string }) {
     <PageShell heroDark={!spot}>
       {/* The search and quick picks sit over the city grid (see the toolbar below), not in the band. */}
       <CatalogHero id="gv-h1" icon={Phone} title={t("Your own permanent US number")} backdrop={<GreenMesh />}
-        sub={empty ? t("Calls and texts, on a Google account you control. One payment, no monthly fee.") : t("Calls and texts, on a Google account you control. One payment, from {0}.", { 0: money.format(from) })}
+        sub={empty ? t("Calls and texts, on a Google account you control. One payment, no monthly fee.") : t("Calls and texts, on a Google account you control. One payment, from {0}.", { 0: gvText(from) })}
         popular={[]}
         stats={!empty && (
           // A live dot: the stock comes straight from the supplier.
@@ -123,7 +128,7 @@ export default function GvCatalog({ card }: { card?: string }) {
                   </div>
                   <dl className="mt-6 flex items-baseline justify-between gap-4 border-t border-slate-200 pt-4 dark:border-white/10">
                     <dt className="text-slate-600 dark:text-slate-400">{t("One-time price")}</dt>
-                    <dd className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{money.format(gvPrice(inCity ? gv.selected : shownNumbers[0] ?? city.numbers[0]))}</dd>
+                    <dd className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white"><OrgPrice value={gvPrice(inCity ? gv.selected : shownNumbers[0] ?? city.numbers[0])} family="google_voice" format={money.format} /></dd>
                   </dl>
                   <button type="button" onClick={gv.openPay} disabled={!inCity} className={`${primary} mt-4 w-full disabled:cursor-not-allowed disabled:opacity-40`}>
                     {inCity ? <>{t("Buy")}{" "}<span dir="ltr" className="font-mono">{gv.selected.number}</span><ArrowRight aria-hidden className="h-4 w-4 rtl:rotate-180" /></> : t("Pick a number")}
@@ -137,13 +142,13 @@ export default function GvCatalog({ card }: { card?: string }) {
                 {list.map((c, i) => (
                   <li key={c.key}>
                     {Card ? (
-                      <Card c={c} i={i} price={money.format(c.from)} on={city?.key === c.key} onPick={() => pickCity(c)}
-                        label={t("{0}, {1} numbers, from {2}", { 0: `${c.city}, ${c.state}`, 1: c.numbers.length, 2: money.format(c.from) })} />
+                      <Card c={c} i={i} price={<OrgPrice value={c.from} family="google_voice" format={money.format} />} on={city?.key === c.key} onPick={() => pickCity(c)}
+                        label={t("{0}, {1} numbers, from {2}", { 0: `${c.city}, ${c.state}`, 1: c.numbers.length, 2: gvText(c.from) })} />
                     ) : <CatalogCard i={i} accent="emerald" on={city?.key === c.key} onPick={() => pickCity(c)} tint="#34A853"
-                      label={t("{0}, {1} numbers, from {2}", { 0: `${c.city}, ${c.state}`, 1: c.numbers.length, 2: money.format(c.from) })}
+                      label={t("{0}, {1} numbers, from {2}", { 0: `${c.city}, ${c.state}`, 1: c.numbers.length, 2: gvText(c.from) })}
                       visual={<span aria-hidden className="grid h-12 w-12 place-items-center rounded-2xl bg-white font-display text-sm font-bold text-slate-900 ring-1 ring-slate-200 dark:bg-white/10 dark:text-white dark:ring-white/15">{c.state}</span>}
                       title={c.city} sub={<span dir="ltr" className="inline-block font-mono text-[13px]">{c.areas.map((a) => `(${a})`).join(" ")}</span>}
-                      price={<span className="flex flex-wrap items-baseline justify-between gap-x-2"><span>{c.numbers.length === 1 ? t("1 number") : t("{0} numbers", { 0: c.numbers.length })}</span><span>{t("from")}{" "}<b className="text-base text-slate-900 dark:text-white">{money.format(c.from)}</b></span></span>} />}
+                      price={<span className="flex flex-wrap items-baseline justify-between gap-x-2"><span>{c.numbers.length === 1 ? t("1 number") : t("{0} numbers", { 0: c.numbers.length })}</span><span>{t("from")}{" "}<b className="text-base text-slate-900 dark:text-white"><OrgPrice value={c.from} family="google_voice" format={money.format} /></b></span></span>} />}
                   </li>
                 ))}
               </ul>

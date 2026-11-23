@@ -30,7 +30,8 @@ export type Prices = { usd: number; from: Record<string, number>; picks?: Picks 
 // Accounts and social platforms the admin put in the header menu (at most 6 and 4) and on the home page's shop
 // window (Api\StorefrontController::prices). An empty list = the site's built-in items. `from` is Toman.
 export type PickItem = { href: string; name: string; name_en: string | null; desc: string | null; desc_en: string | null; image: string | null; color: string | null; from: number | null };
-export type Picks = { menu: { subs: PickItem[]; social: PickItem[] }; home: { subs: PickItem[]; social: PickItem[] } };
+// home.verify: every live verification product (its own shop-window tab; none = the tab is left out).
+export type Picks = { menu: { subs: PickItem[]; social: PickItem[]; verify?: PickItem[] }; home: { subs: PickItem[]; social: PickItem[]; verify?: PickItem[] } };
 
 export const toman = (n: number, locale: Locale = "en") =>
   locale === "fa" ? `${Math.round(n).toLocaleString("fa-IR")} تومان` : `${Math.round(n).toLocaleString("en-US")} Toman`;

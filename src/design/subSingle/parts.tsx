@@ -2,11 +2,13 @@
 import Link from "@/i18n/Link";
 import { Check, ChevronRight, Lock, RotateCcw, Zap } from "lucide-react";
 import { useMoney } from "@/lib/money";
-import { fromPrice, monthly, perMonth, savePct, subCats, type SubProduct } from "@/content/subs-en";
+import { useOrgPrice } from "@/lib/account";
+import { OrgPrice } from "@/components/OrgPrice";
+import { fromPrice, monthly, perMonth, savePct, type SubProduct } from "@/content/subs-en";
 import { ring } from "../googleVoice/clean";
 import { panels } from "../subs/panels";
 import { ActivationBadge, PopularBadge, Tile, type Subs } from "../subs/parts";
-import { useSubsList } from "../subs/live";
+import { useFlavor, useSubsList } from "../subs/live";
 import { useT } from "@/i18n/client";
 import { HOW_STYLE, howStyles } from "./howDelivered";
 
@@ -17,12 +19,13 @@ export const DEFAULT_SLUG = "chatgpt-plus";
 
 export function Crumbs({ p, light = false }: { p: SubProduct; light?: boolean }) {
   const tx = useT();
+  const flavor = useFlavor();
   const a = `rounded font-medium underline-offset-4 hover:underline ${light ? "text-white/85 hover:text-white" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"} ${ring}`;
   return (
     <nav aria-label={tx("Breadcrumb")}>
       <ol className={`flex flex-wrap items-center gap-1.5 text-sm ${light ? "text-white/60" : "text-slate-500"}`}>
         <li><Link href="/" className={a}>{tx("Home")}</Link></li><ChevronRight aria-hidden className="h-3.5 w-3.5 rtl:rotate-180" />
-        <li><Link href="/accounts" className={a}>{tx("Subscriptions")}</Link></li><ChevronRight aria-hidden className="h-3.5 w-3.5 rtl:rotate-180" />
+        <li><Link href={flavor.base} className={a}>{tx(flavor.title)}</Link></li><ChevronRight aria-hidden className="h-3.5 w-3.5 rtl:rotate-180" />
         <li><span aria-current="page" className={`font-semibold ${light ? "text-white" : "text-slate-900 dark:text-white"}`}>{p.name}</span></li>
       </ol>
     </nav>
@@ -89,6 +92,14 @@ export function PlanTable({ p }: { p: SubProduct }) {
 
 export function Trust({ p, className = "" }: { p: SubProduct; className?: string }) {
   const tx = useT();
+  const { verify } = useFlavor();
+  if (verify) return (
+    <ul className={`flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-700 dark:text-slate-300 ${className}`}>
+      {p.delivery && <li className="flex items-center gap-1.5"><Zap aria-hidden className="h-4 w-4 text-amber-600 dark:text-amber-400" />{p.delivery}</li>}
+      {p.fields.some((f) => f.type === "file") && <li className="flex items-center gap-1.5"><Lock aria-hidden className="h-4 w-4 text-violet-700 dark:text-violet-400" />{tx("Documents kept private")}</li>}
+      <li className="flex items-center gap-1.5"><RotateCcw aria-hidden className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />{tx("Not possible? Money back to your wallet")}</li>
+    </ul>
+  );
   return (
     <ul className={`flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-700 dark:text-slate-300 ${className}`}>
       {p.delivery && <li className="flex items-center gap-1.5"><Zap aria-hidden className="h-4 w-4 text-amber-600 dark:text-amber-400" />{p.delivery}</li>}
@@ -105,14 +116,15 @@ export function Related({ p }: { p: SubProduct }) {
   const usd = useMoney().format;
   const tx = useT();
   const all = useSubsList();
+  const flavor = useFlavor();
   const list = [...all.filter((x) => x.cat === p.cat && x.slug !== p.slug), ...all.filter((x) => x.popular && x.cat !== p.cat && x.slug !== p.slug), ...all.filter((x) => !x.popular && x.cat !== p.cat && x.slug !== p.slug)].slice(0, 4);
-  const cat = tx.tr(subCats).find((c) => c.id === p.cat)?.label;
+  const cat = tx.tr(flavor.cats).find((c) => c.id === p.cat)?.label;
   if (!list.length) return null;
   return (
     <section aria-labelledby="related">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <H2 id="related">{cat && list.some((x) => x.cat === p.cat) && p.cat !== "other" ? <>{tx("More in")}{" "}{cat}</> : tx("More subscriptions")}</H2>
-        <Link href="/accounts" className={`rounded-lg text-sm font-semibold text-violet-800 underline-offset-4 hover:underline dark:text-violet-300 ${ring}`}>{tx("All subscriptions")}</Link>
+        <H2 id="related">{cat && list.some((x) => x.cat === p.cat) && p.cat !== "other" ? <>{tx("More in")}{" "}{cat}</> : tx(flavor.more)}</H2>
+        <Link href={flavor.base} className={`rounded-lg text-sm font-semibold text-violet-800 underline-offset-4 hover:underline dark:text-violet-300 ${ring}`}>{tx(flavor.all)}</Link>
       </div>
       <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {list.map((x) => {
@@ -122,10 +134,10 @@ export function Related({ p }: { p: SubProduct }) {
           const wash = { backgroundImage: `linear-gradient(color-mix(in srgb, ${hex} 9%, transparent), color-mix(in srgb, ${hex} 9%, transparent))` };
           return (
           <li key={x.slug}>
-            <Link href={`/accounts/${x.slug}`} style={wash} className={`group relative flex h-full items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 transition-[translate,box-shadow,border-color] duration-700 ${ease} hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_40px_-18px_rgba(15,23,42,.28)] dark:border-white/15 dark:bg-[#0E1424] dark:hover:border-white/25 dark:hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,.8)] ${ring}`}>
+            <Link href={`${flavor.base}/${x.slug}`} style={wash} className={`group relative flex h-full items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 transition-[translate,box-shadow,border-color] duration-700 ${ease} hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_18px_40px_-18px_rgba(15,23,42,.28)] dark:border-white/15 dark:bg-[#0E1424] dark:hover:border-white/25 dark:hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,.8)] ${ring}`}>
               <span aria-hidden style={{ backgroundColor: hex }} className={`pointer-events-none absolute -end-8 -top-8 h-24 w-24 rounded-full opacity-15 blur-2xl transition-[scale,opacity] duration-1000 ${ease} group-hover:scale-150 group-hover:opacity-30`} />
               <span className={`relative block shrink-0 transition-[translate,scale] duration-700 ${ease} group-hover:-translate-y-0.5 group-hover:scale-[1.06]`}><Tile p={x} size="sm" /></span>
-              <span className="relative min-w-0"><span className="block truncate font-semibold text-slate-900 dark:text-white">{x.name}</span><span className="text-sm text-slate-600 dark:text-slate-400">{tx("from")}{" "}{usd(fromPrice(x))}{monthly(x) ? tx("/mo") : ""}</span></span>
+              <span className="relative min-w-0"><span className="block truncate font-semibold text-slate-900 dark:text-white">{x.name}</span><span className="text-sm text-slate-600 dark:text-slate-400">{tx("from")}{" "}<OrgPrice value={fromPrice(x)} family={flavor.org(x.slug)} format={usd} />{monthly(x) ? tx("/mo") : ""}</span></span>
             </Link>
           </li>
           );
@@ -156,7 +168,8 @@ export function TitleBlock({ p, as = "h1", center = false }: { p: SubProduct; as
 // "ChatGPT for work. From $20 a month." The tagline and the per-month part only when the product has them.
 export function FromLine({ p, usd }: { p: SubProduct; usd: (n: number) => string }) {
   const tx = useT();
-  const price = usd(fromPrice(p));
+  // A business account reads its own company price here (a sentence, so no crossed-out figure).
+  const price = usd(useOrgPrice()(fromPrice(p), useFlavor().org(p.slug)).price);
   if (!p.tagline) return <>{monthly(p) ? tx("From {0} a month.", { 0: price }) : tx("From {0}.", { 0: price })}</>;
   return <>{p.tagline}{tx(". From")}{" "}{price}{monthly(p) ? <>{" "}{tx("a month.")}</> : "."}</>;
 }

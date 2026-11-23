@@ -43,6 +43,7 @@ export type AccountOrder = {
   lines?: { title: string; note: string; price: number }[];
   // An account bought with paid add-ons: the plan and each add-on, as invoice lines only.
   bill?: { title: string; note: string; price: number }[];
+  discount?: number; // Toman an organisation account's discount took off `price` (already lower)
 };
 
 export type OrderCharge = { id: number; kind: "order" | "extra"; title: string; price: number; paid: boolean; at: string };

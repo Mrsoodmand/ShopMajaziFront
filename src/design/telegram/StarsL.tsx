@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { useMoney } from "@/lib/money";
+import { useOrgPrice } from "@/lib/account";
 import { tgHeadings } from "@/content/telegram-en";
 import { PageShell } from "../otp/parts";
 import { useHasExtras } from "../service/slot";
@@ -36,6 +37,7 @@ export default function StarsL() {
   const t = useT();
   const spot = useSpotlight();
   const st = useStars();
+  const total = useOrgPrice()(st.total, "telegram").price;
   const extras = useHasExtras();
   const summary = useRef<HTMLDivElement>(null);
   const [summaryInView, setSummaryInView] = useState(false);
@@ -80,7 +82,7 @@ export default function StarsL() {
             <aside aria-label={t("Your order")} className="relative z-10 lg:col-start-2 lg:row-start-1 lg:-mt-64">
               <div ref={summary} className="lg:sticky lg:top-24">
                 <StarsSummary st={st} className={`${panel} shadow-2xl shadow-amber-950/20`}>
-                  <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{starsLabel(st, t(st.addToCart ? "Add to cart" : "Continue"), usd)}</button>
+                  <button type="submit" className={`${primary} mt-5 w-full tabular-nums`}>{starsLabel(st, t(st.addToCart ? "Add to cart" : "Continue"), usd, total)}</button>
                   <StarsBlocker st={st} />
                 </StarsSummary>
               </div>
@@ -98,7 +100,7 @@ export default function StarsL() {
       {/* Phones only: total plus a jump to the order summary (Continue itself stays in the summary). */}
       <div className={`fixed inset-x-0 bottom-0 z-40 border-t border-amber-200 bg-white px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,.25)] transition-transform duration-300 lg:hidden dark:border-white/10 dark:bg-[#0E1424] ${summaryInView ? "translate-y-full" : "translate-y-0"}`} aria-hidden={summaryInView} inert={summaryInView}>
         <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
-          <span className="min-w-0"><span className={`block text-sm ${st.r.user ? "text-slate-600 dark:text-slate-400" : "font-semibold text-amber-800 dark:text-amber-300"}`}>{!st.r.user ? t("Add a username to continue") : st.valid ? t("{0} Stars to @{1}", { 0: fmt(st.amount), 1: st.r.user.username }) : t("Check the amount")}</span><span className="font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white">{st.valid ? usd(st.total) : "—"}</span></span>
+          <span className="min-w-0"><span className={`block text-sm ${st.r.user ? "text-slate-600 dark:text-slate-400" : "font-semibold text-amber-800 dark:text-amber-300"}`}>{!st.r.user ? t("Add a username to continue") : st.valid ? t("{0} Stars to @{1}", { 0: fmt(st.amount), 1: st.r.user.username }) : t("Check the amount")}</span><span className="font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white">{st.valid ? usd(total) : "—"}</span></span>
           <button type="button" onClick={toSummary} className={`rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-900 dark:border-white/20 dark:text-white ${ring}`}>{t("Review order")}</button>
         </div>
       </div>

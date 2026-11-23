@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AccountOrder, BankCard, Dept, Ticket } from "@/content/account-en";
 import type { Clock, Line, Store } from "@/design/account/kit";
+import type { OrgState, OrgStore } from "@/design/account/organization";
 import { useT } from "@/i18n/client";
 import { accountApi, accountForm, ApiError, useAccount } from "./account";
 
@@ -24,6 +25,7 @@ type ApiOrder = {
   due?: number; cancellable?: boolean; night_call?: boolean | null;
   lines?: { title: string; note: string; price: number }[]; // an order support made (kind "custom")
   bill?: { title: string; note: string; price: number }[]; // an account with paid add-ons: invoice lines
+  discount?: number; // organisation discount taken off price
   fields?: { label: string; value: string; secret?: boolean; raw?: boolean }[];
   product_id?: number | null; review?: { state: "open" | "sent" } | null;
 };
@@ -31,7 +33,7 @@ type ApiLine = { id: number; kind: Line["kind"]; amount: number; balance: number
 type ApiMessage = { from: "you" | "support"; name: string | null; at: string; text: string; file: string | null };
 type ApiTicket = { id: number; subject: string; dept: Dept; order_id: number | null; state: Ticket["state"]; unread: boolean; updated_at: string; last: ApiMessage | null; messages: ApiMessage[] | null };
 type Panel = {
-  user: { name: string; mobile: string; email: string | null; since: string | null };
+  user: { name: string; mobile: string; email: string | null; since: string | null; company?: { name: string; tax_code: string } | null };
   wallet: number; cards: { id: string; first6: string; last4: string }[];
   statement: ApiLine[]; orders: ApiOrder[]; tickets: ApiTicket[]; top_up: { min: number; max: number };
 };
@@ -62,7 +64,7 @@ const NUMBER_MINUTES = 20;
 const windowOf = (left: number, at: string) => Math.max(left, left + Math.round((Date.now() - Date.parse(at)) / 1000), 1);
 const POLL_MS = 5000;
 
-export type LiveAccount = Store & { status: "loading" | "ready" | "guest" | "error"; reload: () => Promise<void>; signOut: () => Promise<void> };
+export type LiveAccount = Store & OrgStore & { status: "loading" | "ready" | "guest" | "error"; reload: () => Promise<void>; signOut: () => Promise<void> };
 
 export function useLiveAccount(): LiveAccount {
   const t = useT();
@@ -77,6 +79,8 @@ export function useLiveAccount(): LiveAccount {
   // `total`: the whole window (seconds from purchase to expiry), so the bar shows the real share left.
   const [timers, setTimers] = useState<Record<number, { left: number; at: number; total: number }>>({});
   const [now, setNow] = useState(() => Date.now());
+  // Organisation account (account/panel/organization), loaded when the Business page opens.
+  const [org, setOrg] = useState<OrgState | null>(null);
 
   const fail = useCallback((e: unknown, fallback: string): never => {
     const code = e instanceof ApiError ? e.code : "";
@@ -191,7 +195,7 @@ export function useLiveAccount(): LiveAccount {
     orders, statement, tickets, arrived, clockOf, cardOf,
     cards: (panel?.cards ?? []).map((c) => cardOf(c.id)!).filter(Boolean),
     wallet: panel?.wallet ?? 0,
-    user: { name: panel?.user.name ?? "", mobile: panel?.user.mobile ?? "", email: panel?.user.email ?? null, since: panel?.user.since ?? "" },
+    user: { name: panel?.user.name ?? "", mobile: panel?.user.mobile ?? "", email: panel?.user.email ?? null, since: panel?.user.since ?? "", company: panel?.user.company ?? null },
     limits: panel?.top_up ?? { min: 10_000, max: 50_000_000 },
     cancel: async (id) => {
       try { await accountApi(`virtual-numbers/orders/${id}/cancel`, {}); } catch (e) { fail(e, "Couldn't cancel. Please try again."); }
@@ -251,7 +255,21 @@ export function useLiveAccount(): LiveAccount {
     }, []),
   };
 
-  return { ...store, status, reload, signOut: account.signOut };
+  // Organisation account: where it stands, and sending the form (multipart: fields[key] = value or file).
+  const loadOrg = useCallback(() => {
+    accountApi<OrgState>("panel/organization").then(setOrg).catch((e) => { if (e instanceof ApiError && e.code === "auth") setStatus("guest"); });
+  }, []);
+  const applyOrg = useCallback(async (fields: Record<string, string | File>) => {
+    const body = new FormData();
+    for (const [k, v] of Object.entries(fields)) body.append(`fields[${k}]`, v);
+    try { setOrg(await accountForm<OrgState>("panel/organization", body)); } catch (e) {
+      if (e instanceof ApiError && e.code === "fields_invalid") throw new Error(e.message);
+      if (e instanceof ApiError && ["pending", "already", "closed"].includes(e.code)) { loadOrg(); throw new Error(e.message); }
+      fail(e, "Something went wrong. Please try again.");
+    }
+  }, [fail, loadOrg]);
+
+  return { ...store, org, loadOrg, applyOrg, status, reload, signOut: account.signOut };
 }
 
 // One API order → the design's order, with titles in the visitor's language.
@@ -264,7 +282,7 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
   const deliveredAt = o.state === "delivered" ? o.updated_at ?? undefined : undefined;
   const cart = o.cart ? { id: o.cart.id, at: o.cart.at, paidWith: o.cart.paid_with === "card" && o.cart.card ? cardKey(o.cart.card) : o.cart.paid_with === "card" ? "m:000000:····" : "wallet" } : undefined;
   const charges = (o.charges ?? []).map((c) => ({ ...c, at: c.at ?? o.at }));
-  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart, charges, due: o.due ?? 0, cancellable: !!o.cancellable, nightCall: o.night_call ?? null, review: o.review ?? null, bill: o.bill };
+  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart, charges, due: o.due ?? 0, cancellable: !!o.cancellable, nightCall: o.night_call ?? null, review: o.review ?? null, bill: o.bill, discount: o.discount ?? 0 };
 
   if (o.kind === "number") {
     return {

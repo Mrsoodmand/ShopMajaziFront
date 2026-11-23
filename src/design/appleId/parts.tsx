@@ -15,6 +15,7 @@ import { stripLocale } from "@/i18n/config";
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
 import { useCart } from "@/lib/cart";
 import { useMoney } from "@/lib/money";
+import { OrgPrice } from "@/components/OrgPrice";
 import type { ApiAppleAccount, ApiAppleOrder } from "@/lib/apple-id";
 import { useLiveApple } from "./live";
 
@@ -240,7 +241,7 @@ export function MethodRadios({ a, details = true, legend = "Which Apple ID do yo
               <span className="min-w-0 flex-1">
                 <span className="flex items-start justify-between gap-2 pe-8">
                   <span className="font-display text-lg font-semibold text-slate-900 dark:text-white">{info.title}</span>
-                  <span className="text-end font-bold text-slate-900 dark:text-white">{money.format(m === "ready" ? a.readyPrice : a.customPrice)}</span>
+                  <span className="text-end font-bold text-slate-900 dark:text-white"><OrgPrice value={m === "ready" ? a.readyPrice : a.customPrice} format={money.format} family="apple_id" /></span>
                 </span>
                 <span className="mt-0.5 block text-slate-600 dark:text-slate-400">{info.tagline}</span>
                 <span className="mt-2 flex items-center gap-1.5 text-sm font-medium text-slate-800 dark:text-slate-200"><Clock aria-hidden className="h-4 w-4" />{info.delivery}</span>
@@ -329,7 +330,7 @@ export function Quantity({ a, packsOpen = false, showPacks = true, hint = true, 
             </div>
             <p id={`${id}-sum`} aria-live="polite" className="min-w-0 text-slate-700 dark:text-slate-300">
               <span className="block text-sm tabular-nums">{tx("{0} × {1}", { 0: a.count, 1: money.format(each) })}{a.pack ? ` · ${tx("Partner pack")}` : ""}</span>
-              <span className="block font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white">{money.format(a.total)}</span>
+              <span className="block font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white"><OrgPrice value={a.total} format={money.format} family="apple_id" /></span>
             </p>
           </div>
         </div>
@@ -345,7 +346,7 @@ export function Quantity({ a, packsOpen = false, showPacks = true, hint = true, 
                     <input type="radio" autoComplete="off" name={packName} checked={on} onChange={() => a.setPack(p.qty)} className="sr-only" />
                     {on && <Check aria-hidden className="absolute end-2 top-2 h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" strokeWidth={3} />}
                     <span className="font-display text-lg font-bold tabular-nums text-slate-900 dark:text-white">{p.qty}</span>
-                    <span className="text-xs tabular-nums text-slate-600 dark:text-slate-400">{money.format(p.qty * p.each)}</span>
+                    <span className="text-xs tabular-nums text-slate-600 dark:text-slate-400"><OrgPrice value={p.qty * p.each} format={money.format} family="apple_id" /></span>
                   </label>
                 );
               })}
@@ -581,7 +582,7 @@ export function AppleSummary({ a, title = "Your order", children }: { a: AppleSt
         ))}
       </dl>
       <div aria-live="polite" className="mt-4 flex items-baseline justify-between border-t border-slate-200 pt-4 dark:border-white/10">
-        <span className="text-slate-600 dark:text-slate-400">{tx("Total")}</span><span className="font-display text-2xl font-bold text-slate-900 dark:text-white">{money.format(a.total)}</span>
+        <span className="text-slate-600 dark:text-slate-400">{tx("Total")}</span><span className="font-display text-2xl font-bold text-slate-900 dark:text-white"><OrgPrice value={a.total} format={money.format} family="apple_id" /></span>
       </div>
       {children}
     </section>
@@ -605,7 +606,7 @@ export function AppleCheckout({ a }: { a: AppleState }) {
   const tx = useT();
   const info = tx.tr(methodInfo)[a.method];
   return (
-    <CheckoutModal open={a.payOpen} onClose={a.closePay} price={a.total} itemLabel={a.method === "ready" ? tx("Apple ID × {0}", { 0: a.count }) : tx("Custom Apple ID")} payLabel={tx("Pay")}
+    <CheckoutModal org="apple_id" open={a.payOpen} onClose={a.closePay} price={a.total} itemLabel={a.method === "ready" ? tx("Apple ID × {0}", { 0: a.count }) : tx("Custom Apple ID")} payLabel={tx("Pay")}
       note={a.method === "ready" ? (a.short ? tx("You get the ones ready now straight away; the rest follow in the same order. Login not working? We replace it or refund you.") : tx("Login not working? We replace it or refund you.")) : tx("Ready in about 10 minutes. You'll see it on your order page.")} onPay={a.buy} onAddToCart={a.addToCart}
       {...(a.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<>

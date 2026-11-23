@@ -59,13 +59,19 @@ export function ServicesMega({ open, onEnter, onLeave }: { open: boolean; onEnte
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
             {group.items.map((it, i) => (
-              <Link key={it.href} href={it.href} style={{ animationDelay: `${60 + i * 50}ms` }} className="group flex animate-fade-up items-center [animation-duration:450ms] gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-indigo-300 hover:bg-indigo-50/40 dark:border-white/10 dark:hover:border-indigo-400/50 dark:hover:bg-indigo-500/10">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300"><NavIcon item={it} className="h-5 w-5" /></span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{it.label}</span>
-                  <span className="block truncate text-xs text-slate-500 dark:text-slate-400">{it.desc}</span>
+              // A container: in a narrow card (small screens, long Toman prices) the price moves under the name
+              // instead of squeezing it to a letter.
+              <Link key={it.href} href={it.href} style={{ animationDelay: `${60 + i * 50}ms` }} className="group @container animate-fade-up rounded-2xl border border-slate-200 p-3 transition [animation-duration:450ms] hover:border-indigo-300 hover:bg-indigo-50/40 dark:border-white/10 dark:hover:border-indigo-400/50 dark:hover:bg-indigo-500/10">
+                <span className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300"><NavIcon item={it} className="h-5 w-5" /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">{it.label}</span>
+                    <span className="block truncate text-xs text-slate-500 dark:text-slate-400">{it.desc}</span>
+                    {it.from && <span className="mt-0.5 block whitespace-nowrap text-xs text-slate-400 @[19rem]:hidden">{t("from")}{" "}<b className="font-bold text-slate-900 dark:text-white">{it.from}</b></span>}
+                  </span>
+                  {/* No price (e.g. the Verification catalog link): no "from" either. */}
+                  {it.from && <span className="hidden shrink-0 whitespace-nowrap text-end text-[11px] text-slate-400 @[19rem]:block">{t("from")}<span className="block text-sm font-bold text-slate-900 dark:text-white">{it.from}</span></span>}
                 </span>
-                <span className="text-end text-[11px] text-slate-400">{t("from")}<span className="block text-sm font-bold text-slate-900 dark:text-white">{it.from}</span></span>
               </Link>
             ))}
           </div>

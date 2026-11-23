@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
-import { ArrowLeft, ChevronRight, KeyRound, LifeBuoy, LogOut, MessageCircle, Package, Plus, ReceiptText, RotateCcw, Search, UserRound, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, ChevronRight, KeyRound, LifeBuoy, LogOut, MessageCircle, Package, Plus, ReceiptText, RotateCcw, Search, UserRound, Wallet } from "lucide-react";
 import Link from "@/i18n/Link";
 import { PageShell } from "../otp/parts";
 import { useT } from "@/i18n/client";
@@ -20,7 +20,8 @@ import {
 // never erases the purchase. Navigation is a deep indigo rail on the start side, a tab bar on phones.
 
 // "cart": a cart order #C-{id} (several services bought together), drawn by Passbook's `CartOrder`.
-export type Page = "statement" | "orders" | "order" | "cart" | "funds" | "support" | "profile" | "password";
+// "business": the organisation account (design/account/organization.tsx), drawn by Passbook's `Business`.
+export type Page = "statement" | "orders" | "order" | "cart" | "funds" | "support" | "profile" | "password" | "business";
 // `id`: the order to show, or for support a ticket id (0 = a new ticket, a negative order id = a new ticket about it).
 export type View = { page: Page; id?: number };
 export type Go = (v: View) => void;
@@ -34,6 +35,7 @@ const NAV: { page: Page; label: string; Icon: typeof Wallet }[] = [
   { page: "orders", label: "Orders", Icon: Package },
   { page: "funds", label: "Add funds", Icon: Wallet },
   { page: "support", label: "Support", Icon: LifeBuoy },
+  { page: "business", label: "Business account", Icon: Building2 },
   { page: "profile", label: "Profile", Icon: UserRound },
   { page: "password", label: "Password", Icon: KeyRound },
 ];
@@ -53,7 +55,8 @@ export type OrdersListProps = { demo: Store; go: Go };
 // `OrderPay`: where an order page shows what's still to pay and the buyer's cancel (offers in design/account/orderPay.tsx).
 export type OrderSlot = ComponentType<{ order: AccountOrder; demo: Store; go: Go }>;
 export type OrderPaySlots = { Top?: OrderSlot; Money?: OrderSlot; Aside?: OrderSlot };
-export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder, OrderPay }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }>; OrderPay?: OrderPaySlots }) {
+// `Business`: the organisation-account page; without it the nav has no Business item.
+export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder, OrderPay, Business }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }>; OrderPay?: OrderPaySlots; Business?: ComponentType<{ demo: Store; go: Go }> }) {
   const t = useT();
   const f = useFmt();
   const top = useRef<HTMLDivElement>(null);
@@ -66,6 +69,8 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
   }, [view]);
   const replies = demo.tickets.filter((x) => x.state === "replied").length;
   const order = view.page === "order" ? demo.orders.find((o) => o.id === view.id) : undefined;
+  const nav = NAV.filter((n) => n.page !== "business" || Business);
+  const phoneNav = nav.filter((n) => n.page !== "password");
 
   return (
     <>
@@ -83,7 +88,7 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
               </div>
               <nav aria-label={t("Account")} className="mt-3">
                 <ul className="space-y-1">
-                  {NAV.map(({ page, label, Icon }) => {
+                  {nav.map(({ page, label, Icon }) => {
                     const on = navOf(view.page) === page;
                     return (
                       <li key={page}>
@@ -114,13 +119,14 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
             {view.page === "funds" && <Funds demo={demo} />}
             {view.page === "support" && <Support key={view.id ?? "list"} demo={demo} go={go} initial={view.id} />}
             {(view.page === "profile" || view.page === "password") && <Settings page={view.page} demo={demo} go={go} />}
+            {view.page === "business" && Business && <Business demo={demo} go={go} />}
           </div>
         </div>
 
         {/* Phones: a tab bar that stays at the bottom while the account is on screen. */}
         <nav aria-label={t("Account")} className="sticky bottom-0 z-30 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-12px_rgba(0,0,0,.25)] backdrop-blur lg:hidden dark:border-white/10 dark:bg-[#0B1020]/95">
-          <ul className="mx-auto grid max-w-lg grid-cols-5">
-            {NAV.filter((n) => n.page !== "password").map(({ page, label, Icon }) => {
+          <ul className="mx-auto grid max-w-lg" style={{ gridTemplateColumns: `repeat(${phoneNav.length}, minmax(0, 1fr))` }}>
+            {phoneNav.map(({ page, label, Icon }) => {
               const on = navOf(view.page) === page || (page === "profile" && view.page === "password");
               return (
                 <li key={page}>

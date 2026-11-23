@@ -13,6 +13,7 @@ export const footerColumns: FooterColumn[] = [
       ...navGroups.find((g) => g.id === "apple")!.items.map((i) => ({ label: i.label, href: i.href })),
       { label: "Claude", href: "/accounts/buy-claude" },
       { label: "All subscriptions", href: "/accounts" },
+      { label: "Verification", href: "/verify" },
     ],
   },
   {

@@ -15,8 +15,9 @@ import { why } from "./fa/why";
 import { errors } from "./fa/errors";
 import { cart } from "./fa/cart";
 import { socialService } from "./fa/socialService";
+import { verify } from "./fa/verify";
 
-export const fa: Record<string, string> = { ...dashboard, ...common, ...numbers, ...services, ...subs, ...telegram, ...extras, ...content, ...account, ...numberCatalog, ...why, ...errors, ...invoice, ...cart, ...socialService };
+export const fa: Record<string, string> = { ...verify, ...dashboard, ...common, ...numbers, ...services, ...subs, ...telegram, ...extras, ...content, ...account, ...numberCatalog, ...why, ...errors, ...invoice, ...cart, ...socialService };
 
 // Sentences built from data at runtime. Each pattern is a regex for the whole English text; $1… in the Persian
 // are the captured parts, themselves translated when there is an entry for them.

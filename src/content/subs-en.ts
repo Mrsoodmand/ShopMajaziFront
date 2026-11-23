@@ -2,7 +2,8 @@
 // (each with its own page at /accounts/{slug}), plans per product (name, price, optional discount) and per-product
 // form fields (text or select) the buyer fills in. Prices are made up; the live ones come from the Plan table.
 
-export type SubCat = "ai" | "video" | "music" | "design" | "work" | "trading" | "social" | "other";
+// "verified" / "verify": the two groups of the Verification pages (/verify, lib/verify.ts), never on /accounts.
+export type SubCat = "ai" | "video" | "music" | "design" | "work" | "trading" | "social" | "other" | "verified" | "verify";
 export const subCats: { id: SubCat; label: string }[] = [
   { id: "ai", label: "AI tools" },
   { id: "video", label: "Video" },
@@ -13,12 +14,21 @@ export const subCats: { id: SubCat; label: string }[] = [
   { id: "social", label: "Social apps" },
   { id: "other", label: "More" },
 ];
+// The Verification pages' groups: ready verified accounts, and verifying the buyer's own account.
+export const verifyCats: { id: SubCat; label: string }[] = [
+  { id: "verified", label: "Verified accounts" },
+  { id: "verify", label: "Verify your account" },
+];
 
 // months 0 = unknown (a live plan the admin didn't give a length): no price per month is shown for it.
 // `popular`: the plan the admin marked «محبوب‌ترین» (one per product at most).
 export type SubPlan = { id: string; name: string; months: number; price: number; was?: number; popular?: boolean };
 // A field the buyer fills in. `options` makes it a select.
-export type SubField = { id: string; label: string; hint?: string; type: "email" | "text" | "password" | "select"; options?: string[]; optional?: boolean };
+// Verification products add long text, date, phone and file fields; a file field takes `accept` (image / pdf) and `maxMb`.
+export type SubField = {
+  id: string; label: string; hint?: string; type: "email" | "text" | "password" | "select" | "textarea" | "date" | "phone" | "file";
+  options?: string[]; optional?: boolean; accept?: ("image" | "pdf")[]; maxMb?: number;
+};
 // "own": activated on the buyer's own account (we need its email). "login": activated on the buyer's account, which
 // needs their login (email and password). "ready": we deliver a ready account login.
 // `color` is a Tailwind background class here, or a plain hex colour for live products (see brand() in subs/parts).

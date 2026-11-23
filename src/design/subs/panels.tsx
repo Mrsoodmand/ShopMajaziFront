@@ -2,11 +2,14 @@
 import { useId, type ComponentType } from "react";
 import { Check, Lock, RotateCcw, Zap } from "lucide-react";
 import { useMoney } from "@/lib/money";
+import { OrgPrice } from "@/components/OrgPrice";
+import { useOrgPrice } from "@/lib/account";
 import { savePct, type SubPlan } from "@/content/subs-en";
 import { ring } from "../googleVoice/clean";
-import { ActivationBadge, BuyButton, FieldsForm, Notes, PopularBadge, ProductPanel, Receipt, Tile, type Subs } from "./parts";
+import { ActivationBadge, BuyButton, FieldsForm, Notes, PopularBadge, PopularBand, ProductPanel, Receipt, Tile, type Subs } from "./parts";
 import { useT } from "@/i18n/client";
 import { PLAN_TONE, planTones } from "./planSelect";
+import { useFlavor } from "./live";
 
 // Five versions of the product panel on the Subscriptions page (the box with plans, the account field and Buy).
 // All keep real radio buttons for plans, labelled fields with errors, and work for 1 to 4 plans, select fields
@@ -400,6 +403,8 @@ function PanelTiles({ s, focusable }: PanelProps) {
 // Short rows where the chosen plan fills violet, so the pick is obvious at a glance; Continue carries the price.
 function PanelSplit({ s, focusable }: PanelProps) {
   const usd = useMoney().format;
+  const org = useFlavor().org(s.product?.slug);
+  const orgOn = useOrgPrice()(1000, org).percent > 0; // business price shown: two prices per row
   const t = useT();
   const name = useId();
   const plans = s.product!.plans;
@@ -412,11 +417,13 @@ function PanelSplit({ s, focusable }: PanelProps) {
         <div className="mt-2 space-y-1.5">
           {plans.map((pl) => {
             const on = s.plan?.id === pl.id;
+            const band = pl.popular && orgOn;
             return (
-              <label key={pl.id} className={`flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-colors ${focusRing} ${on ? tone.row : "border-slate-200 text-slate-700 hover:border-slate-400 dark:border-white/15 dark:text-slate-300 dark:hover:border-white/40"}`}>
+              <label key={pl.id} className={`relative flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg border px-3 py-2 ${band ? "pt-7" : ""} text-sm transition-colors ${focusRing} ${on ? tone.row : "border-slate-200 text-slate-700 hover:border-slate-400 dark:border-white/15 dark:text-slate-300 dark:hover:border-white/40"}`}>
                 <input type="radio" autoComplete="off" name={name} checked={on} onChange={() => s.setPlan(pl)} className="sr-only" />
-                <span className="flex min-w-0 items-center gap-2"><span className="truncate font-semibold">{pl.name}</span>{pl.popular && <PopularBadge on={on && tone.fill} />}</span>
-                <span className={`whitespace-nowrap tabular-nums ${on ? tone.price : "text-slate-500 dark:text-slate-400"}`}>{usd(pl.price)}</span>
+                {band && <PopularBand />}
+                <span className="flex min-w-0 items-center gap-2"><span className="truncate font-semibold">{pl.name}</span>{pl.popular && !band && <PopularBadge on={on && tone.fill} />}</span>
+                <span className={`whitespace-nowrap tabular-nums ${on ? tone.price : "text-slate-500 dark:text-slate-400"}`}><OrgPrice value={pl.price} family={org} format={usd} /></span>
               </label>
             );
           })}

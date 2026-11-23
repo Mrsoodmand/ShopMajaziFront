@@ -349,7 +349,7 @@ export function JumpBar({ s, inView, go }: { s: Social; inView: boolean; go: () 
 export function SocialCheckout({ s }: { s: Social }) {
   const tx = useT();
   return (
-    <CheckoutModal open={s.payOpen} onClose={s.closePay} price={s.total} itemLabel={`${fmt(s.qty)} ${tx(s.service.unit)}`} onPay={s.buy}
+    <CheckoutModal org="services" open={s.payOpen} onClose={s.closePay} price={s.total} itemLabel={`${fmt(s.qty)} ${tx(s.service.unit)}`} onPay={s.buy}
       note={tx("Starts {0}. If the link is private or wrong, the order is cancelled and refunded.", { 0: tx(s.service.startsIn) })}
       summary={<><PlatformIcon p={s.platform} /><div className="min-w-0 flex-1"><div className="truncate font-semibold text-slate-900 dark:text-white">{fmt(s.qty)}{" "}{tx(s.service.unit)} · {tx(s.tier.name)}</div><div dir="ltr" className="truncate text-xs text-slate-500 dark:text-slate-400">{s.link.trim()}</div></div></>} />
   );

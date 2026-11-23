@@ -15,9 +15,13 @@ export async function loadLiveComments(service: string): Promise<LiveComments> {
   const t = await getT();
   // Subscriptions (and Telegram Premium, also an account product) keep their comments on the product.
   const slug = service.startsWith("subs:") ? service.slice(5) : service === "telegram-premium" ? "telegram-premium" : null;
+  // Verification products keep theirs on the product too.
+  const verify = service.startsWith("verify:") ? service.slice(7) : null;
   const productId = slug
     ? await storefront<{ account: { id: number } }>(`accounts/${encodeURIComponent(slug)}`, 60).then((r) => r.account.id).catch(() => undefined)
-    : undefined;
+    : verify
+      ? await storefront<{ product: { id: number } }>(`verifications/${encodeURIComponent(verify)}`, 60).then((r) => r.product.id).catch(() => undefined)
+      : undefined;
   const key = commentKey(service, productId);
   return { key, list: await loadComments(key, locale, t("ShopMajazi support")) };
 }

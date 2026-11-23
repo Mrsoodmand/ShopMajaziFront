@@ -6,7 +6,9 @@ import { SubBridgeA, SubBridgeB, SubBridgeC, SubBridgeD, SubBridgeE, SubBridgeF,
 import { CartA, CartB, CartC, CartD, CartE } from "./cart/offers";
 import { CartOrderA, CartOrderB, CartOrderC, CartOrderD } from "./account/cartOrders";
 import { OrderPayA, OrderPayB, OrderPayC } from "./account/orderPay";
+import { BusinessOfferA, BusinessOfferB, BusinessOfferC } from "./account/organization";
 import { NightCallA, NightCallB, NightCallC } from "./checkout/nightCall";
+import { VerifyA, VerifyB, VerifyC, VerifyD, VerifyE, VerifyFormA, VerifyFormB, VerifyFormC, VerifyFormD } from "./verify/offers";
 import ErrorsA from "./errors/ErrorsA";
 import ErrorsB from "./errors/ErrorsB";
 import ErrorsC from "./errors/ErrorsC";
@@ -143,6 +145,7 @@ import AppleH from "./appleId/AppleH";
 import AppleI from "./appleId/AppleI";
 import AppleJ from "./appleId/AppleJ";
 import { PlanSelectA, PlanSelectB, PlanSelectC, PlanSelectD, PlanSelectE, PlanSelectF } from "./subs/planSelect";
+import { PopularBadgeBand, PopularBadgeFolder, PopularBadgeNow, PopularBadgeTab, PopularBadgeTabEnd } from "./subs/popularBadge";
 import { DeliveredA, DeliveredB, DeliveredC, DeliveredD, DeliveredE } from "./subSingle/howDelivered";
 import { CatalogA, CatalogB, CatalogC, CatalogD, CatalogE } from "./hero/catalogWindows";
 import SubsA from "./subs/SubsA";
@@ -663,6 +666,17 @@ export const sections: Section[] = [
     ],
   },
   {
+    id: "page-account-business",
+    title: "Page · Account · Passbook · Business (organisation) account",
+    kind: "page",
+    variantOf: "page-account",
+    offers: [
+      { id: "A", name: "Steps", summary: "A three-step track on top (send details → we review → business prices), then the whole form in one card. Approved: your discount, what it applies to and a sample price, with your company details beside it.", Component: BusinessOfferA },
+      { id: "B", name: "Benefits Aside", summary: "The form split into 'Company details' and 'A few questions' cards, with a deep-indigo side card listing what a business account gives you. Approved: the same side card shows your percent.", Component: BusinessOfferB },
+      { id: "C", name: "Membership Card", summary: "A company card at the top — empty dashed outline while personal, an indigo card with company name, tax code and percent once approved. Applying is two short steps behind a 'Get a business account' button.", Component: BusinessOfferC },
+    ],
+  },
+  {
     id: "checkout-night-call",
     title: "Checkout · Available for a call at night?",
     kind: "part",
@@ -794,6 +808,30 @@ export const sections: Section[] = [
     ],
   },
   {
+    id: "page-verify",
+    title: "Page · Verification",
+    kind: "page",
+    offers: [
+      { id: "A", name: "Two Doors", summary: "Two big choices first (buy a verified account / verify my own account), then only that kind's products; the chosen one's plans and form open below.", Component: VerifyA },
+      { id: "B", name: "Catalog + Panel", summary: "Like the Subscriptions page: kind chips, search and a product grid; the chosen product's plans and form in a panel that follows you on desktop.", Component: VerifyB },
+      { id: "C", name: "Guided Steps", summary: "One column of numbered steps: what you need → product → plan, details and documents. Finished steps fold to one line with Change.", Component: VerifyC },
+      { id: "D", name: "Rows that Open", summary: "A calm list in two groups (ready accounts / we verify yours); opening a row unfolds its plans and form in place.", Component: VerifyD },
+      { id: "E", name: "Privacy First", summary: "Opens on what happens to your documents (send → kept private → verified → deleted after 30 days), then product cards; the form opens in a sheet.", Component: VerifyE },
+    ],
+  },
+  {
+    id: "page-verify-form",
+    title: "Page · Verification · Order form",
+    kind: "page",
+    variantOf: "page-verify",
+    offers: [
+      { id: "A", name: "Drop Zone", summary: "One column; each file is a large dashed box you can drop onto or tap. A green privacy box sits above the form.", Component: VerifyFormA },
+      { id: "B", name: "Compact Rows", summary: "Fields grouped as «Your account» and «Your documents»; each file is a slim row with a Choose file button.", Component: VerifyFormB },
+      { id: "C", name: "Camera First", summary: "Grouped like B, but each file offers Take a photo (opens the camera on phones) and Choose from files.", Component: VerifyFormC },
+      { id: "D", name: "Checklist", summary: "Fields on one side, a «What we need · 2 of 5 ready» checklist with a progress bar beside them; each item jumps to its field.", Component: VerifyFormD },
+    ],
+  },
+  {
     id: "subs-plan-select",
     title: "Subscriptions · Chosen plan colour",
     kind: "part",
@@ -804,6 +842,18 @@ export const sections: Section[] = [
       { id: "D", name: "Violet outline", summary: "A violet border on a soft violet tint instead of a full fill; quieter, so the gold «محبوب‌ترین» badge leads.", Component: PlanSelectD },
       { id: "E", name: "Emerald outline (current)", summary: "A green border on a soft green tint; quiet, and in the site's own colour.", Component: PlanSelectE },
       { id: "F", name: "Ink", summary: "No colour: white in dark theme, black in light. The strongest contrast; the gold badge is the only accent.", Component: PlanSelectF },
+    ],
+  },
+  {
+    id: "subs-popular-badge",
+    title: "Subscriptions · Popular badge with a business price",
+    kind: "part",
+    offers: [
+      { id: "N", name: "Now", summary: "The gold pill beside the name, as it is today; with two prices the row gets crowded.", Component: PopularBadgeNow },
+      { id: "A", name: "Tab on the top edge", summary: "The pill sits on the row's top border, so the row is left to the name and both prices.", Component: PopularBadgeTab },
+      { id: "D", name: "Tab over the price", summary: "The same pill on the row's top border, but at the price's side.", Component: PopularBadgeTabEnd },
+      { id: "E", name: "Folder tab", summary: "A gold tab joined to the row's top corner, like a folder tab: it reads as part of the plan, not a sticker.", Component: PopularBadgeFolder },
+      { id: "F", name: "Gold band inside (current)", summary: "A thin gold strip across the top inside the row with «★ محبوب‌ترین»; name and prices sit under it.", Component: PopularBadgeBand },
     ],
   },
   {

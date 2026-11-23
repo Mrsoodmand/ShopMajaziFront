@@ -2,6 +2,7 @@
 import { useId, type ReactNode } from "react";
 import { BadgeCheck, Ban, Check, Download, FolderPlus, Mic, Smile, Sparkles, Upload } from "lucide-react";
 import { useMoney } from "@/lib/money";
+import { OrgPrice } from "@/components/OrgPrice";
 import { perMonth, premiumCompare, premiumFeatures, premiumSaving } from "@/content/telegram-en";
 import { usePremiumPlans } from "./livePremium";
 import { accent, card, SumRows, type PremiumState } from "./parts";
@@ -40,12 +41,12 @@ export function PlanRadios({ pm, layout = "cards", legend = "How long?", dark = 
                     <span aria-hidden className={`grid h-5 w-5 place-items-center rounded-full border-2 ${on ? "border-violet-600 bg-violet-600 dark:border-violet-400 dark:bg-violet-400" : "border-slate-400"}`}>{on && <Check className="h-3 w-3 text-white" strokeWidth={3} />}</span>
                     <span><span className={`block font-semibold ${text}`}>{p.label}{p.tag && <span className={`ms-2 text-xs font-bold ${t.tr(accent).premium.text}`}>{p.tag}</span>}</span><span className={`text-sm ${sub}`}>{usd(perMonth(p))}{" "}{t("a month")}{save > 0 && ` · save ${save}%`}</span></span>
                   </span>
-                  <span className={`font-display text-lg font-bold ${text}`}>{usd(p.price)}</span>
+                  <span className={`font-display text-lg font-bold ${text}`}><OrgPrice value={p.price} family="telegram" format={usd} /></span>
                 </>
               ) : (
                 <>
                   <span className={`font-semibold ${text} ${layout === "row" ? "text-sm" : ""}`}>{p.label}</span>
-                  <span className={`font-display font-bold ${text} ${layout === "row" ? "text-lg" : "mt-2 text-2xl sm:text-3xl"}`}>{usd(p.price)}</span>
+                  <span className={`font-display font-bold ${text} ${layout === "row" ? "text-lg" : "mt-2 text-2xl sm:text-3xl"}`}><OrgPrice value={p.price} family="telegram" format={usd} /></span>
                   <span className={`text-xs sm:text-sm ${sub}`}>{usd(perMonth(p))}{t("/mo")}</span>
                   {layout === "cards" && <span className={`mt-3 self-start rounded-full px-2 py-0.5 text-xs font-semibold ${save > 0 ? t.tr(accent).premium.soft : "invisible"}`}>{t("Save")}{" "}{save}%</span>}
                 </>

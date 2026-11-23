@@ -9,7 +9,7 @@ import { panels } from "./panels";
 import { CatTabs, ProductButton, SearchBox, SubsCheckout, SubsFaq, SubsOrderView, SubsTitle, useCatalog, useSubs } from "./parts";
 import { useT } from "@/i18n/client";
 import type { SubProduct } from "@/content/subs-en";
-import { useLiveSubs, useSubsList } from "./live";
+import { useFlavor, useLiveSubs, useSubsList } from "./live";
 import { QuickPicks } from "../quickPicks";
 import { BrandMesh } from "../social/heroBackdrops";
 import { SpotlightBand, SpotlightMark, spotTone, useSpotlight } from "@/design/service/spotlight";
@@ -39,6 +39,7 @@ function Mark({ p }: { p: SubProduct }) {
 export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?: string }) {
   const t = useT();
   const live = useLiveSubs();
+  const flavor = useFlavor();
   const list = useSubsList();
   const Panel = panels[panelId ?? "original"] ?? panels.original;
   const s = useSubs(slug ?? (live ? (list.find((p) => p.popular) ?? list[0])?.slug : "chatgpt-plus"));
@@ -61,9 +62,9 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
   if (s.order) return <PageShell><div className="px-6 py-14"><SubsOrderView s={s} /></div></PageShell>;
 
   const pick = (p: Parameters<typeof s.select>[0]) => {
-    if (slug && p && p.slug !== slug && stripLocale(window.location.pathname).startsWith("/accounts/")) {
+    if (slug && p && p.slug !== slug && stripLocale(window.location.pathname).startsWith(`${flavor.base}/`)) {
       try { sessionStorage.setItem(PANEL_FLAG, "1"); } catch {}
-      router.push(lp(`/accounts/${p.slug}`), { scroll: false });
+      router.push(lp(`${flavor.base}/${p.slug}`), { scroll: false });
       return;
     }
     s.select(p);
@@ -85,8 +86,10 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
           {spot ? <SpotlightBand /> : <BrandMesh colors={popular.map((p) => hexOf(p.color)).filter((x): x is string => !!x && x !== FALLBACK_COLOR)} />}
           <div className="mx-auto max-w-7xl px-4 pt-12 text-center sm:px-6 sm:pt-20">
             {spot && <SpotlightMark icon={Sparkles} />}
-            <h1 id="subs-h1" className={`mx-auto max-w-5xl text-balance font-display text-4xl font-bold tracking-tight sm:text-6xl ${spot ? spotTone.title : "text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.25)]"}`}><PageH1 text={t("Premium subscriptions")} /></h1>
-            <p className={`mx-auto mt-4 max-w-3xl text-base leading-relaxed sm:text-lg ${spot ? spotTone.sub : "text-white/90"}`}>{live
+            <h1 id="subs-h1" className={`mx-auto max-w-5xl text-balance font-display text-4xl font-bold tracking-tight sm:text-6xl ${spot ? spotTone.title : "text-white drop-shadow-[0_2px_12px_rgba(0,0,0,.25)]"}`}><PageH1 text={t(flavor.verify ? "Verified accounts and verification" : "Premium subscriptions")} /></h1>
+            <p className={`mx-auto mt-4 max-w-3xl text-base leading-relaxed sm:text-lg ${spot ? spotTone.sub : "text-white/90"}`}>{flavor.verify
+              ? t("Buy an account that's already verified, or have your own account verified. Your documents stay private.")
+              : live
               ? t("Premium apps without a foreign card. Each one shows how it's activated and how long it takes.")
               : t("ChatGPT, Netflix, Spotify, Canva and more. Most are activated on your own account; you never share a password.")}</p>
             <SearchBox c={c} hero className="mx-auto mt-7 max-w-xl text-start" />
@@ -99,7 +102,7 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
         </section>
       )}
       <div className={`mx-auto max-w-7xl px-4 pb-24 sm:px-6 ${product ? "pt-10 sm:pt-14" : "pt-2"}`}>
-        {product && <SubsTitle sub={product.tagline}>{t("{0} subscription", { 0: product.name })}</SubsTitle>}
+        {product && <SubsTitle sub={product.tagline}>{flavor.verify ? product.name : t("{0} subscription", { 0: product.name })}</SubsTitle>}
 
         <div className={`${product ? "mt-8" : ""} grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_400px]`}>
           <section aria-label={t("Catalog")}>
@@ -117,7 +120,7 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
             <div className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-white/15 dark:bg-[#0E1424]">
               {s.product
                 ? <div key={s.product.slug} className="animate-fade-up [animation-duration:250ms]"><Panel s={s} focusable /></div>
-                : <div className="py-10 text-center"><Sparkles aria-hidden className="mx-auto h-8 w-8 text-violet-600 dark:text-violet-400" /><p className="mt-3 font-semibold text-slate-900 dark:text-white">{t("Pick a subscription")}</p><p className="text-slate-600 dark:text-slate-400">{t("You'll see its plans and price here.")}</p></div>}
+                : <div className="py-10 text-center"><Sparkles aria-hidden className="mx-auto h-8 w-8 text-violet-600 dark:text-violet-400" /><p className="mt-3 font-semibold text-slate-900 dark:text-white">{t(flavor.pick)}</p><p className="text-slate-600 dark:text-slate-400">{t("You'll see its plans and price here.")}</p></div>}
             </div>
           </div>
         </div>

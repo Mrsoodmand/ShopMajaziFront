@@ -413,7 +413,7 @@ export function StarsCheckout({ st }: { st: StarsState }) {
   return (
     <>
     {st.notice && <SubsNoticeToast n={st.notice} onClose={st.dismissNotice} />}
-    <CheckoutModal open={st.payOpen} onClose={st.closePay} price={st.total} itemLabel={tx("{0} Stars", { 0: st.amount.toLocaleString("en-US") })} note={tx("Delivered in 1–5 minutes. Wrong username? Nothing is sent and you're refunded.")} onPay={st.buy} onAddToCart={st.addToCart}
+    <CheckoutModal org="telegram" open={st.payOpen} onClose={st.closePay} price={st.total} itemLabel={tx("{0} Stars", { 0: st.amount.toLocaleString("en-US") })} note={tx("Delivered in 1–5 minutes. Wrong username? Nothing is sent and you're refunded.")} onPay={st.buy} onAddToCart={st.addToCart}
       {...(st.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<><ServiceIcon s="stars" /><div className="min-w-0 flex-1"><div className="truncate font-semibold text-slate-900 dark:text-white">{st.amount.toLocaleString("en-US")}{" "}{tx("Telegram Stars")}</div><div className="truncate text-xs text-slate-500 dark:text-slate-400">{tx("To @")}{cleanUsername(st.r.value)}{st.anon ? tx(" · anonymous") : ""}</div></div></>} />
     </>
@@ -499,7 +499,7 @@ export function PremiumCheckout({ pm }: { pm: PremiumState }) {
   return (
     <>
     {pm.notice && <SubsNoticeToast n={pm.notice} onClose={pm.dismissNotice} />}
-    <CheckoutModal open={pm.payOpen} onClose={pm.closePay} price={pm.total} itemLabel={tx("Premium · {0}", { 0: pm.plan.label })} note={tx("It's active on the account in a few minutes. You don't need to do anything else.")} onPay={pm.buy} onAddToCart={pm.addToCart}
+    <CheckoutModal org="telegram" open={pm.payOpen} onClose={pm.closePay} price={pm.total} itemLabel={tx("Premium · {0}", { 0: pm.plan.label })} note={tx("It's active on the account in a few minutes. You don't need to do anything else.")} onPay={pm.buy} onAddToCart={pm.addToCart}
       {...(pm.live && { signIn: true, only: ["wallet", "card"] as PayMethod[], topUpHref: TOP_UP_HREF, fees: { card: 0 }, notes: { card: "Iranian bank cards, via ZarinPal" } })}
       summary={<><ServiceIcon s="premium" /><div className="min-w-0 flex-1"><div className="truncate font-semibold text-slate-900 dark:text-white">{tx("Telegram Premium ·")}{" "}{pm.plan.label}</div><div className="truncate text-xs text-slate-500 dark:text-slate-400">{tx("To @")}{cleanUsername(pm.r.value)}</div></div></>} />
     </>

@@ -7,7 +7,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 // site's. POSTs send the XSRF-TOKEN cookie back as X-XSRF-TOKEN, which Laravel's CSRF check accepts.
 
 export type AccountUser = { name: string; mobile: string };
-type Me = { authenticated: boolean; user: AccountUser | null; wallet: number };
+// organization: an approved organisation account's percent per product family (App\Services\Organizations::badge).
+type Me = { authenticated: boolean; user: AccountUser | null; wallet: number; organization?: { discounts: Record<string, number> } | null };
 
 export class ApiError extends Error {
   constructor(message: string, readonly code: string, readonly status: number, readonly data: Record<string, unknown> | null = null) {
@@ -53,6 +54,8 @@ export type Account = {
   status: "loading" | "guest" | "user";
   user: AccountUser | null;
   wallet: number | null; // null until known (or signed out)
+  // An organisation account's percent per product family (services, subscriptions, verification, apple_id, google_voice).
+  orgDiscounts: Record<string, number>;
   refresh: () => Promise<void>;
   signedIn: (me: Me) => void; // after a sign-in / sign-up call returned the new state
   setWallet: (n: number) => void;
@@ -60,6 +63,7 @@ export type Account = {
 };
 
 const Ctx = createContext<Account | null>(null);
+const NO_DISCOUNTS: Record<string, number> = {};
 
 export function AccountProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
@@ -77,14 +81,31 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     status: me ? (me.authenticated ? "user" : "guest") : failed ? "guest" : "loading",
     user: me?.user ?? null,
     wallet: me?.authenticated ? me.wallet : null,
+    orgDiscounts: (me?.authenticated && me.organization?.discounts) || NO_DISCOUNTS,
     refresh, signedIn: setMe, setWallet, signOut,
   }), [me, failed, refresh, setWallet, signOut]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 // Outside the provider (design previews rendered on their own) everyone is a guest.
-const guest: Account = { status: "guest", user: null, wallet: null, refresh: async () => {}, signedIn: () => {}, setWallet: () => {}, signOut: async () => {} };
+const guest: Account = { status: "guest", user: null, wallet: null, orgDiscounts: {}, refresh: async () => {}, signedIn: () => {}, setWallet: () => {}, signOut: async () => {} };
 export const useAccount = () => useContext(Ctx) ?? guest;
 
 // Wallet top-up by card: the account's Add funds page (Front/src/app/account).
 export const TOP_UP_HREF = "/account/funds";
+
+/*
+ * An organisation account's price for a product family: {price, was, percent}. `was` is the normal price when a
+ * discount applies (to show crossed out), else null. The server takes off the same (Organizations::cut).
+ */
+export type OrgFamily = "services" | "subscriptions" | "verification" | "apple_id" | "google_voice" | "telegram";
+/** Telegram Premium's product slug: sold as a subscription, discounted with the company's Telegram percent. */
+export const TELEGRAM_PREMIUM = "telegram-premium";
+export function useOrgPrice() {
+  const { orgDiscounts } = useAccount();
+  return useCallback((price: number, family: OrgFamily) => {
+    const percent = orgDiscounts[family] ?? 0;
+    const cut = percent > 0 ? Math.round((price * percent) / 100) : 0;
+    return { price: price - cut, was: cut > 0 ? price : null, percent };
+  }, [orgDiscounts]);
+}

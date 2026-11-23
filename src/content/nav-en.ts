@@ -35,6 +35,14 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
+    // Verification (/verify): the products the admin switched on for the menu (admin › وریفای › نمایش در منو) replace
+    // this one catalog link (i18n/nav.ts).
+    id: "verify", label: "Verification", icon: BadgeCheck, viewAll: { label: "All verification products", href: "/verify" },
+    items: [
+      { label: "Verification products", desc: "Ready verified accounts, or your own account verified", href: "/verify", icon: BadgeCheck, from: "" },
+    ],
+  },
+  {
     // No viewAll: there is no Telegram hub page, and its three pages are all listed below.
     id: "telegram", label: "Telegram", icon: Send,
     items: [

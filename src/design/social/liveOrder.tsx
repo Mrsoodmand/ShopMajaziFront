@@ -8,6 +8,7 @@ import NightCallQuestion, { nightCallBody } from "@/components/checkout/NightCal
 import { accountApi, ApiError, TOP_UP_HREF, useAccount } from "@/lib/account";
 import { useCart } from "@/lib/cart";
 import { useMoney } from "@/lib/money";
+import { OrgPrice, useOrgFormat } from "@/components/OrgPrice";
 import { formatNum } from "@/i18n/translate";
 import { useT } from "@/i18n/client";
 import { PLATFORM_BRAND, type ApiServiceOrder, type LiveField, type LiveService } from "@/lib/social";
@@ -236,6 +237,7 @@ export type LiveOrder = ReturnType<typeof useLiveOrder>;
 export function LiveServiceRadios({ o }: { o: LiveOrder }) {
   const tx = useT();
   const money = useMoney();
+  const orgFmt = useOrgFormat("services", money.format);
   return (
     <fieldset>
       <Legend>{`${o.d.platform.name} · ${tx("Service")}`}</Legend>
@@ -249,7 +251,7 @@ export function LiveServiceRadios({ o }: { o: LiveOrder }) {
               <input type="radio" name="social-service" value={x.id} checked={on} onChange={() => o.setService(x.id)} className="sr-only" />
               <span className="flex items-start justify-between gap-2"><span className="font-semibold text-slate-900 dark:text-white">{x.name}</span><Dot on={on} tone={o.tone} /></span>
               {kind && kind.value !== x.name && <span className="text-sm text-slate-600 dark:text-slate-400">{kind.value}</span>}
-              <span className="mt-1 text-sm font-semibold tabular-nums text-slate-900 dark:text-white">{tx("from {0} / 1,000", { 0: money.format(x.per1000) })}</span>
+              <span className="mt-1 text-sm font-semibold tabular-nums text-slate-900 dark:text-white">{tx("from {0} / 1,000", { 0: orgFmt(x.per1000) })}</span>
             </label>
           );
         })}
@@ -275,7 +277,7 @@ export function LiveAmount({ o }: { o: LiveOrder }) {
               <label key={p.id} className={`${optionBase} flex-col items-center !p-3 text-center ${on ? o.tone.border : optionOff}`}>
                 <input type="radio" name="social-plan" checked={on} onChange={() => o.setPlan(p.id)} className="sr-only" />
                 <span className="font-display text-lg font-bold tabular-nums text-slate-900 dark:text-white">{o.num(p.count)}</span>
-                <span className="text-xs tabular-nums text-slate-600 dark:text-slate-400">{money.format(p.price)}</span>
+                <span className="text-xs tabular-nums text-slate-600 dark:text-slate-400"><OrgPrice value={p.price} family="services" format={money.format} wasClassName="block !me-0" /></span>
               </label>
             );
           })}
@@ -296,7 +298,7 @@ export function LiveAmount({ o }: { o: LiveOrder }) {
             <label key={n} className={`${optionBase} flex-col items-center !p-3 text-center ${on ? o.tone.border : optionOff}`}>
               <input type="radio" name="social-qty-preset" checked={on} onChange={() => o.setQty(n)} className="sr-only" />
               <span className="font-display font-bold tabular-nums text-slate-900 dark:text-white">{o.num(n)}</span>
-              <span className="text-xs tabular-nums text-slate-600 dark:text-slate-400">{money.format(countPrice(c, n))}</span>
+              <span className="text-xs tabular-nums text-slate-600 dark:text-slate-400"><OrgPrice value={countPrice(c, n)} family="services" format={money.format} wasClassName="block !me-0" /></span>
             </label>
           );
         })}
@@ -391,7 +393,7 @@ export function LiveSummary({ o, className = card }: { o: LiveOrder; className?:
       </div>
       <div className="mt-2 flex items-baseline justify-between border-t border-slate-200 pt-4 dark:border-white/10">
         <span className="font-semibold text-slate-900 dark:text-white">{tx("Total")}</span>
-        <span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{o.total && !o.qtyError ? money.format(o.total) : "—"}</span>
+        <span className="font-display text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{o.total && !o.qtyError ? <OrgPrice value={o.total} family="services" format={money.format} /> : "—"}</span>
       </div>
       <button type="submit" disabled={!s || !!o.d.error} className={`${primary} mt-5 w-full tabular-nums disabled:cursor-not-allowed disabled:opacity-50`}>{o.inCart && <ShoppingBag aria-hidden className="h-5 w-5" />}{tx(o.inCart ? "Add to cart" : "Continue")}</button>
       {o.blocker && <p role="alert" className="mt-3 flex items-start justify-center gap-1.5 text-center text-sm font-semibold text-red-700 dark:text-red-400"><X aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />{o.blocker}</p>}
@@ -408,7 +410,7 @@ export function LiveJumpBar({ o, inView, go }: { o: LiveOrder; inView: boolean; 
       <div className="mx-auto flex max-w-xl items-center justify-between gap-4">
         <span className="min-w-0">
           <span className="block truncate text-sm text-slate-600 dark:text-slate-400">{o.count && !o.qtyError ? `${o.num(o.count)} · ${o.service?.name ?? ""}` : o.service?.name}</span>
-          <span className="font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white">{o.total && !o.qtyError ? money.format(o.total) : "—"}</span>
+          <span className="font-display text-xl font-bold tabular-nums text-slate-900 dark:text-white">{o.total && !o.qtyError ? <OrgPrice value={o.total} family="services" format={money.format} /> : "—"}</span>
         </span>
         <button type="button" onClick={go} className={`rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-900 dark:border-white/20 dark:text-white ${ring}`}>{tx("Review order")}</button>
       </div>
@@ -424,7 +426,7 @@ export function LiveCheckout({ o }: { o: LiveOrder }) {
   const s = o.service;
   const to = o.target ? (o.values[o.target.name] ?? "").trim() : "";
   return (
-    <CheckoutModal open={o.payOpen} onClose={o.closePay} price={o.total} itemLabel={`${o.num(o.count)} · ${s?.name ?? ""}`} payLabel={tx("Pay")} onPay={o.buy} onAddToCart={o.addToCart}
+    <CheckoutModal org="services" open={o.payOpen} onClose={o.closePay} price={o.total} itemLabel={`${o.num(o.count)} · ${s?.name ?? ""}`} payLabel={tx("Pay")} onPay={o.buy} onAddToCart={o.addToCart}
       signIn only={["wallet", "card"]} topUpHref={TOP_UP_HREF} fees={{ card: 0 }} notes={{ card: "Iranian bank cards, via ZarinPal" }}
       note={o.changedTo != null ? tx("The price just changed to {price}. Check it and pay again.", { price: money.format(o.changedTo) }) : tx("Delivery starts once we've checked the link. If it's private or wrong, the order is cancelled and refunded to your wallet.")}
       summary={<>

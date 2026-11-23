@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentType, CSSProperties } from "react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
 import { ArrowRight, Check, ChevronRight } from "lucide-react";
 import type { GvNumber } from "@/content/google-voice-en";
 import { STATE_NAMES, US_GRID } from "@/lib/us-states";
@@ -12,7 +12,7 @@ import { useT } from "@/i18n/client";
 // border plus a check (never colour alone). Cards sit flat on the page: a border, no shadow; hover tints the card.
 
 export type City = { key: string; city: string; state: string; numbers: GvNumber[]; areas: string[]; from: number };
-export type CityCardProps = { c: City; price: string; on: boolean; onPick: () => void; label: string; i: number };
+export type CityCardProps = { c: City; price: ReactNode; on: boolean; onPick: () => void; label: string; i: number };
 
 const ease = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 const enter = (i: number): CSSProperties => ({ animationDelay: `${Math.min(i, 12) * 30}ms` });

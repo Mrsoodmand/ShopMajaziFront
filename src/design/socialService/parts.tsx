@@ -6,6 +6,7 @@ import { BadgeCheck, CalendarClock, ChevronLeft, Gauge, Headphones, KeyRound, Me
 import { useT } from "@/i18n/client";
 import { formatNum } from "@/i18n/translate";
 import { MoneyProvider, useMoney } from "@/lib/money";
+import { useOrgFormat } from "@/components/OrgPrice";
 import { categoryHref, type SocialCategory } from "@/content/social-categories-en";
 import { liveSocialFaq } from "@/content/social-en";
 import type { ServiceComment } from "@/content/service-extras-en";
@@ -230,6 +231,7 @@ export function Article({ d, className = "" }: { d: LiveSocialOrder; className?:
 export function OtherServices({ o, className = "" }: { o: LiveOrder; className?: string }) {
   const tx = useT();
   const money = useMoney();
+  const orgFmt = useOrgFormat("services", money.format);
   const others = o.d.services.filter((s) => s.id !== o.service?.id);
   if (!others.length) return null;
   return (
@@ -239,7 +241,7 @@ export function OtherServices({ o, className = "" }: { o: LiveOrder; className?:
         {others.map((s) => (
           <li key={s.id}>
             <Link href={`${categoryHref(o.d.platform)}/${s.slug}`} className={`${card} flex items-center justify-between gap-3 !rounded-2xl p-4 hover:border-slate-300 dark:hover:border-white/30 ${ring}`}>
-              <span className="min-w-0"><span className="block truncate font-semibold text-slate-900 dark:text-white">{s.name}</span><span className="block text-sm tabular-nums text-slate-600 dark:text-slate-400">{tx("from {0} / 1,000", { 0: money.format(s.per1000) })}</span></span>
+              <span className="min-w-0"><span className="block truncate font-semibold text-slate-900 dark:text-white">{s.name}</span><span className="block text-sm tabular-nums text-slate-600 dark:text-slate-400">{tx("from {0} / 1,000", { 0: orgFmt(s.per1000) })}</span></span>
               <ChevronLeft aria-hidden className="h-4 w-4 shrink-0 text-slate-400 ltr:rotate-180" />
             </Link>
           </li>
@@ -253,8 +255,9 @@ export function OtherServices({ o, className = "" }: { o: LiveOrder; className?:
 
 export function useTotal(o: LiveOrder) {
   const money = useMoney();
+  const orgFmt = useOrgFormat("services", money.format);
   const ok = !!o.total && !o.qtyError;
-  return { ok, total: ok ? money.format(o.total) : "—", amount: o.count && !o.qtyError ? o.num(o.count) : "—", from: o.service ? money.format(o.service.per1000) : "—" };
+  return { ok, total: ok ? orgFmt(o.total) : "—", amount: o.count && !o.qtyError ? o.num(o.count) : "—", from: o.service ? orgFmt(o.service.per1000) : "—" };
 }
 
 // Phones: a bar fixed to the bottom with the total and the pay button itself (not a jump), hidden while `hide`.

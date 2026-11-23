@@ -18,7 +18,8 @@ import { cardShort, useAccountDemo, useFmt, type Fmt, type Store } from "./kit";
 export type Invoice = {
   no: number;
   issued: string; // ISO, when it was paid
-  buyer: { name: string; mobile: string; email: string | null };
+  buyer: { name: string; mobile: string; email: string | null; company?: { name: string; tax_code: string } | null };
+  discount?: number; // organisation discount: item/lines show the list price, this line takes it off
   item: { title: string; detail: string; amount: number };
   paid: { how: string; at: string };
   refund?: { amount: number; reason: string; at: string };
@@ -56,7 +57,8 @@ export function toInvoice(o: AccountOrder, store: Store): Invoice {
   return {
     no: o.id, issued: o.at,
     buyer: store.user,
-    item: { title: o.title, detail: o.detail, amount: o.price },
+    item: { title: o.title, detail: o.detail, amount: o.price + (o.discount ?? 0) },
+    discount: o.discount || undefined,
     // An order support made: every line on its own, its note under it (never in the amount column).
     // An account with paid add-ons (o.bill): its plan, then each add-on, the same way.
     lines: (o.lines?.length ? o.lines : o.bill?.length ? o.bill : null)?.map((l) => ({ title: l.title, detail: l.note, amount: l.price })),
@@ -339,7 +341,9 @@ function SheetD({ inv }: { inv: Invoice }) {
         <Stamp inv={inv} />
       </div>
       <dl className="mt-12 grid grid-cols-3 gap-8 border-y border-slate-200 py-6 text-sm">
-        <div><dt className="text-slate-500">{t("Billed to")}</dt><dd className="mt-1 font-semibold">{t(inv.buyer.name)}</dd><dd className="tabular-nums text-slate-600" dir="ltr">{inv.buyer.mobile}</dd></div>
+        <div><dt className="text-slate-500">{t("Billed to")}</dt>
+          {inv.buyer.company && <><dd className="mt-1 font-semibold">{inv.buyer.company.name}</dd><dd className="text-slate-600">{t("Tax code")}: <span className="tabular-nums" dir="ltr">{inv.buyer.company.tax_code}</span></dd></>}
+          <dd className={inv.buyer.company ? "text-slate-600" : "mt-1 font-semibold"}>{t(inv.buyer.name)}</dd><dd className="tabular-nums text-slate-600" dir="ltr">{inv.buyer.mobile}</dd></div>
         <div><dt className="text-slate-500">{t("Paid with")}</dt><dd className="mt-1 font-semibold">{t(inv.paid.how)}</dd><dd className="text-slate-600">{f.when(inv.paid.at)}</dd></div>
         <div><dt className="text-slate-500">{t("Issued by")}</dt><dd className="mt-1 font-semibold">{t("ShopMajazi")}</dd><dd className="text-slate-600" dir="ltr">{SELLER.email}</dd></div>
       </dl>
@@ -350,6 +354,7 @@ function SheetD({ inv }: { inv: Invoice }) {
             <tr key={i} className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t(l.title)}</span><span className="text-slate-600">{t(l.detail)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">{f.money(l.amount)}</td></tr>
           ))}
           {inv.refunds?.map((r, i) => <tr key={`r${i}`} className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("Refund to wallet")} · {t(r.title)}</span><span className="text-slate-600">{t(r.reason)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">−{f.money(r.amount)}</td></tr>)}
+          {!!inv.discount && <tr className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("Business discount")}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">−{f.money(inv.discount)}</td></tr>}
           {inv.refund && <tr className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("Refund to wallet")}</span><span className="text-slate-600">{t(inv.refund.reason)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">−{f.money(inv.refund.amount)}</td></tr>}
         </tbody>
       </table>
