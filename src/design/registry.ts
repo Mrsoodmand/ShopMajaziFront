@@ -147,6 +147,7 @@ import AppleI from "./appleId/AppleI";
 import AppleJ from "./appleId/AppleJ";
 import { PlanSelectA, PlanSelectB, PlanSelectC, PlanSelectD, PlanSelectE, PlanSelectF } from "./subs/planSelect";
 import { PopularBadgeBand, PopularBadgeFolder, PopularBadgeNow, PopularBadgeTab, PopularBadgeTabEnd } from "./subs/popularBadge";
+import { NotesCard, NotesChecklist, NotesChips, NotesFold, NotesRows } from "./subs/notesPlacement";
 import { DeliveredA, DeliveredB, DeliveredC, DeliveredD, DeliveredE } from "./subSingle/howDelivered";
 import { CatalogA, CatalogB, CatalogC, CatalogD, CatalogE } from "./hero/catalogWindows";
 import SubsA from "./subs/SubsA";
@@ -885,6 +886,18 @@ export const sections: Section[] = [
       { id: "D", name: "Tab over the price", summary: "The same pill on the row's top border, but at the price's side.", Component: PopularBadgeTabEnd },
       { id: "E", name: "Folder tab", summary: "A gold tab joined to the row's top corner, like a folder tab: it reads as part of the plan, not a sticker.", Component: PopularBadgeFolder },
       { id: "F", name: "Gold band inside (current)", summary: "A thin gold strip across the top inside the row with «★ محبوب‌ترین»; name and prices sit under it.", Component: PopularBadgeBand },
+    ],
+  },
+  {
+    id: "subs-notes",
+    title: "Subscriptions · Order notes (نکات کنار سفارش) in panel J",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Spec rows under the name", summary: "A tinted box of label / value rows right under the product name, before the plans: read first.", Component: NotesRows },
+      { id: "B", name: "Chips under the name", summary: "The notes as small «عنوان: مقدار» pills under the name; takes the least room.", Component: NotesChips },
+      { id: "C", name: "Checklist above Continue", summary: "Green-check lines between the total and Continue, the last thing read before paying.", Component: NotesChecklist },
+      { id: "D", name: "Card under the panel", summary: "Its own small card «پیش از خرید بدانید» under the buy panel; the panel stays as it is today.", Component: NotesCard },
+      { id: "E", name: "Fold «جزئیات سرویس»", summary: "A closed row under the plans that opens to the notes; nothing extra on screen until asked.", Component: NotesFold },
     ],
   },
   {

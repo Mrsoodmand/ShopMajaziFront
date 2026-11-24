@@ -43,6 +43,8 @@ export type SubProduct = {
   addons?: SubAddon[];
   // Live, Persian site, the product's own page only: the admin's article (lib/article.ts), shown in its guide.
   guide?: { title: string; paragraphs: string[] }[];
+  // Live: the admin's «نکات کنار سفارش» as rows, shown in a card under the buy panel (subs/notesPlacement.tsx).
+  specs?: { label: string; value: string }[];
 };
 
 const yourEmail = (app: string): SubField => ({ id: "email", label: `Email of your ${app} account`, hint: `We activate the plan on this ${app} account.`, type: "email" });

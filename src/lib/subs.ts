@@ -79,6 +79,9 @@ export function toSubProduct(a: ApiSub, locale: "en" | "fa"): SubProduct {
   }));
   // Notes are written in Persian; the English site leaves out the ones it can't show.
   const notes = a.notes.map((n) => `${n.label}: ${n.value}`).filter((n) => locale === "fa" || !PERSIAN.test(n));
+  // The card under the buy panel leaves out «نوع فعال‌سازی»: the activation badge already says it (delivery time is
+  // taken out by the server).
+  const specs = a.notes.filter((n) => !/نوع\s*فعال/u.test(n.label)).filter((n) => locale === "fa" || !PERSIAN.test(`${n.label}${n.value}`));
   return {
     id: a.id,
     slug: a.slug,
@@ -98,6 +101,7 @@ export function toSubProduct(a: ApiSub, locale: "en" | "fa"): SubProduct {
       options: x.options.map((o) => ({ id: o.id, label: (locale === "en" && o.label_en) || o.label, prices: o.prices ?? {} })),
     })),
     notes,
+    specs,
     popular: a.popular,
   };
 }

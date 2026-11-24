@@ -352,4 +352,6 @@ export const subs: Record<string, string> = {
   "Short details": "توضیحات کوتاه",
   "Testimonials": "دیدگاه‌ها",
   "{0} details": "جزئیات {0}",
+  // Card under the buy panel with the admin's order notes (subs/notesPlacement.tsx).
+  "Good to know before you buy": "پیش از خرید بدانید",
 };

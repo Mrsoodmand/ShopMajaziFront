@@ -9,6 +9,7 @@ import type { LiveComments } from "../service/ServiceExtras";
 import { SpotlightBand, spotTone, useSpotlight } from "@/design/service/spotlight";
 import { useHasExtras } from "@/design/service/slot";
 import { subBridges } from "./bridge";
+import { OrderNotes } from "../subs/notesPlacement";
 
 // Single D — "Brand Hero": a hero in the product's own colour with a large title; on desktop the buy box overlaps
 // the hero, so it's the first thing on the right. On phones it follows the hero. Details come below.
@@ -45,7 +46,7 @@ export default function SingleD({ slug, panel, comments, bridge }: { slug?: stri
         <div className={`relative z-10 mx-auto max-w-6xl px-4 sm:px-6 ${Bridge ? "pb-0" : "pb-20"}`}>
           <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_380px]">
             {/* The buy box comes first in the markup (as on the other layouts) and CSS order puts it second on phones. */}
-            <aside className="relative order-2 lg:col-start-2 lg:row-start-1 lg:mt-8"><div className="lg:sticky lg:top-24"><BuyBox s={s} panel={panel} className="shadow-2xl shadow-slate-900/20" /></div></aside>
+            <aside className="relative order-2 lg:col-start-2 lg:row-start-1 lg:mt-8"><div className="lg:sticky lg:top-24"><BuyBox s={s} panel={panel} className="shadow-2xl shadow-slate-900/20" /><OrderNotes p={p} className="mt-4" /></div></aside>
             <div className="contents lg:sticky lg:top-20 lg:col-start-1 lg:row-start-1 lg:block lg:space-y-10 lg:self-start">
               <div className={`order-1 mt-8 ${spotTone.title}`}>
                 {heading}
@@ -75,7 +76,7 @@ export default function SingleD({ slug, panel, comments, bridge }: { slug?: stri
       </section>
       <div className={`mx-auto max-w-6xl px-4 sm:px-6 ${Bridge ? "pb-0" : "pb-20"}`}>
         <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <aside className="relative z-10 -mt-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:-mt-80"><div className="lg:sticky lg:top-24"><BuyBox s={s} panel={panel} className="shadow-2xl shadow-slate-900/20" /></div></aside>
+          <aside className="relative z-10 -mt-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:-mt-80"><div className="lg:sticky lg:top-24"><BuyBox s={s} panel={panel} className="shadow-2xl shadow-slate-900/20" /><OrderNotes p={p} className="mt-4" /></div></aside>
           <div className="space-y-12 lg:col-start-1 lg:row-start-1">
             {/* On desktop the facts sit in the hero's faded foot, which is otherwise empty beside the buy box. */}
             <div className="relative z-10 lg:-mt-28"><Trust p={p} /></div>

@@ -69,6 +69,11 @@ export function toVerifyProduct(a: ApiVerify, locale: "en" | "fa"): SubProduct {
     plans,
     fields,
     notes: a.notes.map((n) => `${n.label}: ${n.value}`).filter((n) => locale === "fa" || !PERSIAN.test(n)),
+    // «پیش از خرید بدانید» card under the buy panel (subs/notesPlacement.tsx): leaves out what the header already says,
+    // the activation type and (when the product has its own delivery time) a delivery-time note.
+    specs: a.notes
+      .filter((n) => !/نوع\s*فعال/u.test(n.label) && !(a.delivery && /زمان|مدت\s*تحویل/u.test(n.label)))
+      .filter((n) => locale === "fa" || !PERSIAN.test(`${n.label}${n.value}`)),
     popular: a.popular,
   };
 }
