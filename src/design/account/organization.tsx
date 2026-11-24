@@ -153,9 +153,9 @@ function OrgInput({ f, value, error, onChange }: { f: OrgField; value: string | 
   return <Labeled id={id} label={label} hint={hint} error={error}>{f.type === "yesno" ? <span id={`${id}-l`} className="sr-only">{label}</span> : null}{control}</Labeled>;
 }
 
-function useOrgForm(fields: OrgField[], send: (v: Record<string, string | File>) => Promise<void>) {
+function useOrgForm(fields: OrgField[], send: (v: Record<string, string | File>) => Promise<void>, initial: Record<string, string> = {}) {
   const t = useT();
-  const [values, setValues] = useState<Record<string, string | File | undefined>>({});
+  const [values, setValues] = useState<Record<string, string | File | undefined>>(initial);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
@@ -515,3 +515,5 @@ export const BusinessOfferA = inLanguage(offer(BusinessA));
 export const BusinessOfferB = inLanguage(offer(BusinessB));
 export const BusinessOfferC = inLanguage(offer(BusinessC));
 export { BusinessA, BusinessB, BusinessC };
+// The same inputs draw other admin-built forms (design/subs/request.tsx: درخواست اکانت).
+export { OrgInput, useOrgForm };

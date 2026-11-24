@@ -148,6 +148,7 @@ import AppleJ from "./appleId/AppleJ";
 import { PlanSelectA, PlanSelectB, PlanSelectC, PlanSelectD, PlanSelectE, PlanSelectF } from "./subs/planSelect";
 import { PopularBadgeBand, PopularBadgeFolder, PopularBadgeNow, PopularBadgeTab, PopularBadgeTabEnd } from "./subs/popularBadge";
 import { NotesCard, NotesChecklist, NotesChips, NotesFold, NotesRows } from "./subs/notesPlacement";
+import { AccountRequestsList, RequestAsk, RequestBand, RequestSearchFirst, RequestCardGrow, RequestCardSide, RequestTile, RequestUnfold } from "./subs/requestOffers";
 import { DeliveredA, DeliveredB, DeliveredC, DeliveredD, DeliveredE } from "./subSingle/howDelivered";
 import { CatalogA, CatalogB, CatalogC, CatalogD, CatalogE } from "./hero/catalogWindows";
 import SubsA from "./subs/SubsA";
@@ -898,6 +899,28 @@ export const sections: Section[] = [
       { id: "C", name: "Checklist above Continue", summary: "Green-check lines between the total and Continue, the last thing read before paying.", Component: NotesChecklist },
       { id: "D", name: "Card under the panel", summary: "Its own small card «پیش از خرید بدانید» under the buy panel; the panel stays as it is today.", Component: NotesCard },
       { id: "E", name: "Fold «جزئیات سرویس»", summary: "A closed row under the plans that opens to the notes; nothing extra on screen until asked.", Component: NotesFold },
+    ],
+  },
+  {
+    id: "subs-request",
+    title: "Subscriptions · Request an account we don't sell (درخواست اکانت)",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Tile in the grid → side panel", summary: "A dashed last card «اکانتی که می‌خواهید را پیدا نکردید؟»; the form opens in the side panel where a product's plans show. A search with no result opens it there with the name filled in.", Component: RequestTile },
+      { id: "B", name: "Band under the grid → dialog", summary: "A soft green band under the list with one button; the form opens in a dialog. A search with no result turns the band into «qq را پیدا نکردیم» with «درخواست qq».", Component: RequestBand },
+      { id: "C", name: "Band that unfolds", summary: "A card under the list whose button opens the form inside it, no pop-up. A search with no result shows it already open with the name filled in.", Component: RequestUnfold },
+      { id: "D", name: "Quiet line + empty search is the form", summary: "Under the list only a one-line link (opens a side sheet). When a search finds nothing, that space becomes a card with the form already open.", Component: RequestSearchFirst },
+      { id: "E", name: "One question first", summary: "A card asking «دنبال چه اکانتی هستید؟» with one input; after «بعدی» the rest of the form follows, with the name as an editable chip.", Component: RequestAsk },
+      { id: "F", name: "Account card → side panel", summary: "The last card of the grid looks like an account card (green wash, glow, a + tile, «به سفارش», «قیمت: پس از بررسی»); picking it opens the form in the side panel the way a product shows its plans. A search with no result shows only this card, already picked, with «درخواست qq».", Component: RequestCardSide },
+      { id: "G", name: "Account card that grows", summary: "The same account card; picking it widens it across the whole row and the form opens inside it. A search with no result shows it already open with the name filled in.", Component: RequestCardGrow },
+    ],
+  },
+  {
+    id: "page-account-requests",
+    title: "Account › Account requests (درخواست‌های اکانت)",
+    kind: "part",
+    offers: [
+      { id: "A", name: "Request cards", summary: "One card per request: site, number and date, a status pill; the price as a «پرداخت» button that opens the order, the rejection note, and «لغو درخواست» while it waits.", Component: AccountRequestsList },
     ],
   },
   {

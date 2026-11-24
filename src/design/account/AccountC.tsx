@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
-import { ArrowLeft, Building2, ChevronRight, KeyRound, LifeBuoy, LogOut, MessageCircle, Package, Plus, ReceiptText, RotateCcw, Search, UserRound, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, ChevronRight, KeyRound, LifeBuoy, LogOut, MessageCircle, MessageSquarePlus, Package, Plus, ReceiptText, RotateCcw, Search, UserRound, Wallet } from "lucide-react";
 import Link from "@/i18n/Link";
 import { PageShell } from "../otp/parts";
 import { useT } from "@/i18n/client";
@@ -21,7 +21,8 @@ import {
 
 // "cart": a cart order #C-{id} (several services bought together), drawn by Passbook's `CartOrder`.
 // "business": the organisation account (design/account/organization.tsx), drawn by Passbook's `Business`.
-export type Page = "statement" | "orders" | "order" | "cart" | "funds" | "support" | "profile" | "password" | "business";
+// "requests": accounts asked for that the site doesn't sell (design/account/requests.tsx), drawn by Passbook's `Requests`.
+export type Page = "statement" | "orders" | "order" | "cart" | "funds" | "support" | "profile" | "password" | "business" | "requests";
 // `id`: the order to show, or for support a ticket id (0 = a new ticket, a negative order id = a new ticket about it).
 export type View = { page: Page; id?: number };
 export type Go = (v: View) => void;
@@ -35,6 +36,7 @@ const NAV: { page: Page; label: string; Icon: typeof Wallet }[] = [
   { page: "orders", label: "Orders", Icon: Package },
   { page: "funds", label: "Add funds", Icon: Wallet },
   { page: "support", label: "Support", Icon: LifeBuoy },
+  { page: "requests", label: "Account requests", Icon: MessageSquarePlus },
   { page: "business", label: "Business account", Icon: Building2 },
   { page: "profile", label: "Profile", Icon: UserRound },
   { page: "password", label: "Password", Icon: KeyRound },
@@ -55,8 +57,9 @@ export type OrdersListProps = { demo: Store; go: Go };
 // `OrderPay`: where an order page shows what's still to pay and the buyer's cancel (offers in design/account/orderPay.tsx).
 export type OrderSlot = ComponentType<{ order: AccountOrder; demo: Store; go: Go }>;
 export type OrderPaySlots = { Top?: OrderSlot; Money?: OrderSlot; Aside?: OrderSlot };
-// `Business`: the organisation-account page; without it the nav has no Business item.
-export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder, OrderPay, Business }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }>; OrderPay?: OrderPaySlots; Business?: ComponentType<{ demo: Store; go: Go }> }) {
+// `Business`: the organisation-account page; without it the nav has no Business item. Same for `Requests`.
+// On phones the tab bar has no room for «درخواست‌های اکانت»: the orders page links to it (components/account/AccountApp).
+export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder, OrderPay, Business, Requests }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }>; OrderPay?: OrderPaySlots; Business?: ComponentType<{ demo: Store; go: Go }>; Requests?: ComponentType<{ demo: Store; go: Go }> }) {
   const t = useT();
   const f = useFmt();
   const top = useRef<HTMLDivElement>(null);
@@ -69,8 +72,8 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
   }, [view]);
   const replies = demo.tickets.filter((x) => x.state === "replied").length;
   const order = view.page === "order" ? demo.orders.find((o) => o.id === view.id) : undefined;
-  const nav = NAV.filter((n) => n.page !== "business" || Business);
-  const phoneNav = nav.filter((n) => n.page !== "password");
+  const nav = NAV.filter((n) => (n.page !== "business" || Business) && (n.page !== "requests" || Requests));
+  const phoneNav = nav.filter((n) => n.page !== "password" && n.page !== "requests");
 
   return (
     <>
@@ -120,6 +123,7 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
             {view.page === "support" && <Support key={view.id ?? "list"} demo={demo} go={go} initial={view.id} />}
             {(view.page === "profile" || view.page === "password") && <Settings page={view.page} demo={demo} go={go} />}
             {view.page === "business" && Business && <Business demo={demo} go={go} />}
+            {view.page === "requests" && Requests && <Requests demo={demo} go={go} />}
           </div>
         </div>
 

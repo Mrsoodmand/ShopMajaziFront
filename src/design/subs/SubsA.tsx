@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { PageShell } from "../otp/parts";
@@ -16,12 +16,16 @@ import { SpotlightBand, SpotlightMark, spotTone, useSpotlight } from "@/design/s
 import { useLocalePath } from "@/i18n/Link";
 import { stripLocale } from "@/i18n/config";
 import { PageH1 } from "@/components/seo/PageHeading";
+import { LiveRequestPanel, RequestCard, useAccountRequests } from "./request";
 
 // Page A — "Catalog + Panel": the catalog as a grid with category chips and search; picking a subscription shows
 // its plans, the fields it needs and Buy in a panel that stays beside the grid on desktop. On phones the panel sits
 // below and the page scrolls to it (focus moves to its heading).
 // Opens on ChatGPT Plus (live: the first popular subscription), or on `slug` on a product's own page
 // (/accounts/{slug}), where the heading is the product.
+// The last card asks for an account we don't sell («درخواست اکانت», /design/subs-request F): picking it opens the
+// admin's request form in the panel. A search that finds nothing shows only that card, already picked, with the
+// search as the site's name. Live /accounts only (not /verify), and only while the admin accepts requests.
 // There, picking another subscription goes to its page so the content below matches the address.
 const PANEL_FLAG = "subs-open-panel";
 const isPhone = () => window.matchMedia("(max-width: 1023px)").matches;
@@ -48,6 +52,11 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
   const router = useRouter();
   const lp = useLocalePath();
   const extras = useHasExtras();
+  const req = useAccountRequests(!!live && !flavor.verify);
+  const askable = !!live && !flavor.verify && !!req.state?.open && req.state.fields.length > 0;
+  const [asking, setAsking] = useState(false);
+  const missing = c.list.length === 0 ? c.q.trim() : "";
+  const askOn = askable && (asking || !!missing);
 
   const showPanel = () => {
     panel.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
@@ -62,6 +71,7 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
   if (s.order) return <PageShell><div className="px-6 py-14"><SubsOrderView s={s} /></div></PageShell>;
 
   const pick = (p: Parameters<typeof s.select>[0]) => {
+    setAsking(false);
     if (slug && p && p.slug !== slug && stripLocale(window.location.pathname).startsWith(`${flavor.base}/`)) {
       try { sessionStorage.setItem(PANEL_FLAG, "1"); } catch {}
       router.push(lp(`${flavor.base}/${p.slug}`), { scroll: false });
@@ -111,14 +121,17 @@ export default function SubsA({ slug, panel: panelId }: { slug?: string; panel?:
               <CatTabs c={c} />
             </div>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {c.list.map((p) => <li key={p.slug}><ProductButton more p={p} on={s.product?.slug === p.slug} onPick={() => pick(p)} /></li>)}
+              {c.list.map((p) => <li key={p.slug}><ProductButton more p={p} on={!askOn && s.product?.slug === p.slug} onPick={() => pick(p)} /></li>)}
+              {askable && <li><RequestCard on={askOn} q={missing || undefined} onPick={() => { setAsking(true); if (isPhone()) setTimeout(showPanel, 80); }} /></li>}
             </ul>
-            {c.list.length === 0 && <p className="mt-6 text-slate-600 dark:text-slate-400">{t("Nothing matches “")}{c.q}”.</p>}
+            {c.list.length === 0 && !askable && <p className="mt-6 text-slate-600 dark:text-slate-400">{t("Nothing matches “")}{c.q}”.</p>}
           </section>
 
           <div ref={panel} className="scroll-mt-20 lg:sticky lg:top-24 lg:self-start">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-white/15 dark:bg-[#0E1424]">
-              {s.product
+              {askOn
+                ? <div key={`ask:${missing}`} className="animate-fade-up [animation-duration:250ms]"><LiveRequestPanel req={req} prefill={missing} /></div>
+                : s.product
                 ? <div key={s.product.slug} className="animate-fade-up [animation-duration:250ms]"><Panel s={s} focusable /></div>
                 : <div className="py-10 text-center"><Sparkles aria-hidden className="mx-auto h-8 w-8 text-violet-600 dark:text-violet-400" /><p className="mt-3 font-semibold text-slate-900 dark:text-white">{t(flavor.pick)}</p><p className="text-slate-600 dark:text-slate-400">{t("You'll see its plans and price here.")}</p></div>}
             </div>

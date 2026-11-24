@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Clock, X } from "lucide-react";
+import { Check, ChevronRight, Clock, MessageSquarePlus, X } from "lucide-react";
 import { PageShell } from "@/design/otp/parts";
 import { Passbook, type Page, type View } from "@/design/account/AccountC";
 import { NowContext, secondary } from "@/design/account/kit";
@@ -10,14 +10,16 @@ import { ListD as OrdersByDay } from "@/design/account/orders";
 import { BannerAside, BannerTop } from "@/design/account/orderPay";
 import { cartEntry, CartOrderPage } from "@/design/account/cartKit";
 import { BusinessB } from "@/design/account/organization";
+import { AccountRequests } from "@/design/account/requests";
 import { Empty } from "@/design/account/kit";
-import type { Go } from "@/design/account/AccountC";
+import type { Go, OrdersListProps } from "@/design/account/AccountC";
 import type { Store } from "@/design/account/kit";
 import { useLiveAccount } from "@/lib/account-panel";
 import { useLocalePath } from "@/i18n/Link";
+import { useAccountRequests } from "@/design/subs/request";
 import { useT } from "@/i18n/client";
 
-const PAGES: Page[] = ["orders", "funds", "support", "profile", "password", "business"];
+const PAGES: Page[] = ["orders", "funds", "support", "profile", "password", "business", "requests"];
 
 // URL segments → the page and its id, and back.
 function viewOf(slug: string[], newFor: string | null): View {
@@ -83,10 +85,31 @@ export default function AccountApp({ slug }: { slug: string[] }) {
   return (
     <PageShell>
       <NowContext.Provider value={null}>
-        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersByDay} CartOrder={CartOrder} OrderPay={ORDER_PAY} Business={BusinessB}
+        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersWithRequests} CartOrder={CartOrder} OrderPay={ORDER_PAY} Business={BusinessB} Requests={AccountRequests}
           onSignOut={async () => { await store.signOut(); router.replace(lp("/")); }} />
       </NowContext.Provider>
     </PageShell>
+  );
+}
+
+// Phones: the tab bar has no «درخواست‌های اکانت», so the orders page links to it (only once there are requests).
+function OrdersWithRequests(props: OrdersListProps) {
+  const t = useT();
+  const req = useAccountRequests();
+  const n = req.state?.requests.length ?? 0;
+  const waiting = req.state?.requests.filter((r) => r.status === "quoted").length ?? 0;
+  return (
+    <>
+      {n > 0 && (
+        <button type="button" onClick={() => props.go({ page: "requests" })} className="mb-5 flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-start lg:hidden dark:border-white/15 dark:bg-[#0E1424]">
+          <MessageSquarePlus aria-hidden className="h-5 w-5 shrink-0 text-indigo-700 dark:text-indigo-300" />
+          <span className="flex-1 font-semibold text-slate-900 dark:text-white">{t("Account requests")}</span>
+          {waiting > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 dark:bg-amber-500/20 dark:text-amber-200">{t("Price sent")}</span>}
+          <ChevronRight aria-hidden className="h-4 w-4 text-slate-400 rtl:rotate-180" />
+        </button>
+      )}
+      <OrdersByDay {...props} />
+    </>
   );
 }
 
