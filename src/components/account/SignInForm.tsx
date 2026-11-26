@@ -9,7 +9,8 @@ import { errorText } from "./errors";
 import WordReveal from "@/components/ui/WordReveal";
 
 type Me = { authenticated: boolean; user: AccountUser | null; wallet: number };
-type Started = { mobile: string; exists: boolean; resend_in?: number; dev_code?: string };
+// referral: only while admin › معرفی دوستان is on (sign-up step), with the code from a ?ref link if there was one.
+type Started = { mobile: string; exists: boolean; resend_in?: number; dev_code?: string; referral?: { code: string | null } };
 type Step = "mobile" | "password" | "code" | "register";
 
 const field = "w-full rounded-2xl bg-white px-4 py-3.5 text-base text-slate-900 ring-1 ring-slate-200 transition placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-white/5 dark:text-white dark:ring-white/10";
@@ -28,6 +29,7 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [referral, setReferral] = useState<string | null>(null); // null: no referral box
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [devCode, setDevCode] = useState<string | null>(null);
@@ -50,12 +52,12 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
   const submitMobile = (e: FormEvent) => { e.preventDefault(); run(async () => {
     const r = await accountApi<Started>("start", { mobile: latin(mobile), ...(await captcha.fields()) });
     setMobile(r.mobile);
-    if (r.exists) setStep("password"); else { codeSent(r); setStep("register"); }
+    if (r.exists) setStep("password"); else { codeSent(r); setReferral(r.referral ? (r.referral.code ?? "") : null); setStep("register"); }
   }); };
   const sendCode = () => run(async () => { codeSent(await accountApi<Started>("code", { mobile, ...(await captcha.fields()) })); if (step === "password") setStep("code"); });
   const submitPassword = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, password, ...(await captcha.fields()) }))); };
   const submitCode = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("login", { mobile, code: latin(code), ...(await captcha.fields()) }))); };
-  const submitRegister = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("register", { mobile, code: latin(code), name, password, email, ...(await captcha.fields()) }))); };
+  const submitRegister = (e: FormEvent) => { e.preventDefault(); run(async () => finish(await accountApi<Me>("register", { mobile, code: latin(code), name, password, email, ...(referral !== null ? { referral: latin(referral.trim()) } : {}), ...(await captcha.fields()) }))); };
   const changeNumber = () => { setStep("mobile"); setError(null); setPassword(""); setCode(""); setDevCode(null); };
 
   const titles: Record<Step, [string, string]> = {
@@ -119,6 +121,11 @@ export default function SignInForm({ onDone, heading = true }: { onDone?: () => 
           <Label text={t("Full name")}><input type="text" autoComplete="name" required minLength={3} maxLength={40} value={name} onChange={(e) => setName(e.target.value)} className={field} /></Label>
           <Label text={t("Password")} hint={t("6 to 30 characters")}><input type="password" autoComplete="new-password" required minLength={6} maxLength={30} value={password} onChange={(e) => setPassword(e.target.value)} className={field} /></Label>
           <Label text={t("Email")} hint={t("Optional")}><input type="email" autoComplete="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} className={`${field} text-start`} /></Label>
+          {referral !== null && (
+            <Label text={t("Referral code")} hint={t("Optional")}>
+              <input type="text" autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={20} value={referral} onChange={(e) => setReferral(e.target.value)} placeholder={t("If a friend sent you their code")} className={`${field} text-start font-mono placeholder:font-sans`} />
+            </Label>
+          )}
           <CaptchaField captcha={captcha} />
           <Submit busy={busy} label={t("Create account")} />
           <Resend at={resendAt} onResend={sendCode} busy={busy} />

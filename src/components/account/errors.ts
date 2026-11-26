@@ -14,6 +14,7 @@ const MESSAGES: Record<string, string> = {
   password_invalid: "Use a password of 6 to 30 characters.",
   email_invalid: "That email doesn't look right.",
   user_exists: "An account already uses this number. Sign in instead.",
+  referral_invalid: "That referral code doesn't match anyone. Check it, or leave it empty.",
   too_many_codes: "Too many codes requested. Try again in an hour.",
   auth: "Please sign in to continue.",
   unavailable: "This number isn't available right now. Pick another server or country.",
