@@ -7,6 +7,7 @@ import { CartA, CartB, CartC, CartD, CartE } from "./cart/offers";
 import { CartOrderA, CartOrderB, CartOrderC, CartOrderD } from "./account/cartOrders";
 import { OrderPayA, OrderPayB, OrderPayC } from "./account/orderPay";
 import { BusinessOfferA, BusinessOfferB, BusinessOfferC } from "./account/organization";
+import { HomeOfferA, HomeOfferB, HomeOfferC } from "./account/home";
 import { NightCallA, NightCallB, NightCallC } from "./checkout/nightCall";
 import { VerifyA, VerifyB, VerifyC, VerifyD, VerifyE, VerifyFormA, VerifyFormB, VerifyFormC, VerifyFormD } from "./verify/offers";
 import { AboutA, AboutB, AboutC, ContactA, ContactB, ContactC, FaqPageA, FaqPageB, FaqPageC } from "./info/offers";
@@ -666,6 +667,17 @@ export const sections: Section[] = [
       { id: "A", name: "Pay Banner", summary: "An amber band across the top of the order: what support asked for (the order support made, or VAT added later), the amount, wallet or card, Pay. Cancel is a quiet red link in the side column.", Component: OrderPayA },
       { id: "B", name: "In the Money table", summary: "The unpaid lines sit in a dashed amber box under the order's Money table, with the total to pay and the Pay controls right there. A 'Changed your mind?' card in the side column cancels with a refund.", Component: OrderPayB },
       { id: "C", name: "Side Pay Card", summary: "A deep indigo card at the top of the side column: the amount to pay in big type, its lines, then wallet/card and Pay. Under it a 'Not started yet' card with Cancel & refund.", Component: OrderPayC },
+    ],
+  },
+  {
+    id: "page-account-home",
+    title: "Page · Account · Passbook · Overview (the /account home page)",
+    kind: "page",
+    variantOf: "page-account",
+    offers: [
+      { id: "A", name: "Today", summary: "A deep indigo wallet card beside two counters (on the way, support replies), then one list of what needs you with a button each (pay, read the reply, see the code), then on-the-way orders with their timers beside recent orders, shop shortcuts and the referral link.", Component: HomeOfferA },
+      { id: "B", name: "Bento", summary: "The account as tiles: a big wallet tile with its last movements and Add funds, counters for what needs you and support replies, the next order on its way with its bar, recent orders, a dark referral tile and four shop tiles.", Component: HomeOfferB },
+      { id: "C", name: "Feed", summary: "One timeline of everything new (orders, top-ups, refunds, ticket replies), newest first, under a highlighted 'needs your attention' box. A side column holds the wallet with 30-day spend, shortcuts with New ticket, and the referral card.", Component: HomeOfferC },
     ],
   },
   {

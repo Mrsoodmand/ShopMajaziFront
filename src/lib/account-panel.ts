@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AccountOrder, BankCard, Dept, Ticket } from "@/content/account-en";
 import type { Clock, Line, Store } from "@/design/account/kit";
 import type { OrgState, OrgStore } from "@/design/account/organization";
+import type { Referral } from "@/design/account/home";
 import { useT } from "@/i18n/client";
 import { accountApi, accountForm, ApiError, useAccount } from "./account";
 
@@ -26,6 +27,7 @@ type ApiOrder = {
   lines?: { title: string; note: string; price: number }[]; // an order support made (kind "custom")
   bill?: { title: string; note: string; price: number }[]; // an account with paid add-ons: invoice lines
   discount?: number; // organisation discount taken off price
+  vat?: { percent: number; price: number } | null; // official-invoice VAT inside price
   fields?: { label: string; value: string; secret?: boolean; raw?: boolean }[];
   product_id?: number | null; review?: { state: "open" | "sent" } | null;
 };
@@ -36,6 +38,7 @@ type Panel = {
   user: { name: string; mobile: string; email: string | null; since: string | null; company?: { name: string; tax_code: string } | null };
   wallet: number; cards: { id: string; first6: string; last4: string }[];
   statement: ApiLine[]; orders: ApiOrder[]; tickets: ApiTicket[]; top_up: { min: number; max: number };
+  referral?: Referral | null; // the dashboard's referral tile (design/account/home.tsx)
 };
 type NumberPoll = { order: { id: number; status: "waiting" | "received" | "expired" | "cancelled"; code: string | null; seconds_left: number }; wallet: number };
 
@@ -64,7 +67,7 @@ const NUMBER_MINUTES = 20;
 const windowOf = (left: number, at: string) => Math.max(left, left + Math.round((Date.now() - Date.parse(at)) / 1000), 1);
 const POLL_MS = 5000;
 
-export type LiveAccount = Store & OrgStore & { status: "loading" | "ready" | "guest" | "error"; reload: () => Promise<void>; signOut: () => Promise<void> };
+export type LiveAccount = Store & OrgStore & { referral: Referral | null; status: "loading" | "ready" | "guest" | "error"; reload: () => Promise<void>; signOut: () => Promise<void> };
 
 export function useLiveAccount(): LiveAccount {
   const t = useT();
@@ -269,7 +272,7 @@ export function useLiveAccount(): LiveAccount {
     }
   }, [fail, loadOrg]);
 
-  return { ...store, org, loadOrg, applyOrg, status, reload, signOut: account.signOut };
+  return { ...store, referral: panel?.referral ?? null, org, loadOrg, applyOrg, status, reload, signOut: account.signOut };
 }
 
 // One API order → the design's order, with titles in the visitor's language.
@@ -282,7 +285,7 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
   const deliveredAt = o.state === "delivered" ? o.updated_at ?? undefined : undefined;
   const cart = o.cart ? { id: o.cart.id, at: o.cart.at, paidWith: o.cart.paid_with === "card" && o.cart.card ? cardKey(o.cart.card) : o.cart.paid_with === "card" ? "m:000000:····" : "wallet" } : undefined;
   const charges = (o.charges ?? []).map((c) => ({ ...c, at: c.at ?? o.at }));
-  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart, charges, due: o.due ?? 0, cancellable: !!o.cancellable, nightCall: o.night_call ?? null, review: o.review ?? null, bill: o.bill, discount: o.discount ?? 0 };
+  const base = { id: o.id, price: o.price, paidWith, at: o.at, state: o.state, refund, deliveredAt, cart, charges, due: o.due ?? 0, cancellable: !!o.cancellable, nightCall: o.night_call ?? null, review: o.review ?? null, bill: o.bill, discount: o.discount ?? 0, vat: o.vat ?? null };
 
   if (o.kind === "number") {
     return {
@@ -302,11 +305,13 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
   const rows = (fields ?? []).map((f) => ({ label: f.raw ? f.label : t(f.label.replace(/ \d+$/, "")) + (/ \d+$/.test(f.label) ? ` ${t.num(Number(f.label.split(" ").pop()))}` : ""), value: f.value, secret: f.secret }));
   const delivery = { type: "details" as const, fields: rows, note: notes[o.state] ?? "", loading: fields === undefined };
   const plan = o.plan ?? (o.count ? t("{0} items", { 0: t.num(o.count) }) : "");
+  // «اکانت ChatGPT - Plus»: what was bought, then its plan.
+  const full = [name, o.plan].filter(Boolean).join(" - ");
 
   switch (o.kind) {
     case "social": {
       const telegram = (o.sub?.slug ?? "").includes("telegram") || /telegram/i.test(o.sub?.en ?? "");
-      return { ...base, kind: telegram ? "telegram" : "social", service: o.sub?.en ?? name, title: name || t("Social media service"), detail: [plan, sub].filter(Boolean).join(" · "), delivery };
+      return { ...base, kind: telegram ? "telegram" : "social", service: o.sub?.en ?? name, title: full || t("Social media service"), detail: [plan, sub].filter(Boolean).join(" · "), delivery };
     }
     case "apple-id":
       return { ...base, kind: "apple-id", service: "Apple", title: o.custom ? t("Apple ID · made for you") : t("Apple ID"), detail: o.count && o.count > 1 ? t("{0} accounts", { 0: t.num(o.count) }) : t("1 account"), delivery };
@@ -318,6 +323,6 @@ function toOrder(o: ApiOrder, fields: ApiOrder["fields"] | undefined, t: ReturnT
     case "static-ip":
       return { ...base, kind: "static-ip", service: "Static IP", title: t("Static IP"), detail: "", delivery };
     default:
-      return { ...base, kind: "subscription", service: o.name?.en ?? name, title: name || t("Subscription"), detail: plan, delivery };
+      return { ...base, kind: "subscription", service: o.name?.en ?? name, title: full || t("Subscription"), detail: plan, delivery };
   }
 }

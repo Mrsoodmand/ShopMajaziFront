@@ -8,6 +8,7 @@ const MESSAGES: Record<string, string> = {
   mobile_invalid: "Enter a valid Iranian mobile number, like 0912 345 6789.",
   no_user: "No account uses this number.",
   wrong_password: "Wrong password.",
+  account_disabled: "Your account has been disabled. Please contact support to follow it up.",
   wrong_code: "That code is wrong or has expired.",
   name_invalid: "Enter your name (3 to 40 letters).",
   password_invalid: "Use a password of 6 to 30 characters.",

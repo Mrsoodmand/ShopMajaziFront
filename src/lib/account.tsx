@@ -8,7 +8,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 export type AccountUser = { name: string; mobile: string };
 // organization: an approved organisation account's percent per product family (App\Services\Organizations::badge).
-type Me = { authenticated: boolean; user: AccountUser | null; wallet: number; organization?: { discounts: Record<string, number> } | null };
+// vat: its VAT percent when it asked for an official invoice (0 = none); added to every family purchase after the discount.
+type Me = { authenticated: boolean; user: AccountUser | null; wallet: number; organization?: { discounts: Record<string, number>; vat?: number } | null };
 
 export class ApiError extends Error {
   constructor(message: string, readonly code: string, readonly status: number, readonly data: Record<string, unknown> | null = null) {
@@ -56,6 +57,7 @@ export type Account = {
   wallet: number | null; // null until known (or signed out)
   // An organisation account's percent per product family (services, subscriptions, verification, apple_id, google_voice).
   orgDiscounts: Record<string, number>;
+  orgVat: number; // official-invoice VAT percent (Organizations::vatOf), 0 = none
   refresh: () => Promise<void>;
   signedIn: (me: Me) => void; // after a sign-in / sign-up call returned the new state
   setWallet: (n: number) => void;
@@ -82,13 +84,14 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     user: me?.user ?? null,
     wallet: me?.authenticated ? me.wallet : null,
     orgDiscounts: (me?.authenticated && me.organization?.discounts) || NO_DISCOUNTS,
+    orgVat: (me?.authenticated && me.organization?.vat) || 0,
     refresh, signedIn: setMe, setWallet, signOut,
   }), [me, failed, refresh, setWallet, signOut]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 // Outside the provider (design previews rendered on their own) everyone is a guest.
-const guest: Account = { status: "guest", user: null, wallet: null, orgDiscounts: {}, refresh: async () => {}, signedIn: () => {}, setWallet: () => {}, signOut: async () => {} };
+const guest: Account = { status: "guest", user: null, wallet: null, orgDiscounts: {}, orgVat: 0, refresh: async () => {}, signedIn: () => {}, setWallet: () => {}, signOut: async () => {} };
 export const useAccount = () => useContext(Ctx) ?? guest;
 
 // Wallet top-up by card: the account's Add funds page (Front/src/app/account).

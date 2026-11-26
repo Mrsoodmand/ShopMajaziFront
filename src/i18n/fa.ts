@@ -9,6 +9,7 @@ import { extras } from "./fa/extras";
 import { content } from "./fa/content";
 import { account } from "./fa/account";
 import { dashboard } from "./fa/dashboard";
+import { accountHome } from "./fa/accountHome";
 import { invoice } from "./fa/invoice";
 import { numberCatalog } from "./fa/numberCatalog";
 import { why } from "./fa/why";
@@ -19,7 +20,7 @@ import { verify } from "./fa/verify";
 import { info } from "./fa/info";
 import { accountRequest } from "./fa/accountRequest";
 
-export const fa: Record<string, string> = { ...accountRequest, ...info, ...verify, ...dashboard, ...common, ...numbers, ...services, ...subs, ...telegram, ...extras, ...content, ...account, ...numberCatalog, ...why, ...errors, ...invoice, ...cart, ...socialService };
+export const fa: Record<string, string> = { ...accountHome, ...accountRequest, ...info, ...verify, ...dashboard, ...common, ...numbers, ...services, ...subs, ...telegram, ...extras, ...content, ...account, ...numberCatalog, ...why, ...errors, ...invoice, ...cart, ...socialService };
 
 // Sentences built from data at runtime. Each pattern is a regex for the whole English text; $1… in the Persian
 // are the captured parts, themselves translated when there is an entry for them.

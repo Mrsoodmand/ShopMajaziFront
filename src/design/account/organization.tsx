@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
-import { BadgePercent, Building2, Check, CircleAlert, Clock, FileUp, Loader2, Mail, MapPin, Phone, ReceiptText, ShieldCheck, Sparkles, X } from "lucide-react";
+import { BadgePercent, Building2, Check, CircleAlert, Clock, FileCheck2, FileUp, Loader2, Mail, MapPin, Phone, ReceiptText, ShieldCheck, Sparkles, X } from "lucide-react";
 import { PageShell } from "../otp/parts";
 import { LocaleProvider, useLocale, useT } from "@/i18n/client";
 import { usePathname } from "next/navigation";
@@ -21,7 +21,8 @@ export type OrgStatus = "personal" | "pending" | "approved" | "rejected" | "canc
 export type OrgFamily = "subscriptions" | "services" | "verification" | "apple_id" | "google_voice" | "telegram";
 export type OrgRequest = { id: number; status: Exclude<OrgStatus, "personal">; company_name: string | null; note: string | null; answers: { key: string; title: string; type: string; value: string }[]; created_at: string | null; reviewed_at: string | null };
 // discounts: this company's percent per product family; a family not listed has no discount.
-export type OrgState = { status: OrgStatus; discounts: Partial<Record<OrgFamily, number>>; open: boolean; can_apply: boolean; fields: OrgField[]; request: OrgRequest | null };
+// vat: the VAT percent an official invoice adds (the company's own once approved, else the admin's default).
+export type OrgState = { status: OrgStatus; discounts: Partial<Record<OrgFamily, number>>; vat?: number; open: boolean; can_apply: boolean; fields: OrgField[]; request: OrgRequest | null };
 export type OrgStore = { org: OrgState | null; loadOrg?: () => void; applyOrg: (fields: Record<string, string | File>) => Promise<void> };
 
 export const FAMILY_LABEL: Record<OrgFamily, string> = { subscriptions: "Subscriptions & accounts", services: "Social media services", verification: "Verification", apple_id: "Apple ID", google_voice: "Google Voice", telegram: "Telegram Stars & Premium" };
@@ -35,6 +36,7 @@ export const orgCut = (price: number, percent: number) => (percent > 0 ? Math.ro
 /* ---------- Sample ---------- */
 
 const FIELDS: OrgField[] = [
+  { key: "official_invoice", title: "آیا فاکتور رسمی نیاز دارید؟", title_en: "Do you need an official invoice?", type: "yesno", required: true, hint: null, hint_en: null, options: [], accept: [], max_mb: null },
   { key: "company_name", title: "نام شرکت", title_en: "Company name", type: "text", required: true, hint: null, hint_en: null, options: [], accept: [], max_mb: null },
   { key: "company_email", title: "ایمیل شرکت", title_en: "Company email", type: "email", required: true, hint: null, hint_en: null, options: [], accept: [], max_mb: null },
   { key: "company_phone", title: "تلفن شرکت", title_en: "Company phone", type: "phone", required: true, hint: null, hint_en: null, options: [], accept: [], max_mb: null },
@@ -53,11 +55,11 @@ const ANSWERS = [
 ];
 const REQ = (status: OrgRequest["status"], note: string | null = null): OrgRequest => ({ id: 14, status, company_name: "داده‌پردازان آریا", note, answers: ANSWERS, created_at: "2026-11-20T10:15:00", reviewed_at: status === "pending" ? null : "2026-11-21T09:00:00" });
 const SAMPLES: Record<OrgStatus, OrgState> = {
-  personal: { status: "personal", discounts: {}, open: true, can_apply: true, fields: FIELDS, request: null },
-  pending: { status: "pending", discounts: {}, open: true, can_apply: false, fields: [], request: REQ("pending") },
-  rejected: { status: "rejected", discounts: {}, open: true, can_apply: true, fields: FIELDS, request: REQ("rejected", "کد اقتصادی با نام شرکت یکی نیست. لطفا دوباره بررسی کنید.") },
-  approved: { status: "approved", discounts: { subscriptions: 10, verification: 5 }, open: true, can_apply: false, fields: [], request: REQ("approved") },
-  cancelled: { status: "cancelled", discounts: {}, open: true, can_apply: true, fields: FIELDS, request: REQ("cancelled") },
+  personal: { status: "personal", discounts: {}, vat: 12, open: true, can_apply: true, fields: FIELDS, request: null },
+  pending: { status: "pending", discounts: {}, vat: 12, open: true, can_apply: false, fields: [], request: REQ("pending") },
+  rejected: { status: "rejected", discounts: {}, vat: 12, open: true, can_apply: true, fields: FIELDS, request: REQ("rejected", "کد اقتصادی با نام شرکت یکی نیست. لطفا دوباره بررسی کنید.") },
+  approved: { status: "approved", discounts: { subscriptions: 10, verification: 5 }, vat: 12, open: true, can_apply: false, fields: [], request: REQ("approved") },
+  cancelled: { status: "cancelled", discounts: {}, vat: 12, open: true, can_apply: true, fields: FIELDS, request: REQ("cancelled") },
 };
 
 function useOrgDemo(initial: OrgStatus) {
@@ -75,8 +77,17 @@ function useOrgDemo(initial: OrgStatus) {
 
 const fieldTitle = (f: OrgField, en: boolean) => (en && f.title_en) || f.title;
 const fieldHint = (f: OrgField, en: boolean) => (en && f.hint_en) || f.hint || undefined;
-const FIELD_ICON: Partial<Record<string, typeof Mail>> = { company_name: Building2, company_email: Mail, company_phone: Phone, company_address: MapPin, tax_code: ReceiptText };
+const FIELD_ICON: Partial<Record<string, typeof Mail>> = { official_invoice: FileCheck2, company_name: Building2, company_email: Mail, company_phone: Phone, company_address: MapPin, tax_code: ReceiptText };
 const isBuiltin = (k: string) => k in FIELD_ICON;
+
+/*
+ * The field as it applies now: with the official-invoice question on the form, the tax code is required only
+ * when the answer is yes (Organizations::submit checks the same).
+ */
+function liveField(f: OrgField, fields: OrgField[], values: Record<string, string | File | undefined>): OrgField {
+  if (f.key !== "tax_code" || !fields.some((x) => x.key === "official_invoice")) return f;
+  return { ...f, required: values.official_invoice === "yes" };
+}
 
 function checkField(f: OrgField, v: string | File | undefined, t: ReturnType<typeof useT>): string | null {
   if (f.type === "file") {
@@ -93,7 +104,7 @@ function checkField(f: OrgField, v: string | File | undefined, t: ReturnType<typ
 }
 
 /** One input, by type. */
-function OrgInput({ f, value, error, onChange }: { f: OrgField; value: string | File | undefined; error: string | null; onChange: (v: string | File | undefined) => void }) {
+function OrgInput({ f, value, error, onChange, note }: { f: OrgField; value: string | File | undefined; error: string | null; onChange: (v: string | File | undefined) => void; note?: ReactNode }) {
   const t = useT();
   const en = useLocale() === "en";
   const id = useId();
@@ -118,7 +129,7 @@ function OrgInput({ f, value, error, onChange }: { f: OrgField; value: string | 
     case "yesno":
       control = (
         <div role="radiogroup" aria-labelledby={`${id}-l`} className="flex gap-2">
-          {(["yes", "no"] as const).map((v) => (
+          {(f.key === "official_invoice" ? (["no", "yes"] as const) : (["yes", "no"] as const)).map((v) => (
             <button key={v} type="button" role="radio" aria-checked={s === v} onClick={() => onChange(v)}
               className={`${smallBtn} min-w-20 border ${s === v ? "border-indigo-600 bg-indigo-50 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-500/15 dark:text-indigo-200" : "border-slate-300 text-slate-700 dark:border-white/20 dark:text-slate-300"}`}>
               {v === "yes" ? t("Yes") : t("No")}
@@ -150,7 +161,7 @@ function OrgInput({ f, value, error, onChange }: { f: OrgField; value: string | 
           type={f.type === "email" ? "email" : "text"} autoComplete={f.type === "email" ? "email" : f.type === "phone" ? "tel" : undefined} />
       );
   }
-  return <Labeled id={id} label={label} hint={hint} error={error}>{f.type === "yesno" ? <span id={`${id}-l`} className="sr-only">{label}</span> : null}{control}</Labeled>;
+  return <Labeled id={id} label={label} hint={hint} error={error}>{f.type === "yesno" ? <span id={`${id}-l`} className="sr-only">{label}</span> : null}{control}{note}</Labeled>;
 }
 
 function useOrgForm(fields: OrgField[], send: (v: Record<string, string | File>) => Promise<void>, initial: Record<string, string> = {}) {
@@ -162,7 +173,7 @@ function useOrgForm(fields: OrgField[], send: (v: Record<string, string | File>)
   const set = (k: string, v: string | File | undefined) => { setValues((x) => ({ ...x, [k]: v })); if (errors[k]) setErrors((e) => ({ ...e, [k]: null })); };
   const check = (only?: OrgField[]) => {
     const next: Record<string, string | null> = {};
-    for (const f of only ?? fields) next[f.key] = checkField(f, values[f.key], t);
+    for (const f of only ?? fields) next[f.key] = checkField(liveField(f, fields, values), values[f.key], t);
     setErrors((e) => ({ ...e, ...next }));
     const first = (only ?? fields).find((f) => next[f.key]);
     if (first) setTimeout(() => document.querySelector<HTMLElement>(`[aria-invalid="true"]`)?.focus(), 0); // after React marks the fields
@@ -175,12 +186,27 @@ function useOrgForm(fields: OrgField[], send: (v: Record<string, string | File>)
       await send(Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined && v !== "")) as Record<string, string | File>);
     } catch (e) { setFailure(errorText(e, t("Something went wrong. Please try again."))); } finally { setBusy(false); }
   };
-  return { values, errors, busy, failure, set, check, submit };
+  return { values, errors, busy, failure, set, check, submit, fields };
 }
 type OrgFormState = ReturnType<typeof useOrgForm>;
 
-const Inputs = ({ list, s }: { list: OrgField[]; s: OrgFormState }) => (
-  <>{list.map((f) => <OrgInput key={f.key} f={f} value={s.values[f.key]} error={s.errors[f.key] ?? null} onChange={(v) => s.set(f.key, v)} />)}</>
+// Under "official invoice: yes": the VAT that will be added (the admin's percent).
+function VatNote({ vat }: { vat: number }) {
+  const t = useT();
+  const f = useFmt();
+  return (
+    <p role="status" className="mt-3 flex items-start gap-2 rounded-2xl bg-amber-50 p-3 text-[15px] font-semibold text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+      <ReceiptText aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
+      {t("{0}% VAT will be added to every invoice.", { 0: f.pct(vat) })}
+    </p>
+  );
+}
+
+const Inputs = ({ list, s, vat = 0 }: { list: OrgField[]; s: OrgFormState; vat?: number }) => (
+  <>{list.map((f) => (
+    <OrgInput key={f.key} f={liveField(f, s.fields, s.values)} value={s.values[f.key]} error={s.errors[f.key] ?? null} onChange={(v) => s.set(f.key, v)}
+      note={f.key === "official_invoice" && s.values.official_invoice === "yes" && vat > 0 ? <VatNote vat={vat} /> : undefined} />
+  ))}</>
 );
 
 function SendButton({ s, label }: { s: OrgFormState; label: string }) {
@@ -230,12 +256,13 @@ function Families({ org, tone = "light" }: { org: OrgState; tone?: "light" | "da
 }
 
 function Answers({ req }: { req: OrgRequest }) {
+  const t = useT();
   return (
     <dl className="divide-y divide-slate-200 dark:divide-white/10">
       {req.answers.filter((a) => a.type !== "file").map((a) => (
         <div key={a.key} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5">
           <dt className="text-sm text-slate-600 dark:text-slate-400">{a.title}</dt>
-          <dd dir={["email", "phone"].includes(a.type) || a.key === "tax_code" ? "ltr" : undefined} className="text-[15px] font-semibold text-slate-900 dark:text-white">{a.value}</dd>
+          <dd dir={["email", "phone"].includes(a.type) || a.key === "tax_code" ? "ltr" : undefined} className="text-[15px] font-semibold text-slate-900 dark:text-white">{a.type === "yesno" ? (a.value === "yes" ? t("Yes") : t("No")) : a.value}</dd>
         </div>
       ))}
     </dl>
@@ -325,7 +352,7 @@ function BusinessA({ demo }: { demo: Store; go: Go }) {
       {org.status === "pending" && org.request && <section className={`${card} p-6`}><h2 className="mb-2 font-display text-lg font-semibold text-slate-900 dark:text-white">{t("What you sent")}</h2><Answers req={org.request} /></section>}
       {org.can_apply && (
         <form noValidate onSubmit={(e) => { e.preventDefault(); s.submit(); }} className={`${card} space-y-7 p-6 sm:p-8`}>
-          <Inputs list={org.fields} s={s} />
+          <Inputs list={org.fields} s={s} vat={org.vat} />
           <SendButton s={s} label={org.status === "personal" ? t("Send for review") : t("Send again")} />
         </form>
       )}
@@ -373,13 +400,13 @@ function BusinessB({ demo }: { demo: Store; go: Go }) {
               <fieldset className={`${card} space-y-7 p-6 sm:p-8`}>
                 <legend className="sr-only">{t("Company details")}</legend>
                 <h2 aria-hidden className="font-display text-lg font-semibold text-slate-900 dark:text-white">{t("Company details")}</h2>
-                <Inputs list={company} s={s} />
+                <Inputs list={company} s={s} vat={org.vat} />
               </fieldset>
               {questions.length > 0 && (
                 <fieldset className={`${card} space-y-7 p-6 sm:p-8`}>
                   <legend className="sr-only">{t("A few questions")}</legend>
                   <h2 aria-hidden className="font-display text-lg font-semibold text-slate-900 dark:text-white">{t("A few questions")}</h2>
-                  <Inputs list={questions} s={s} />
+                  <Inputs list={questions} s={s} vat={org.vat} />
                 </fieldset>
               )}
               <SendButton s={s} label={org.status === "personal" ? t("Send for review") : t("Send again")} />
@@ -461,7 +488,7 @@ function BusinessC({ demo }: { demo: Store; go: Go }) {
             <h2 className="font-display text-lg font-semibold text-slate-900 dark:text-white">{step === 1 ? t("Company details") : t("A few questions")}</h2>
             <span className="text-sm tabular-nums text-slate-600 dark:text-slate-400">{t("Step {0} of {1}", { 0: step, 1: last })}</span>
           </div>
-          <Inputs list={step === 1 ? company : questions} s={s} />
+          <Inputs list={step === 1 ? company : questions} s={s} vat={org.vat} />
           <div className="flex flex-col-reverse gap-3 sm:flex-row">
             <button type="button" onClick={() => setStep(step === 2 ? 1 : 0)} className={`${secondary} sm:w-auto`}>{t("Back")}</button>
             <div className="flex-1 space-y-3">{step < last ? <button type="submit" className={payBtn}>{t("Next")}</button> : <SendButton s={s} label={t("Send for review")} />}</div>

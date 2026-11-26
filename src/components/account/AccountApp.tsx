@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronRight, Clock, MessageSquarePlus, X } from "lucide-react";
 import { PageShell } from "@/design/otp/parts";
@@ -11,6 +11,7 @@ import { BannerAside, BannerTop } from "@/design/account/orderPay";
 import { cartEntry, CartOrderPage } from "@/design/account/cartKit";
 import { BusinessB } from "@/design/account/organization";
 import { AccountRequests } from "@/design/account/requests";
+import { HomeB } from "@/design/account/home";
 import { Empty } from "@/design/account/kit";
 import type { Go, OrdersListProps } from "@/design/account/AccountC";
 import type { Store } from "@/design/account/kit";
@@ -19,7 +20,7 @@ import { useLocalePath } from "@/i18n/Link";
 import { useAccountRequests } from "@/design/subs/request";
 import { useT } from "@/i18n/client";
 
-const PAGES: Page[] = ["orders", "funds", "support", "profile", "password", "business", "requests"];
+const PAGES: Page[] = ["statement", "orders", "funds", "support", "profile", "password", "business", "requests"];
 
 // URL segments → the page and its id, and back.
 function viewOf(slug: string[], newFor: string | null): View {
@@ -28,10 +29,10 @@ function viewOf(slug: string[], newFor: string | null): View {
   if (page === "orders" && id && /^c\d+$/i.test(id)) return { page: "cart", id: Number(id.slice(1)) };
   if (page === "support" && id === "new") return { page: "support", id: newFor && /^\d+$/.test(newFor) ? -Number(newFor) : 0 };
   if (page === "support" && id && /^\d+$/.test(id)) return { page: "support", id: Number(id) };
-  return PAGES.includes(page as Page) ? { page: page as Page } : { page: "statement" };
+  return PAGES.includes(page as Page) ? { page: page as Page } : { page: "home" };
 }
 function pathOf(v: View): string {
-  if (v.page === "statement") return "/account";
+  if (v.page === "home") return "/account";
   if (v.page === "order") return `/account/orders/${v.id}`;
   if (v.page === "cart") return `/account/orders/c${v.id}`;
   if (v.page === "support" && v.id != null) return v.id > 0 ? `/account/support/${v.id}` : v.id < 0 ? `/account/support/new?order=${-v.id}` : "/account/support/new";
@@ -46,6 +47,9 @@ export default function AccountApp({ slug }: { slug: string[] }) {
   const store = useLiveAccount();
   const view = useMemo(() => viewOf(slug, search.get("order")), [slug, search]);
   const here = pathOf(view);
+  // The dashboard (design page-account-home B · Bento), with the referral tile when the API sends it.
+  const referral = store.referral;
+  const Home = useCallback((p: { demo: Store; go: Go }) => <HomeB {...p} referral={referral} />, [referral]);
 
   // Signed out: sign in, then come back to this page.
   useEffect(() => {
@@ -85,7 +89,7 @@ export default function AccountApp({ slug }: { slug: string[] }) {
   return (
     <PageShell>
       <NowContext.Provider value={null}>
-        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersWithRequests} CartOrder={CartOrder} OrderPay={ORDER_PAY} Business={BusinessB} Requests={AccountRequests}
+        <Passbook store={store} view={view} go={(v) => router.push(lp(pathOf(v)))} notice={notice} OrdersList={OrdersWithRequests} CartOrder={CartOrder} OrderPay={ORDER_PAY} Business={BusinessB} Requests={AccountRequests} Home={Home}
           onSignOut={async () => { await store.signOut(); router.replace(lp("/")); }} />
       </NowContext.Provider>
     </PageShell>

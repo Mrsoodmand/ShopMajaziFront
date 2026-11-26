@@ -46,6 +46,10 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
   const listPrice = price;
   const business = org ? orgPrice(listPrice, org) : null;
   if (business?.was) price = business.price;
+  // Official-invoice companies: VAT on the discounted price, as the server adds it (Organizations::apply / vat).
+  const vatPct = org ? account.orgVat : 0;
+  const vat = vatPct > 0 ? Math.round((price * vatPct) / 100) : 0;
+  price += vat;
   const [pay, setPay] = useState<PayMethod>("wallet");
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -168,6 +172,7 @@ export default function CheckoutModal({ open, onClose, summary, price, itemLabel
         <dl className="mt-5 space-y-2 border-t border-slate-100 pt-4 text-sm dark:border-white/10">
           <div className="flex justify-between"><dt className="text-slate-500 dark:text-slate-400">{itemLabel}</dt><dd className="text-slate-900 dark:text-white">{usd(listPrice)}</dd></div>
           {business?.was != null && <div className="flex justify-between"><dt className="text-emerald-700 dark:text-emerald-400">{t("Business discount ({0}%)", { 0: t.num(business.percent, { maximumFractionDigits: 2 }) })}</dt><dd className="text-emerald-700 dark:text-emerald-400">−{usd(listPrice - business.price)}</dd></div>}
+          {vat > 0 && <div className="flex justify-between"><dt className="text-slate-500 dark:text-slate-400">{t("VAT ({0}%)", { 0: t.num(vatPct, { maximumFractionDigits: 2 }) })}</dt><dd className="text-slate-900 dark:text-white">+{usd(vat)}</dd></div>}
           <div className="flex justify-between"><dt className="text-slate-500 dark:text-slate-400">{t("Payment fee")}</dt><dd className="text-slate-900 dark:text-white">{fee ? usd(fee) : t("Free")}</dd></div>
           <div className="flex items-baseline justify-between pt-2"><dt className="font-semibold text-slate-900 dark:text-white">{t("Total")}</dt><dd className="font-display text-3xl font-bold text-slate-900 dark:text-white">{usd(total)}</dd></div>
         </dl>

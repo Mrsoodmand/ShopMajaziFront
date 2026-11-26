@@ -20,6 +20,8 @@ export type Invoice = {
   issued: string; // ISO, when it was paid
   buyer: { name: string; mobile: string; email: string | null; company?: { name: string; tax_code: string } | null };
   discount?: number; // organisation discount: item/lines show the list price, this line takes it off
+  vat?: { percent: number; amount: number }; // official-invoice VAT, added after the discount
+  extras?: { title: string; amount: number }[]; // amounts support added to the order (tax, VAT…: kind "extra" charges)
   item: { title: string; detail: string; amount: number };
   paid: { how: string; card?: { bank: string; number: string }; at: string }; // how: a key to translate; card: the one used, masked
   refund?: { amount: number; reason: string; at: string };
@@ -51,13 +53,17 @@ export const paidText = (inv: Invoice, t: (k: string) => string = (k) => k): Rea
 export function toCartInvoice(items: AccountOrder[], store: Store): Invoice {
   const cart = items[0].cart!;
   const total = items.reduce((s, o) => s + o.price, 0);
+  // VAT sits inside each line's price: lines show it taken out, one VAT line adds it back.
+  const vatSum = items.reduce((s, o) => s + (o.vat?.price ?? 0), 0);
+  const vatPct = items.find((o) => o.vat)?.vat?.percent;
   const refunds = items.filter((o) => o.refund).map((o) => ({ title: o.title, amount: o.refund!.amount, reason: o.refund!.reason }));
   const back = refunds.reduce((s, r) => s + r.amount, 0);
   return {
     no: cart.id, label: `C-${cart.id}`, issued: cart.at,
     buyer: store.user,
     item: { title: items[0].title, detail: items[0].detail, amount: total },
-    lines: items.map((o) => ({ title: o.title, detail: o.detail, amount: o.price })),
+    lines: items.map((o) => ({ title: o.title, detail: o.detail, amount: o.price - (o.vat?.price ?? 0) })),
+    vat: vatSum > 0 && vatPct ? { percent: vatPct, amount: vatSum } : undefined,
     refunds,
     paid: paidOf(cart.paidWith, store, cart.at),
     net: total - back,
@@ -67,17 +73,21 @@ export function toCartInvoice(items: AccountOrder[], store: Store): Invoice {
 }
 
 export function toInvoice(o: AccountOrder, store: Store): Invoice {
+  const vat = o.vat?.price ?? 0;
+  const extras = (o.charges ?? []).filter((c) => c.kind === "extra").map((c) => ({ title: c.title, amount: c.price }));
   return {
     no: o.id, issued: o.at,
     buyer: store.user,
-    item: { title: o.title, detail: o.detail, amount: o.price + (o.discount ?? 0) },
+    item: { title: o.title, detail: o.detail, amount: o.price + (o.discount ?? 0) - vat },
     discount: o.discount || undefined,
+    vat: vat > 0 ? { percent: o.vat!.percent, amount: vat } : undefined,
+    extras: extras.length ? extras : undefined,
     // An order support made: every line on its own, its note under it (never in the amount column).
     // An account with paid add-ons (o.bill): its plan, then each add-on, the same way.
     lines: (o.lines?.length ? o.lines : o.bill?.length ? o.bill : null)?.map((l) => ({ title: l.title, detail: l.note, amount: l.price })),
     paid: paidOf(o.paidWith, store, o.at),
     refund: o.refund,
-    net: o.price - (o.refund?.amount ?? 0),
+    net: o.price + (extras.reduce((s, x) => s + x.amount, 0)) - (o.refund?.amount ?? 0),
     state: o.state,
     payment: o.unpaid ? "unpaid" : o.refund ? "refunded" : "paid",
   };
@@ -368,6 +378,8 @@ function SheetD({ inv }: { inv: Invoice }) {
           ))}
           {inv.refunds?.map((r, i) => <tr key={`r${i}`} className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("Refund to wallet")} · {t(r.title)}</span><span className="text-slate-600">{t(r.reason)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">−{f.money(r.amount)}</td></tr>)}
           {!!inv.discount && <tr className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("Business discount")}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">−{f.money(inv.discount)}</td></tr>}
+          {inv.vat && <tr className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("VAT ({0}%)", { 0: f.pct(inv.vat.percent) })}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">+{f.money(inv.vat.amount)}</td></tr>}
+          {inv.extras?.map((x, i) => <tr key={`x${i}`} className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{x.title}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">+{f.money(x.amount)}</td></tr>)}
           {inv.refund && <tr className="border-t border-slate-200"><td className="py-4"><span className="block text-[15px] font-semibold">{t("Refund to wallet")}</span><span className="text-slate-600">{t(inv.refund.reason)}</span></td><td className="py-4 text-end align-top text-[15px] tabular-nums">−{f.money(inv.refund.amount)}</td></tr>}
         </tbody>
       </table>

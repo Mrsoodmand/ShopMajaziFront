@@ -383,4 +383,6 @@ export const dashboard: Record<string, string> = {
   "Business price": "قیمت سازمانی",
   "Tax code": "کد اقتصادی",
   "Business discount": "تخفیف سازمانی",
+  "{0}% VAT will be added to every invoice.": "به هر فاکتور {0} درصد ارزش افزوده اضافه خواهد شد.",
+  "VAT ({0}%)": "ارزش افزوده ({0}٪)",
 };

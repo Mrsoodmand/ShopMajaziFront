@@ -25,6 +25,7 @@ export const account: Record<string, string> = {
   "Enter a valid Iranian mobile number, like 0912 345 6789.": "یک شماره موبایل معتبر وارد کنید، مثل ۰۹۱۲ ۳۴۵ ۶۷۸۹.",
   "No account uses this number.": "با این شماره حسابی پیدا نشد.",
   "Wrong password.": "رمز عبور اشتباه است.",
+  "Your account has been disabled. Please contact support to follow it up.": "حساب کاربری شما غیرفعال شده است. برای پیگیری، لطفاً با پشتیبانی تماس بگیرید.",
   "That code is wrong or has expired.": "کد اشتباه است یا منقضی شده.",
   "Enter your name (3 to 40 letters).": "نامتان را وارد کنید (۳ تا ۴۰ حرف).",
   "Use a password of 6 to 30 characters.": "رمز عبور باید ۶ تا ۳۰ کاراکتر باشد.",

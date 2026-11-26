@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("My account — ShopMajazi"), robots: { index: false, follow: false } };
 }
 
-// /account (statement), /account/orders[/id], /account/funds, /account/support[/id|/new], /account/profile,
+// /account (dashboard), /account/statement, /account/orders[/id], /account/funds, /account/support[/id|/new], /account/profile,
 // /account/password. One client app (design "Passbook"); the data comes from the signed-in session.
 export default async function AccountPage({ params }: { params: Promise<{ slug?: string[] }> }) {
   const { slug = [] } = await params;

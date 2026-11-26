@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
-import { ArrowLeft, Building2, ChevronRight, KeyRound, LifeBuoy, LogOut, MessageCircle, MessageSquarePlus, Package, Plus, ReceiptText, RotateCcw, Search, UserRound, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, ChevronRight, KeyRound, LayoutDashboard, LifeBuoy, LogOut, MessageCircle, MessageSquarePlus, Package, Plus, ReceiptText, RotateCcw, Search, UserRound, Wallet } from "lucide-react";
 import Link from "@/i18n/Link";
 import { PageShell } from "../otp/parts";
 import { useT } from "@/i18n/client";
@@ -22,7 +22,7 @@ import {
 // "cart": a cart order #C-{id} (several services bought together), drawn by Passbook's `CartOrder`.
 // "business": the organisation account (design/account/organization.tsx), drawn by Passbook's `Business`.
 // "requests": accounts asked for that the site doesn't sell (design/account/requests.tsx), drawn by Passbook's `Requests`.
-export type Page = "statement" | "orders" | "order" | "cart" | "funds" | "support" | "profile" | "password" | "business" | "requests";
+export type Page = "home" | "statement" | "orders" | "order" | "cart" | "funds" | "support" | "profile" | "password" | "business" | "requests";
 // `id`: the order to show, or for support a ticket id (0 = a new ticket, a negative order id = a new ticket about it).
 export type View = { page: Page; id?: number };
 export type Go = (v: View) => void;
@@ -32,6 +32,7 @@ const railRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:
 export const pageRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 dark:focus-visible:ring-emerald-400 dark:focus-visible:ring-offset-[#070B14]";
 
 const NAV: { page: Page; label: string; Icon: typeof Wallet }[] = [
+  { page: "home", label: "Dashboard", Icon: LayoutDashboard },
   { page: "statement", label: "Statement", Icon: ReceiptText },
   { page: "orders", label: "Orders", Icon: Package },
   { page: "funds", label: "Add funds", Icon: Wallet },
@@ -59,7 +60,7 @@ export type OrderSlot = ComponentType<{ order: AccountOrder; demo: Store; go: Go
 export type OrderPaySlots = { Top?: OrderSlot; Money?: OrderSlot; Aside?: OrderSlot };
 // `Business`: the organisation-account page; without it the nav has no Business item. Same for `Requests`.
 // On phones the tab bar has no room for «درخواست‌های اکانت»: the orders page links to it (components/account/AccountApp).
-export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder, OrderPay, Business, Requests }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }>; OrderPay?: OrderPaySlots; Business?: ComponentType<{ demo: Store; go: Go }>; Requests?: ComponentType<{ demo: Store; go: Go }> }) {
+export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList = Orders, CartOrder, OrderPay, Business, Requests, Home }: { store: Store; view: View; go: Go; onSignOut?: () => void; notice?: ReactNode; OrdersList?: ComponentType<OrdersListProps>; CartOrder?: ComponentType<{ id: number; demo: Store; go: Go }>; OrderPay?: OrderPaySlots; Business?: ComponentType<{ demo: Store; go: Go }>; Requests?: ComponentType<{ demo: Store; go: Go }>; Home?: ComponentType<{ demo: Store; go: Go }> }) {
   const t = useT();
   const f = useFmt();
   const top = useRef<HTMLDivElement>(null);
@@ -72,8 +73,9 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
   }, [view]);
   const replies = demo.tickets.filter((x) => x.state === "replied").length;
   const order = view.page === "order" ? demo.orders.find((o) => o.id === view.id) : undefined;
-  const nav = NAV.filter((n) => (n.page !== "business" || Business) && (n.page !== "requests" || Requests));
-  const phoneNav = nav.filter((n) => n.page !== "password" && n.page !== "requests");
+  // `Home`: the overview page (design/account/home.tsx); with it, phones show Overview in place of Statement.
+  const nav = NAV.filter((n) => (n.page !== "business" || Business) && (n.page !== "requests" || Requests) && (n.page !== "home" || Home));
+  const phoneNav = nav.filter((n) => n.page !== "password" && n.page !== "requests" && (n.page !== "statement" || !Home));
 
   return (
     <>
@@ -115,6 +117,7 @@ export function Passbook({ store: demo, view, go, onSignOut, notice, OrdersList 
           <div className="min-w-0">
             {notice}
             {view.page === "order" && !order && <Empty title={t("Order not found")} text={t("It may be older than the orders shown here. Write to support with its number.")} action={<button type="button" onClick={() => go({ page: "orders" })} className={secondary}>{t("All orders")}</button>} />}
+            {view.page === "home" && Home && <Home demo={demo} go={go} />}
             {view.page === "statement" && <Statement demo={demo} go={go} />}
             {view.page === "orders" && <OrdersList demo={demo} go={go} />}
             {view.page === "order" && order && <Receipt order={order} demo={demo} go={go} slots={OrderPay} />}
