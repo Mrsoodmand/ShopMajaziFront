@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "@/i18n/Link";
+import enamadSeal from "./enamad.png";
 import { CreditCard, Bitcoin, Wallet, ShieldCheck } from "lucide-react";
 import { footerColumns, socials, type FooterColumn } from "@/content/footer-en";
 import { FooterLink, hoverLink, type LinkStyle } from "./links";
@@ -62,18 +63,16 @@ export function Payments({ dark = false }: { dark?: boolean }) {
   );
 }
 
-// The eNamad trust seal, registered for shopmajazi.com, so FooterF shows it on Persian pages only. Image and link are
-// eNamad's own; referrerPolicy "origin" (and no "noreferrer") lets eNamad check which site shows the seal. It is
-// always shown and loads eagerly: eNamad answers only Iranian connections (a visitor on a VPN gets nothing back), and
-// hiding it on a failed load also hid it in browsers that report a not-yet-loaded lazy image as failed.
-const ENAMAD_QUERY = "id=256396&Code=lQ5vHzLk6iA7WpwVeWHj";
+// The eNamad trust seal, registered for shopmajazi.com, so FooterF shows it on Persian pages only. The image is a
+// saved copy (enamad.png, bundled under /_next/static, which the server routes to Next.js): eNamad's own image only
+// loads for Iranian connections, so a visitor on a VPN saw nothing. The link is eNamad's; referrerPolicy "origin"
+// (and no "noreferrer") lets eNamad see which site the visitor came from.
 export function EnamadSeal({ className = "" }: { className?: string }) {
   const tx = useT();
   return (
-    <a href={`https://trustseal.enamad.ir/?${ENAMAD_QUERY}`} target="_blank" rel="noopener" referrerPolicy="origin"
+    <a href="https://trustseal.enamad.ir/?id=256396&Code=lQ5vHzLk6iA7WpwVeWHj" target="_blank" rel="noopener" referrerPolicy="origin"
       className={`grid w-fit place-items-center overflow-hidden rounded-2xl bg-white p-2 ring-1 ring-slate-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/20 dark:ring-white/10 motion-reduce:hover:translate-y-0 ${className}`}>
-      <img src={`https://trustseal.enamad.ir/logo.aspx?${ENAMAD_QUERY}`} referrerPolicy="origin" alt={tx("Enamad trust badge")}
-        width={80} height={80} className="h-20 w-20 object-contain text-center text-[10px] leading-tight text-slate-500" />
+      <img src={enamadSeal.src} alt={tx("Enamad trust badge")} width={80} height={80} className="h-20 w-20 object-contain" />
     </a>
   );
 }
