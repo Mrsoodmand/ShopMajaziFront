@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-otp";
 import { readDecisions } from "@/components/design/decisions";
 import { ExtrasSlot } from "@/design/service/slot";
 import LiveServiceExtras from "@/design/service/LiveServiceExtras";
@@ -51,7 +51,6 @@ export default async function VirtualNumberPage({ searchParams }: { searchParams
   const seo = await pageSeo("virtual-number");
   const want = await searchParams;
   const [decisions, live] = await Promise.all([readDecisions(), getLocale().then((l) => loadLive(l, want))]);
-  const section = getSection("page-otp")!;
   const offer = section.offers.find((o) => o.id === decisions["page-otp"]?.offer) ?? section.offers.find((o) => o.id === "L")!;
   // Pages L and P also take the chosen order screen from /design/page-otp-order.
   const { Component } = offer;

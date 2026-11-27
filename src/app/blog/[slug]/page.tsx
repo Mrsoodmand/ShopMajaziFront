@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-blog-post";
 import { readDecisions } from "@/components/design/decisions";
 import { LiveArticleProvider } from "@/design/blogPost/parts";
 import { PostWithHero, type PostHeroId } from "@/design/blogPost/heroes";
@@ -47,7 +47,6 @@ export default async function BlogPostPage({ params }: Props) {
   // The post's approved comments (the old site's too: same comments table), and the key new ones are sent under.
   const key = `blog:${id}`;
   const article = { ...post, comments: { key, list: await loadComments(key, locale, t("ShopMajazi support")) } };
-  const section = getSection("page-blog-post")!;
   const offer = section.offers.find((o) => o.id === decisions["page-blog-post"]?.offer) ?? section.offers.find((o) => o.id === "B")!;
   const { Component } = offer;
   // The hero chosen in /design/blog-post-hero; it fits post design B, the one the live page uses.

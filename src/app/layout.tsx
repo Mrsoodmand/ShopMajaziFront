@@ -24,7 +24,8 @@ import { SHARE_LOGO, siteTexts } from "@/lib/seo";
 import Script from "next/script";
 
 // Analytics carried over from the old Blade header (site-v2/layout/header.blade.php). Production builds only,
-// so local development doesn't show up in the reports.
+// so local development doesn't show up in the reports. Started once the page has fully loaded (lazyOnload): on
+// Iranian connections Google and Microsoft can answer slowly, and they shouldn't compete with the page's own files.
 const GTM_ID = "GTM-M9NKWXDK";
 const CLARITY_ID = "lbb2ig9kcg";
 const ANALYTICS = process.env.NODE_ENV === "production";
@@ -32,9 +33,11 @@ const gtmScript = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new
 const clarityScript = `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${CLARITY_ID}");`;
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk" });
-const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif-display" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono-code" });
+// Display, serif and code fonts appear in a few places only, so they aren't preloaded: a page that uses one still
+// fetches it, but no visitor (on the Persian site, nearly none use them) downloads them up front.
+const grotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-grotesk", preload: false });
+const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif-display", preload: false });
+const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono-code", preload: false });
 // Persian pages (see globals.css). FaNum: Latin digits are drawn as Persian digits.
 const iransans = localFont({
   variable: "--font-iransans",
@@ -86,8 +89,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <noscript>
               <iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} />
             </noscript>
-            <Script id="gtm" strategy="afterInteractive">{gtmScript}</Script>
-            <Script id="clarity" strategy="afterInteractive">{clarityScript}</Script>
+            <Script id="gtm" strategy="lazyOnload">{gtmScript}</Script>
+            <Script id="clarity" strategy="lazyOnload">{clarityScript}</Script>
           </>
         )}
         <LocaleProvider locale={locale} prices={prices}>

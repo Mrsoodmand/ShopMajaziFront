@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { catLabel, postHref } from "@/content/blog-en";
 import Cover from "../blog/Cover";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ChevronDown, Search, Menu, Wallet, ArrowRight } from "lucide-react";
 import { navGroups, navLinks } from "@/content/nav-en";
 import { LangSwitch, Logo, MobileMenu, ThemeToggle, useScrolled } from "./shared";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/i18n/server";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-tg-ads";
 import { readDecisions } from "@/components/design/decisions";
 import { tgPaths } from "@/content/telegram-en";
 import { PageHeadingProvider } from "@/components/seo/PageHeading";
@@ -24,7 +24,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TelegramAdsPage() {
   const seo = await pageSeo("telegram-ads");
   const decisions = await readDecisions();
-  const section = getSection("page-tg-ads")!;
   const offer = section.offers.find((o) => o.id === decisions["page-tg-ads"]?.offer) ?? section.offers.find((o) => o.id === "G")!;
   // The budget and rules picks (/design/tg-ads-budget, /design/tg-ads-rules) go to design G; others ignore them.
   const { Component } = offer;

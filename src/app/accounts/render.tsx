@@ -2,7 +2,7 @@ import type { ComponentType } from "react";
 import type { Metadata } from "next";
 import { getLocale, getT } from "@/i18n/server";
 import { makeT, toman } from "@/i18n/translate";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-subs";
 import { readDecisions } from "@/components/design/decisions";
 import { ExtrasSlot } from "@/design/service/slot";
 import LiveServiceExtras, { loadLiveComments } from "@/design/service/LiveServiceExtras";
@@ -113,8 +113,7 @@ export async function AccountsPage({ slug }: { slug?: string }) {
     if (tabbed) comments = await loadLiveComments(`subs:${p.slug}`);
     page = <Single slug={p.slug} panel={panel} comments={comments} bridge={decisions["sub-single-bridge"]?.offer} />;
   } else {
-    const section = getSection("page-subs")!;
-    const { Component } = section.offers.find((o) => o.id === decisions["page-subs"]?.offer) ?? section.offers.find((o) => o.id === "A")!;
+      const { Component } = section.offers.find((o) => o.id === decisions["page-subs"]?.offer) ?? section.offers.find((o) => o.id === "A")!;
     const seo = await pageSeo("accounts");
     page = <PageHeadingProvider h1={seo.h1}><Component panel={panel} /></PageHeadingProvider>;
   }

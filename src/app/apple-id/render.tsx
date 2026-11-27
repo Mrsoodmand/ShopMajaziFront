@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/i18n/server";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-apple-id";
 import { readDecisions } from "@/components/design/decisions";
 import { applePaths, appleTitles, type AppleMethod } from "@/content/apple-en";
 import { ExtrasSlot } from "@/design/service/slot";
@@ -49,7 +49,6 @@ async function loadLive(): Promise<LiveApple> {
 // Prices, stock and paying come from the backend (see design/appleId/parts.tsx useApple).
 export async function ApplePage({ method }: { method?: AppleMethod }) {
   const [decisions, live, seo] = await Promise.all([readDecisions(), loadLive(), pageSeo(seoKey(method))]);
-  const section = getSection("page-apple-id")!;
   const offer = section.offers.find((o) => o.id === decisions["page-apple-id"]?.offer) ?? section.offers.find((o) => o.id === "A")!;
   const { Component } = offer;
   // How to use, content, comments, FAQ and blog follow the design (see ServiceExtras).

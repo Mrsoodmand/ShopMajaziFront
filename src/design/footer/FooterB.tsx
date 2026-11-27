@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ArrowRight } from "lucide-react";
 import { brand } from "@/content/en";
 import { copyright, footerBlurb, legalLinks } from "@/content/footer-en";

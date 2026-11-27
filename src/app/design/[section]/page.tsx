@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { notFound } from "next/navigation";
 import { Maximize2 } from "lucide-react";
 import { getSection } from "@/design/registry";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Zap, ShieldCheck, Wallet, Smartphone, Apple, Users, MessageCircle, Send, ArrowRight, type LucideIcon } from "lucide-react";
 import { faqs, faqSupport } from "@/content/faq-en";
 import FaqSchema from "./FaqSchema";

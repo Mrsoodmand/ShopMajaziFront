@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Star, Zap, ShoppingCart, Flame, Sparkles, Tag } from "lucide-react";
 import { type Product } from "@/content/products-en";
 import { useMoney } from "@/lib/money";

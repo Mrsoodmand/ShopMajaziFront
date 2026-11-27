@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ArrowRight, ListOrdered, PartyPopper, Type } from "lucide-react";
 import { catLabel, postHref } from "@/content/blog-en";
 import { PageShell } from "../otp/parts";

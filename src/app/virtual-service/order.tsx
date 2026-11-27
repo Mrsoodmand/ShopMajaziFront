@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocale, getT } from "@/i18n/server";
-import { getSection } from "@/design/registry";
+import { section as socialPage } from "@/design/chosen/page-social";
+import { section as socialServicePage } from "@/design/chosen/page-social-service";
 import { readDecisions } from "@/components/design/decisions";
 import { LiveSocialOrderProvider, type LiveSocialOrder } from "@/design/social/live";
 import { MoneyProvider } from "@/lib/money";
@@ -88,7 +89,7 @@ export async function SocialOrderPage({ platform, service }: { platform: string;
   // The platform page uses the design chosen in /design/page-social (L · Band + Shelf); a service's own page uses the
   // one chosen in /design/page-social-service (A · Spec Sheet). Both sections' offers read the live data.
   const id = service ? "page-social-service" : "page-social";
-  const section = getSection(id)!;
+  const section = service ? socialServicePage : socialPage;
   const offer = section.offers.find((o) => o.id === decisions[id]?.offer) ?? section.offers.find((o) => o.id === "A")!;
   const { Component } = offer;
   return (

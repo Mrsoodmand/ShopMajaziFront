@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { MessageCircle, Send, Mail, ArrowUpRight } from "lucide-react";
 import { copyright, footerBlurb, legalLinks, supportEmail } from "@/content/footer-en";
 import { Logo, ThemeToggle } from "../header/shared";

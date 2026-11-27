@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Search, Menu } from "lucide-react";
 import { navGroups, navLinks } from "@/content/nav-en";
 import { LangSwitch, Logo, MobileMenu, SearchPalette, useScrolled, useSearchHotkey } from "./shared";

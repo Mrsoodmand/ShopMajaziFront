@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Check, Mail } from "lucide-react";
 import { copyright, legalLinks } from "@/content/footer-en";
 import { Logo } from "../header/shared";

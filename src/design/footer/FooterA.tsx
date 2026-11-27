@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { copyright, footerBlurb, legalLinks } from "@/content/footer-en";
 import { Logo, ThemeToggle } from "../header/shared";
 import { Columns, Payments, Socials } from "./parts";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { faqs } from "@/content/faq-en";
 import Item from "./Item";
 import FaqSchema from "./FaqSchema";

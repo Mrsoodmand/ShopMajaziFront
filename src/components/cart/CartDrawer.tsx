@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import {
   AlertCircle, Apple, Check, Clock, CreditCard, Info, Loader2, Lock, Minus, Phone, Plus, RotateCcw, ShoppingBag, Sparkles,
   Trash2, Users, Wallet, X,

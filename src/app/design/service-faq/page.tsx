@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { readDecisions } from "@/components/design/decisions";
 import Previews from "./Previews";
 

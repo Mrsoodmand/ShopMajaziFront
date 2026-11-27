@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Search, ArrowRight } from "lucide-react";
 import { productCats, products } from "@/content/products-en";
 import { useMoney } from "@/lib/money";

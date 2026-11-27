@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/i18n/server";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-tg-premium";
 import { readDecisions } from "@/components/design/decisions";
 import { tgPaths } from "@/content/telegram-en";
 import { ExtrasSlot } from "@/design/service/slot";
@@ -39,7 +39,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TelegramPremiumPage() {
   const [seo, live] = await Promise.all([pageSeo("telegram-premium"), loadPremium()]);
   const decisions = await readDecisions();
-  const section = getSection("page-tg-premium")!;
   const offer = section.offers.find((o) => o.id === decisions["page-tg-premium"]?.offer) ?? section.offers.find((o) => o.id === "S")!;
   const { Component } = offer;
   const page = <PageHeadingProvider h1={seo.h1}><ExtrasSlot extras={<LiveServiceExtras service="telegram-premium" />}><Component /></ExtrasSlot></PageHeadingProvider>;

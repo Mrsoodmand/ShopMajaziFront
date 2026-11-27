@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Fragment } from "react";
-import Link from "next/link";
-import { sections } from "@/design/registry";
+import Link from "@/components/Link";
+import { sections } from "@/design/chosen/home";
 import { readDecisions } from "@/components/design/decisions";
 import { LiveBlogProvider } from "@/design/blog/live";
 import { getLocale } from "@/i18n/server";

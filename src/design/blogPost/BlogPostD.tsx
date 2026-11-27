@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ArrowRight, Check, Lightbulb, ShieldCheck, Zap, RotateCcw } from "lucide-react";
 import Cover from "../blog/Cover";
 import { textLang } from "../blog/live";

@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { TrendingUp, ArrowRight } from "lucide-react";
 import { catOf, products } from "@/content/products-en";
 import { useMoney } from "@/lib/money";

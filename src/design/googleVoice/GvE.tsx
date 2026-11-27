@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ArrowDown, Check } from "lucide-react";
 import { useMoney } from "@/lib/money";
 import { compareRows, GV_PRICE, gvCities } from "@/content/google-voice-en";

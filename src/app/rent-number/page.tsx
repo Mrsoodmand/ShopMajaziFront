@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/i18n/server";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-rent";
 import { readDecisions } from "@/components/design/decisions";
 import { ExtrasSlot } from "@/design/service/slot";
 import LiveServiceExtras from "@/design/service/LiveServiceExtras";
@@ -22,7 +22,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RentNumberPage() {
   const seo = await pageSeo("rent-number");
   const decisions = await readDecisions();
-  const section = getSection("page-rent")!;
   const offer = section.offers.find((o) => o.id === decisions["page-rent"]?.offer) ?? section.offers.find((o) => o.id === "G")!;
   const { Component } = offer;
   // How to use, content, comments, FAQ and blog follow the design (see ServiceExtras).

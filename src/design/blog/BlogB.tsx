@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ArrowRight } from "lucide-react";
 import { postHref, posts as placeholder } from "@/content/blog-en";
 import Cover from "./Cover";

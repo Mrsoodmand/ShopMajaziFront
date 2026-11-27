@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { postHref, posts as placeholder, type Post } from "@/content/blog-en";
 import Cover from "./Cover";
 import { Chip, Heading, Meta } from "./parts";

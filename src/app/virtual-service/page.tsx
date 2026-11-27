@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getLocale, getT } from "@/i18n/server";
 import { makeT } from "@/i18n/translate";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-social-list";
 import { readDecisions } from "@/components/design/decisions";
 import { LiveSocialProvider, type LiveSocial } from "@/design/social/live";
 import { MoneyProvider } from "@/lib/money";
@@ -37,7 +37,6 @@ async function loadLive(locale: "en" | "fa"): Promise<LiveSocial> {
 export default async function SocialPage() {
   const seo = await pageSeo("virtual-service");
   const [decisions, live] = await Promise.all([readDecisions(), getLocale().then((l) => loadLive(l === "fa" ? "fa" : "en"))]);
-  const section = getSection("page-social-list")!;
   const offer = section.offers.find((o) => o.id === decisions["page-social-list"]?.offer) ?? section.offers.find((o) => o.id === "F")!;
   const { Component } = offer;
   const textures: Record<string, string> = { A: "grid", B: "rings", C: "grain", D: "lines", E: "glyphs", F: "none" };

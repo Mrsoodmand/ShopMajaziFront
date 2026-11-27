@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Quote, Smartphone, Phone, Apple, Sparkles, Users, CalendarClock, ShieldCheck, type LucideIcon } from "lucide-react";
 import { seoIntro, seoSections, type SeoSection } from "@/content/seo-en";
 import Body from "./Body";

@@ -1,6 +1,6 @@
 "use client";
 
-import NextLink from "next/link";
+import NextLink from "@/components/Link";
 import type { ComponentProps } from "react";
 import { localePath } from "./config";
 import { useLocale } from "./client";

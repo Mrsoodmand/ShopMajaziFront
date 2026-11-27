@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ArrowUpRight } from "lucide-react";
 import { catLabel, postHref, type Post } from "@/content/blog-en";
 import Cover from "../blog/Cover";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { copyright, legalLinks } from "@/content/footer-en";
 import { aboutLinks, navGroups } from "@/content/nav-en";
 import { HAS_BLOG } from "@/i18n/edition";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Search, MessageCircle, Send, Mail, SearchX } from "lucide-react";
 import { faqCategories, faqs, faqSupport } from "@/content/faq-en";
 import Item from "./Item";

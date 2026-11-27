@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { ArrowRight } from "lucide-react";
 import { blogCats, catLabel, postHref, posts as placeholder } from "@/content/blog-en";
 import Cover from "./Cover";

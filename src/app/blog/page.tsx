@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getLocale, getT } from "@/i18n/server";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-blog";
 import { readDecisions } from "@/components/design/decisions";
 import { blogCats } from "@/content/blog-en";
 import { LiveBlogProvider, type LiveBlog } from "@/design/blog/live";
@@ -28,7 +28,6 @@ export default async function BlogPage({ searchParams }: Props) {
   const locale = await getLocale();
   const [decisions, { topic }, posts, t] = await Promise.all([readDecisions(), searchParams, loadBlog(locale), getT()]);
   const live: LiveBlog = posts ? { posts } : { posts: [], error: t("Articles are unavailable right now. Please try again in a minute.") };
-  const section = getSection("page-blog")!;
   const offer = section.offers.find((o) => o.id === decisions["page-blog"]?.offer) ?? section.offers.find((o) => o.id === "F")!;
   const { Component } = offer;
   return (

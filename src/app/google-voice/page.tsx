@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getT } from "@/i18n/server";
-import { getSection } from "@/design/registry";
+import { section } from "@/design/chosen/page-google-voice";
 import { readDecisions } from "@/components/design/decisions";
 import { ExtrasSlot } from "@/design/service/slot";
 import LiveServiceExtras from "@/design/service/LiveServiceExtras";
@@ -42,7 +42,6 @@ export default async function GoogleVoicePage({ searchParams }: { searchParams: 
   const seo = await pageSeo("google-voice");
   const { state } = await searchParams;
   const [decisions, live] = await Promise.all([readDecisions(), loadLive(state)]);
-  const section = getSection("page-google-voice")!;
   const offer = section.offers.find((o) => o.id === decisions["page-google-voice"]?.offer) ?? section.offers.find((o) => o.id === "A")!;
   const { Component } = offer;
   // How to use, content, comments, FAQ and blog follow the design (see ServiceExtras).
