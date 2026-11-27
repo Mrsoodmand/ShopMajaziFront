@@ -4,9 +4,9 @@ import Link from "@/i18n/Link";
 import { MessageCircle, Send, Mail, ArrowUpRight } from "lucide-react";
 import { copyright, footerBlurb, legalLinks, supportEmail } from "@/content/footer-en";
 import { Logo } from "../header/shared";
-import { Columns, Socials } from "./parts";
+import { Columns, EnamadSeal, Socials } from "./parts";
 import { FooterLink, type LinkStyle } from "./links";
-import { useT } from "@/i18n/client";
+import { useLocale, useT } from "@/i18n/client";
 import seam from "./footerSeam.module.css";
 
 const channels = [
@@ -20,6 +20,7 @@ const channels = [
 // 2026-11-09). Links and socials animate on hover; `linkStyle` picks the link hover style (see links.tsx).
 export default function FooterF({ linkStyle = "arrow" }: { linkStyle?: LinkStyle }) {
   const t = useT();
+  const locale = useLocale();
   return (
     <footer className="relative bg-[#F5F6FB] dark:bg-[#070B14]">
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -53,6 +54,7 @@ export default function FooterF({ linkStyle = "arrow" }: { linkStyle?: LinkStyle
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-6 text-slate-500 dark:text-slate-400">{t.tr(footerBlurb)}</p>
             <div className="mt-6"><Socials animated /></div>
+            {locale === "fa" && <EnamadSeal className="mt-6" />}
           </div>
           <Columns linkStyle={linkStyle} />
         </div>
