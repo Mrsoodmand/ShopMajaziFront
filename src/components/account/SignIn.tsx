@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, LockKeyhole, X } from "lucide-react";
-import SignInForm from "./SignInForm";
+import dynamic from "next/dynamic";
 import WordReveal from "@/components/ui/WordReveal";
 import { Logo } from "@/design/header/shared";
 import { useAccount } from "@/lib/account";
@@ -14,6 +14,11 @@ import { useT } from "@/i18n/client";
 // so signing in never leaves the page you're on. Motion stops under prefers-reduced-motion (globals.css).
 
 const indigo = "bg-[#1e1b4b] dark:bg-[#15123a]";
+
+// The form's code (sign-in steps, captcha, SMS code) loads when it is first shown: the popup is in every page's
+// layout but renders the form only while open, so pages don't download it up front. /login still renders it on
+// the server.
+const SignInForm = dynamic(() => import("./SignInForm"));
 
 function useChips() {
   const t = useT();

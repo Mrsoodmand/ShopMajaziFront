@@ -49,20 +49,6 @@ function messageOf(e: unknown, t: T, m: (n: number) => string) {
   return own[code] ? t(own[code]) : errorText(e, t, m);
 }
 
-export function CartButton({ className = "" }: { className?: string }) {
-  const cart = useCart();
-  const t = useT();
-  if (!cart) return null;
-  const n = cart.count;
-  return (
-    <button type="button" onClick={() => cart.setOpen(true)} aria-label={t("Cart, {0} items", { 0: t.num(n) })} aria-expanded={cart.open} data-no-loader
-      className={`relative ${className} ${focus}`}>
-      <ShoppingBag className="h-[18px] w-[18px]" />
-      {n > 0 && <span key={n} className="absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-emerald-600 px-1 text-[11px] font-bold text-white ring-2 ring-white animate-[cart-pop_.4s_ease-out] dark:ring-[#070B14]">{t.num(n)}</span>}
-    </button>
-  );
-}
-
 export default function CartDrawer() {
   const cart = useCart();
   const t = useT();
@@ -72,7 +58,12 @@ export default function CartDrawer() {
   const [busy, setBusy] = useState<number | "pay" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const panel = useRef<HTMLElement>(null);
-  const open = !!cart?.open;
+  // This drawer loads on the cart's first opening (LazyCartDrawer), already asked to be open: draw it closed first,
+  // then open, so it slides in that first time too. A timer, not requestAnimationFrame: frames pause in a hidden tab,
+  // which would leave the cart closed.
+  const [shown, setShown] = useState(false);
+  useEffect(() => { const id = setTimeout(() => setShown(true), 30); return () => clearTimeout(id); }, []);
+  const open = !!cart?.open && shown;
   const close = () => cart?.setOpen(false);
   const closeRef = useRef(close);
   closeRef.current = close;
@@ -106,7 +97,6 @@ export default function CartDrawer() {
 
   return (
     <div className={`fixed inset-0 z-[75] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open} inert={!open}>
-      <style>{"@keyframes cart-pop{0%{transform:scale(.4)}60%{transform:scale(1.25)}100%{transform:scale(1)}}"}</style>
       <div onClick={close} className={`absolute inset-0 bg-slate-950/40 backdrop-blur-sm transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`} />
       <aside ref={panel} role="dialog" aria-modal="true" aria-labelledby="cart-title"
         className={`absolute inset-y-0 end-0 flex w-full max-w-[420px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out dark:bg-[#0B1020] ${open ? "translate-x-0" : "ltr:translate-x-full rtl:-translate-x-full"}`}>

@@ -5,7 +5,7 @@ import "./globals.css";
 import { LocaleProvider } from "@/i18n/client";
 import { AccountProvider } from "@/lib/account";
 import { CartProvider } from "@/lib/cart";
-import CartDrawer from "@/components/cart/CartDrawer";
+import CartDrawer from "@/components/cart/LazyCartDrawer";
 import { SignInPopupProvider } from "@/components/account/SignIn";
 import ScrollReveal from "@/components/ScrollReveal";
 import PersianDigits from "@/components/PersianDigits";

@@ -97,7 +97,7 @@ export function catalogFor(tx: T): Tab[] {
 
 // A card's icon tile content: the uploaded logo, else the built-in icon.
 function CardIcon({ c, className }: { c: Card; className: string }) {
-  if (c.image) return <img src={c.image} alt="" className="h-full w-full rounded-xl object-cover" />;
+  if (c.image) return <img src={c.image} alt="" loading="lazy" decoding="async" className="h-full w-full rounded-xl object-cover" />;
   const Icon = c.icon;
   return <Icon aria-hidden className={className} />;
 }

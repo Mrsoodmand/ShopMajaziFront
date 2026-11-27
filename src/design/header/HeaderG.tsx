@@ -11,7 +11,7 @@ import { useT } from "@/i18n/client";
 import { stripLocale } from "@/i18n/config";
 import { HAS_BLOG } from "@/i18n/edition";
 import { AccountButton } from "./AccountMenu";
-import { CartButton } from "@/components/cart/CartDrawer";
+import { CartButton } from "@/components/cart/CartButton";
 import { ServicesMega } from "./ServicesMega";
 
 type MenuId = "services" | "about";
