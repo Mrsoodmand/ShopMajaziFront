@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "@/i18n/Link";
 import { CreditCard, Bitcoin, Wallet, ShieldCheck } from "lucide-react";
 import { footerColumns, socials, type FooterColumn } from "@/content/footer-en";
@@ -64,20 +63,17 @@ export function Payments({ dark = false }: { dark?: boolean }) {
 }
 
 // The eNamad trust seal, registered for shopmajazi.com, so FooterF shows it on Persian pages only. Image and link are
-// eNamad's own; referrerPolicy "origin" (and no "noreferrer") lets eNamad check which site shows the seal. eNamad's
-// server doesn't answer outside Iran, so when the image fails the seal is left out instead of showing a broken box.
-const ENAMAD_QUERY = "id=256396&code=lQ5vHzLk6iA7WpwVeWHj";
+// eNamad's own; referrerPolicy "origin" (and no "noreferrer") lets eNamad check which site shows the seal. It is
+// always shown and loads eagerly: eNamad answers only Iranian connections (a visitor on a VPN gets nothing back), and
+// hiding it on a failed load also hid it in browsers that report a not-yet-loaded lazy image as failed.
+const ENAMAD_QUERY = "id=256396&Code=lQ5vHzLk6iA7WpwVeWHj";
 export function EnamadSeal({ className = "" }: { className?: string }) {
   const tx = useT();
-  const img = useRef<HTMLImageElement>(null);
-  const [failed, setFailed] = useState(false);
-  // A failure before hydration fires no onError, so check once on mount too.
-  useEffect(() => { if (img.current?.complete && !img.current.naturalWidth) setFailed(true); }, []);
-  if (failed) return null;
   return (
     <a href={`https://trustseal.enamad.ir/?${ENAMAD_QUERY}`} target="_blank" rel="noopener" referrerPolicy="origin"
-      className={`grid w-fit place-items-center rounded-2xl bg-white p-2 ring-1 ring-slate-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/20 dark:ring-white/10 motion-reduce:hover:translate-y-0 ${className}`}>
-      <img ref={img} onError={() => setFailed(true)} src={`https://trustseal.enamad.ir/logo.aspx?${ENAMAD_QUERY}`} referrerPolicy="origin" alt={tx("Enamad trust badge")} loading="lazy" className="h-20 w-auto" />
+      className={`grid w-fit place-items-center overflow-hidden rounded-2xl bg-white p-2 ring-1 ring-slate-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/20 dark:ring-white/10 motion-reduce:hover:translate-y-0 ${className}`}>
+      <img src={`https://trustseal.enamad.ir/logo.aspx?${ENAMAD_QUERY}`} referrerPolicy="origin" alt={tx("Enamad trust badge")}
+        width={80} height={80} className="h-20 w-20 object-contain text-center text-[10px] leading-tight text-slate-500" />
     </a>
   );
 }
