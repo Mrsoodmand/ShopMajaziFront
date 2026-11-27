@@ -37,7 +37,7 @@ export default function HeaderF({ overDark = false }: { overDark?: boolean; bare
     return () => { html.style.overflow = ""; };
   }, [menu]);
 
-  const blog = t.tr(navLinks).find((l) => l.href === "/blog")!;
+  const blog = t.tr(navLinks).find((l) => l.href === "/blog"); // none on the English site
 
   const trigger = (id: MenuId) =>
     `flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${menu === id
@@ -60,7 +60,7 @@ export default function HeaderF({ overDark = false }: { overDark?: boolean; bare
             <button onMouseEnter={() => show("services")} onMouseLeave={hide} onClick={() => show("services")} onKeyDown={escape} aria-expanded={menu === "services"} className={trigger("services")}>
               <LayoutGrid className="h-4 w-4" />{t("All services")}<ChevronDown className={`h-3.5 w-3.5 transition ${menu === "services" ? "rotate-180" : ""}`} />
             </button>
-            <Link href={blog.href} onMouseEnter={hide} className="rounded-full px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">{blog.label}</Link>
+            {blog && <Link href={blog.href} onMouseEnter={hide} className="rounded-full px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">{blog.label}</Link>}
             <div className="relative" onMouseLeave={hide}>
               <button onMouseEnter={() => show("about")} onClick={() => show("about")} onKeyDown={escape} aria-expanded={menu === "about"} className={trigger("about")}>
                 {t("About us")}<ChevronDown className={`h-3.5 w-3.5 transition ${menu === "about" ? "rotate-180" : ""}`} />

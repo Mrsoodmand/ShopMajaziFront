@@ -19,7 +19,7 @@ import { toSubProduct, toSubProducts, type ApiSub, type ApiSubDetail } from "@/l
 import { articleBlocks, articleSections, repeats } from "@/lib/article";
 import type { SubProduct } from "@/content/subs-en";
 import { PageHeadingProvider } from "@/components/seo/PageHeading";
-import { pageSeo, seoMetadata } from "@/lib/seo";
+import { pageSeo, seoMetadata, withShare } from "@/lib/seo";
 
 // Shared by /accounts (the catalog, opens on the first popular subscription) and /accounts/{slug} (one
 // subscription's own page with more detail and its own buy box). Products, plans and toman prices come from the
@@ -86,11 +86,11 @@ export async function accountsMetadata(slug?: string): Promise<Metadata> {
       .filter(Boolean).join(". ") + ".",
   };
   // The admin's SEO text is Persian: the Persian site uses it, the English one writes its own.
-  return {
+  return withShare({
     title: (locale === "fa" && raw.seo.meta_title) || own.title,
     description: (locale === "fa" && raw.seo.meta_desc) || own.description,
     alternates: { canonical: `/accounts/${p.slug}` },
-  };
+  });
 }
 
 // /accounts: the catalog design chosen in /design/page-subs (falls back to A).

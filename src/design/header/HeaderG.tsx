@@ -9,6 +9,7 @@ import { navFor } from "@/i18n/nav";
 import { Logo, MobileMenu, SearchPalette, ThemeToggle, useScrolled, useSearchHotkey } from "./shared";
 import { useT } from "@/i18n/client";
 import { stripLocale } from "@/i18n/config";
+import { HAS_BLOG } from "@/i18n/edition";
 import { AccountButton } from "./AccountMenu";
 import { CartButton } from "@/components/cart/CartDrawer";
 import { ServicesMega } from "./ServicesMega";
@@ -72,9 +73,9 @@ export default function HeaderG({ overDark = false }: { overDark?: boolean; bare
             <button onMouseEnter={() => show("services")} onMouseLeave={hide} onClick={() => show("services")} onKeyDown={escape} aria-expanded={menu === "services"} className={item(onServices || menu === "services")}>
               <AlignLeft className={icon(onServices || menu === "services")} />{t("Services")}<ChevronDown className={`h-3.5 w-3.5 opacity-60 transition ${menu === "services" ? "rotate-180" : ""}`} />
             </button>
-            <Link href="/blog" onMouseEnter={hide} aria-current={onBlog ? "page" : undefined} className={item(onBlog)}>
+            {HAS_BLOG && <Link href="/blog" onMouseEnter={hide} aria-current={onBlog ? "page" : undefined} className={item(onBlog)}>
               <BookOpen className={icon(onBlog)} />{t("Blog")}
-            </Link>
+            </Link>}
             <div className="relative" onMouseLeave={hide}>
               <button onMouseEnter={() => show("about")} onClick={() => show("about")} onKeyDown={escape} aria-expanded={menu === "about"} className={item(onAbout || menu === "about")}>
                 <Info className={icon(onAbout || menu === "about")} />{t("About")}<ChevronDown className={`h-3.5 w-3.5 opacity-60 transition ${menu === "about" ? "rotate-180" : ""}`} />

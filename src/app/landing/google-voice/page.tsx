@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { localePath } from "@/i18n/config";
+import { ENGLISH_ONLY } from "@/i18n/edition";
 import { getLocale } from "@/i18n/server";
 import { storefront } from "@/lib/backend";
 import { toGvNumber, type ApiGoogleVoice } from "@/lib/google-voice";
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   title: "Google Voice number: a permanent US number of your own — ShopMajazi",
   description: "A real US number for calls and texts, on its own Google account. Choose it by state or area code, pay once without a foreign card, get the login instantly.",
   alternates: { canonical: "/landing/google-voice" },
+  ...ENGLISH_ONLY,
 };
 
 async function loadNumbers(): Promise<GvNumber[] | null> {

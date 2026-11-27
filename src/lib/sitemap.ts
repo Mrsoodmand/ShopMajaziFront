@@ -6,28 +6,34 @@ import type { ApiSub } from "./subs";
 import type { ApiVerify } from "./verify";
 import type { ApiVirtualServices } from "./social";
 import type { ApiBlogPost } from "./blog";
+import { EDITION, HAS_BLOG } from "@/i18n/edition";
 
 // What /sitemap.xml, /blog/sitemap.xml and /tech-news/sitemap.xml list (src/app/sitemap.ts and the two route
 // handlers). Every address is the page's canonical one: no redirects (/virtual-numbers, /tech-news/x), no pages
-// marked noindex (/login, /account). Persian is the main site; pages with an English version say so with hreflang.
+// marked noindex (/login, /account). Each site lists its own pages in its own language (src/i18n/edition.ts):
+// shopmajazi.com the Persian ones, the English site the English ones. Only a site serving both (`npm run dev`) gives
+// every page its English version with hreflang.
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://shopmajazi.com").replace(/\/$/, "");
 
 const url = (path: string) => (path === "/" ? SITE_URL : `${SITE_URL}${path}`);
 const en = (path: string) => url(path === "/" ? "/en" : `/en${path}`);
 
-// A page of the new site, in Persian with its English version.
+// A page of the new site (with its English version when this site serves both languages).
 function page(path: string, priority: number, lastModified?: string | null): MetadataRoute.Sitemap[number] {
   return {
     url: url(path),
     ...(lastModified && { lastModified }),
     priority,
-    alternates: { languages: { fa: url(path), en: en(path), "x-default": url(path) } },
+    ...(EDITION === "all" && { alternates: { languages: { fa: url(path), en: en(path), "x-default": url(path) } } }),
   };
 }
 
-// Pages the old Laravel site still serves (Persian only).
-const legacy = ["/static-ip", "/faq", "/contact-us", "/about-us"];
+// Pages the old Laravel site still serves (Persian only, so not on the English site).
+const legacy = EDITION === "en" ? [] : ["/static-ip"];
+
+// Info pages of the new site (moved from Laravel 2026-11-23), in both languages.
+const info = ["/faq", "/contact-us", "/about-us"];
 
 async function safe<T>(what: string, load: () => Promise<T>): Promise<T | null> {
   try {
@@ -63,7 +69,8 @@ export async function pagesSitemap(): Promise<MetadataRoute.Sitemap> {
       ...c.services.map((s) => page(`/virtual-service/${encodeURIComponent(c.slug)}/${encodeURIComponent(s.slug)}`, 0.7)),
     ]),
     ...Object.values(tgPaths).map((p) => page(p, 0.8)),
-    page("/blog", 0.7),
+    ...(HAS_BLOG ? [page("/blog", 0.7)] : []),
+    ...info.map((p) => page(p, 0.5)),
     ...legacy.map((p) => ({ url: url(p), priority: 0.5 })),
   ];
 }
@@ -71,6 +78,7 @@ export async function pagesSitemap(): Promise<MetadataRoute.Sitemap> {
 // Published posts, both kinds, at their one address /blog/{slug} (tech news included: /tech-news/{slug} redirects
 // there). Posts are written in Persian and their canonical address is the Persian page, so no English alternate.
 export async function postsSitemap(type?: ApiBlogPost["type"]): Promise<MetadataRoute.Sitemap> {
+  if (!HAS_BLOG) return [];
   const { posts } = await storefront<{ posts: ApiBlogPost[] }>("blog", 600);
   return posts
     .filter((p) => !type || p.type === type)

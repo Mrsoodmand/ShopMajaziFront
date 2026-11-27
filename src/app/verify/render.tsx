@@ -14,6 +14,7 @@ import { isNotFound, storefront } from "@/lib/backend";
 import { toVerifyProduct, toVerifyProducts, type ApiVerify, type ApiVerifyDetail } from "@/lib/verify";
 import { articleBlocks, articleSections, repeats } from "@/lib/article";
 import type { SubProduct } from "@/content/subs-en";
+import { withShare } from "@/lib/seo";
 
 // /verify (the catalog) and /verify/{slug} (one product's own page). The user asked for the same designs as the
 // Subscriptions pages: catalog A with the chosen product panel, and single page D. They run in `flavor: "verify"`
@@ -51,11 +52,11 @@ function guideOf(raw: ApiVerifyDetail): SubProduct["guide"] {
 
 export async function verifyMetadata(slug?: string): Promise<Metadata> {
   const t = await getT();
-  if (!slug) return {
+  if (!slug) return withShare({
     title: t("Verified accounts and account verification — ShopMajazi"),
     description: t("Buy an account that's already verified, or have your own account verified. Pay with your wallet or an Iranian bank card; your documents stay private."),
     alternates: { canonical: "/verify" },
-  };
+  });
   let raw: ApiVerifyDetail | null = null;
   try { raw = await loadVerify(slug); } catch { /* backend down: the page says so */ }
   if (!raw) return { title: `${t("We couldn't find that page")} — ${t("ShopMajazi")}`, robots: { index: false } };
@@ -66,11 +67,11 @@ export async function verifyMetadata(slug?: string): Promise<Metadata> {
     title: t("Buy {0} from {1} — ShopMajazi", { 0: p.name, 1: toman(from, locale) }),
     description: [p.tagline, p.delivery].filter(Boolean).join(locale === "fa" ? "، " : ". ") + ".",
   };
-  return {
+  return withShare({
     title: (locale === "fa" && raw.seo.meta_title) || own.title,
     description: (locale === "fa" && raw.seo.meta_desc) || own.description,
     alternates: { canonical: `/verify/${p.slug}` },
-  };
+  });
 }
 
 export async function VerifyPage({ slug, raw }: { slug?: string; raw?: ApiVerifyDetail | null }) {

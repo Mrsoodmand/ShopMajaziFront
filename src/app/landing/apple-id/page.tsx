@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { localePath } from "@/i18n/config";
+import { ENGLISH_ONLY } from "@/i18n/edition";
 import { getLocale } from "@/i18n/server";
 import { appleCompare, entry } from "@/content/landing-en";
 import { Arrow, CompareTable, EntryHead, LexiconPage, LookupBox, Notes, Section, SeeAlso, Senses, Usage } from "@/design/landing/Lexicon";
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
   title: "US Apple ID, ready in seconds or made with your details — ShopMajazi",
   description: "A United States Apple ID for the App Store, iCloud and every Apple device: ready the moment you pay, or custom-made with your own name and email.",
   alternates: { canonical: "/landing/apple-id" },
+  ...ENGLISH_ONLY,
 };
 
 const contents = [

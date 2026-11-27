@@ -10,15 +10,18 @@ import { commentDate, loadTestimonials } from "@/lib/comments";
 import { LiveTestimonialsProvider, type LiveTestimonial } from "@/design/testimonials/live";
 import { getT } from "@/i18n/server";
 import { BridgeBeam, BridgeMarquee, BridgeThread, BridgeTwinkle, BridgeWave } from "@/design/bridge/offers";
+import { siteTexts, withShare } from "@/lib/seo";
 
 // The moving element in the band under the hero, by its offer in gallery section "hero-bridge".
 const bridges: Record<string, typeof BridgeWave> = { A: BridgeThread, B: BridgeMarquee, C: BridgeBeam, D: BridgeWave, E: BridgeTwinkle };
 
 export const dynamic = "force-dynamic";
 
-// Title and description come from the root layout; the home page adds its own address (same in both languages,
-// like the other pages).
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+// The site's own title and description (as in the root layout), the home page's address (same in both languages,
+// like the other pages) and its link-preview data.
+export async function generateMetadata(): Promise<Metadata> {
+  return withShare({ ...(await siteTexts()), alternates: { canonical: "/" } });
+}
 
 // How many of the newest posts the home page's blog section gets.
 const HOME_POSTS = 8;

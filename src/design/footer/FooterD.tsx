@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { copyright, legalLinks } from "@/content/footer-en";
 import { aboutLinks, navGroups } from "@/content/nav-en";
+import { HAS_BLOG } from "@/i18n/edition";
 import { Logo, ThemeToggle } from "../header/shared";
 import { Socials } from "./parts";
 
@@ -9,7 +10,7 @@ import { Socials } from "./parts";
 export default function FooterD() {
   const links = [
     ...navGroups.map((g) => ({ label: g.label, href: g.viewAll?.href ?? g.items[0].href })),
-    { label: "Blog", href: "/blog" },
+    ...(HAS_BLOG ? [{ label: "Blog", href: "/blog" }] : []),
     ...aboutLinks.map((l) => ({ label: l.label, href: l.href })),
   ];
   return (

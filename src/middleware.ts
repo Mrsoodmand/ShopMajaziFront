@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { LOCALE_HEADER, isUnlocalized } from "@/i18n/config";
+import { LOCALE_HEADER, isUnlocalized, localeOfPath } from "@/i18n/config";
 
-// Sets the request's language for the pages: "/en/..." is English, everything else Persian (the default, no prefix).
+// Sets the request's language for the pages: on a site with both languages "/en/..." is English and everything else
+// Persian (the default, no prefix); a one-language site (src/i18n/edition.ts) is always in its own language.
 // It only sets a request header. Stripping "/en" is a rewrite in next.config.ts, and "/fa/..." → "/..." a redirect
 // there: rewriting or redirecting here needs an absolute URL, and behind Apache the server's own origin
 // (HOSTNAME=127.0.0.1) differs from the one middleware builds (localhost), so Next.js proxied "/en" back to itself
@@ -10,7 +11,7 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (isUnlocalized(pathname)) return NextResponse.next();
   const headers = new Headers(req.headers);
-  headers.set(LOCALE_HEADER, pathname === "/en" || pathname.startsWith("/en/") ? "en" : "fa");
+  headers.set(LOCALE_HEADER, localeOfPath(pathname));
   return NextResponse.next({ request: { headers } });
 }
 

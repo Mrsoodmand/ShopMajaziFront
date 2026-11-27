@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { localePath } from "@/i18n/config";
+import { ENGLISH_ONLY } from "@/i18n/edition";
 import { getLocale } from "@/i18n/server";
 import { storefront } from "@/lib/backend";
 import { toCatalog, type ApiVirtualNumbers, type VnCatalog } from "@/lib/virtual-numbers";
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
   title: "Virtual number for SMS verification, from 150+ countries — ShopMajazi",
   description: "A phone number in another country for one verification code: WhatsApp, Telegram, Google, ChatGPT and 2,000+ apps. Pay without a foreign card; refunded if no code arrives.",
   alternates: { canonical: "/landing/virtual-number" },
+  ...ENGLISH_ONLY,
 };
 
 // Apps first in the plate, by how often they are bought for (ids from the backend's image names).

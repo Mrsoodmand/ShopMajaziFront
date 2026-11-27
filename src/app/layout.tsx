@@ -14,11 +14,13 @@ import { BrandProvider } from "@/components/brand/Brand";
 import RouteLoader from "@/components/brand/RouteLoader";
 import { readDecisions } from "@/components/design/decisions";
 import { dirOf } from "@/i18n/config";
+import { EDITION, SITE_INDEXED } from "@/i18n/edition";
 import { getLocale, getPrices, getT } from "@/i18n/server";
 import { cookies } from "next/headers";
 import { SpotlightProvider } from "@/design/service/spotlight";
 import { HERO_PREVIEW_COOKIE } from "@/design/service/heroPreview";
 import { SITE_URL } from "@/lib/sitemap";
+import { SHARE_LOGO, siteTexts } from "@/lib/seo";
 import Script from "next/script";
 
 // Analytics carried over from the old Blade header (site-v2/layout/header.blade.php). Production builds only,
@@ -48,13 +50,20 @@ const iransans = localFont({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getT();
+  const [t, locale, site] = await Promise.all([getT(), getLocale(), siteTexts()]);
   return {
     // Canonical and share addresses the pages give as paths ("/blog/x") go out as full addresses on the site's domain.
     metadataBase: new URL(SITE_URL),
-    title: t("ShopMajazi — Digital services, delivered instantly"),
-    description: t("Virtual numbers, Google Voice, Apple ID, subscriptions and social growth services."),
-    other: { enamad: "838208" },
+    ...site,
+    // Link-preview defaults for pages that set no share data of their own (sign-in, 404…). The rest go through
+    // lib/seo.ts › withShare, since a page's openGraph replaces this one whole. No title here: previews then use the
+    // page's own <title>.
+    openGraph: { type: "website", siteName: t("ShopMajazi"), locale: locale === "fa" ? "fa_IR" : "en_US", images: [{ ...SHARE_LOGO, alt: t("ShopMajazi") }] },
+    twitter: { card: "summary" },
+    // A site not open to search engines yet (SITE_INDEX=0, src/i18n/edition.ts): every page says noindex.
+    ...(!SITE_INDEXED && { robots: { index: false, follow: false } }),
+    // The eNamad trust seal is registered for shopmajazi.com.
+    ...(EDITION !== "en" && { other: { enamad: "838208" } }),
   };
 }
 

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { ArrowLeft, Home, LifeBuoy, RotateCw, Search } from "lucide-react";
 import Link from "@/i18n/Link";
 import { useT } from "@/i18n/client";
+import { HAS_BLOG } from "@/i18n/edition";
 
 // Error pages (section "errors" in /design). Each offer renders one status code; with no `code` it is a preview
 // and shows a switcher so every code can be checked. The live pages (app/not-found.tsx, app/error.tsx, and
@@ -19,7 +20,7 @@ export const popular: { href: string; label: string }[] = [
   { href: "/google-voice", label: "Google Voice" },
   { href: "/accounts", label: "Premium accounts" },
   { href: "/telegram/premium", label: "Telegram Premium" },
-  { href: "/blog", label: "Blog" },
+  ...(HAS_BLOG ? [{ href: "/blog", label: "Blog" }] : []),
 ];
 
 export const SUPPORT_URL = "https://t.me/shopmajazi";

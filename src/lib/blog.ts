@@ -1,5 +1,6 @@
 import { cache } from "react";
 import type { Locale } from "@/i18n/config";
+import { HAS_BLOG } from "@/i18n/edition";
 import { makeT } from "@/i18n/translate";
 import { blogCats, type BlogCat, type Post } from "@/content/blog-en";
 import { team, topicProducts, type ArticlePage, type TocItem } from "@/content/blog-post-en";
@@ -69,8 +70,10 @@ export function toPost(p: ApiBlogPost, locale: Locale): Post {
   };
 }
 
-// Every published post and news item, newest first. null when the backend can't be reached.
+// Every published post and news item, newest first. null when the backend can't be reached. None on the English
+// site, which has no blog (src/i18n/edition.ts): the blog sections of the other pages are then left out.
 export const loadBlog = cache(async (locale: Locale): Promise<Post[] | null> => {
+  if (!HAS_BLOG) return [];
   try {
     const { posts } = await storefront<{ posts: ApiBlogPost[] }>("blog", BLOG_CACHE);
     return posts.map((p) => toPost(p, locale));
@@ -83,6 +86,7 @@ export const loadBlog = cache(async (locale: Locale): Promise<Post[] | null> => 
 // One post, ready for the post page designs. null when there is no such published post; throws when the backend
 // can't be reached (the page shows the error page rather than a wrong 404).
 export const loadArticle = cache(async (slug: string, locale: Locale): Promise<{ article: ArticlePage; seo: ArticleSeo; id: number } | null> => {
+  if (!HAS_BLOG) return null;
   let data: ApiBlogArticle;
   try {
     data = await storefront<ApiBlogArticle>(`blog/${encodeURIComponent(slug)}`, BLOG_CACHE);

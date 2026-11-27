@@ -11,6 +11,7 @@ import { loadBlog } from "@/lib/blog";
 import { articleBlocks } from "@/lib/article";
 import { display, toLiveServices, toSocialCategories, type ApiServiceDetail, type ApiServicePlatform, type ApiVirtualServices } from "@/lib/social";
 import type { SocialCategory } from "@/content/social-categories-en";
+import { withShare } from "@/lib/seo";
 
 // Shared by /virtual-service/{platform} and /virtual-service/{platform}/{service} (opens on that service, with its
 // own SEO and FAQ). Platforms, services, packages, fields and prices come from React admin › Virtual services.
@@ -51,11 +52,11 @@ export async function socialOrderMetadata(platform: string, service?: string): P
   // The admin's SEO texts are Persian; the English site gets its own.
   const seo = locale === "fa" ? (detail ? detail.service.seo : page?.category.seo) : null;
   const name = detail ? (locale === "fa" ? detail.service.name : display(detail.service.en_name || detail.service.name)) : null;
-  return {
+  return withShare({
     title: seo?.meta_title || (name ? t("{0} — {1} — ShopMajazi", { 0: name, 1: p.name }) : t("Buy {0} services — ShopMajazi", { 0: p.name })),
     description: seo?.meta_desc || t("{0} services: pick a package, paste the link and pay with your wallet or card. We never ask for your password.", { 0: p.name }),
     alternates: { canonical },
-  };
+  });
 }
 
 export async function SocialOrderPage({ platform, service }: { platform: string; service?: string }) {

@@ -5,6 +5,7 @@ import { readDecisions } from "@/components/design/decisions";
 import { blogCats } from "@/content/blog-en";
 import { LiveBlogProvider, type LiveBlog } from "@/design/blog/live";
 import { loadBlog } from "@/lib/blog";
+import { withShare } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +15,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const { topic: id } = await searchParams;
   const topic = blogCats.find((c) => c.id === id);
   const t = await getT();
-  return {
+  return withShare({
     title: topic ? t("{0} articles — ShopMajazi blog", { 0: t(topic.label) }) : t("Blog: guides, news and how-tos — ShopMajazi"),
     description: t("Step-by-step guides for virtual numbers, Apple ID, Telegram, subscriptions and growing your channels."),
     alternates: { canonical: topic ? `/blog?topic=${topic.id}` : "/blog" },
-  };
+  });
 }
 
 // The live blog list: every post and news item from the backend (React admin › Blog / News), in whichever page

@@ -2,6 +2,7 @@ import {
   Smartphone, Apple, Sparkles, Users, MessageSquareCode, Phone, CalendarClock, UserPen, BadgeCheck,
   Bot, LineChart, Headphones, Palette, Send, Instagram, MessagesSquare, Info, Crown, Megaphone, Star, type LucideIcon,
 } from "lucide-react";
+import { HAS_BLOG } from "@/i18n/edition";
 
 // Site navigation, grouped the same way as the hero G tabs.
 // `image`: an admin-uploaded logo (live menu items, i18n/nav.ts), shown instead of `icon`.
@@ -61,8 +62,9 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
+// No blog on the English site (src/i18n/edition.ts).
 export const navLinks = [
-  { label: "Blog", href: "/blog" },
+  ...(HAS_BLOG ? [{ label: "Blog", href: "/blog" }] : []),
   { label: "Support", href: "/contact-us" },
 ];
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { localePath } from "@/i18n/config";
+import { ENGLISH_ONLY } from "@/i18n/edition";
 import { getLocale } from "@/i18n/server";
 import { entry, numberCompare, numberKinds } from "@/content/landing-en";
 import { Arrow, CompareTable, EntryHead, LexiconPage, LookupBox, Notes, Section, SeeAlso, Senses, Usage } from "@/design/landing/Lexicon";
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
   title: "Rent a phone number for a week to a month, unlimited SMS — ShopMajazi",
   description: "Rent a number for all your apps or for one app, from 12 countries. Every SMS for a week to a month; extend any time and keep the same number.",
   alternates: { canonical: "/landing/rent-number" },
+  ...ENGLISH_ONLY,
 };
 
 const contents = [

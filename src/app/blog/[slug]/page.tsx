@@ -7,7 +7,7 @@ import { PostWithHero, type PostHeroId } from "@/design/blogPost/heroes";
 import { getLocale, getT } from "@/i18n/server";
 import { loadArticle } from "@/lib/blog";
 import { loadComments } from "@/lib/comments";
-import { absolute } from "@/lib/seo";
+import { absolute, SHARE_LOGO, withShare } from "@/lib/seo";
 import { SITE_URL } from "@/lib/sitemap";
 
 export const dynamic = "force-dynamic";
@@ -21,9 +21,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!found) return {};
   const { article, seo } = found;
   const t = await getT();
-  const image = seo.image ? await absolute(seo.image) : undefined;
-  return {
-    title: t("{0} — ShopMajazi", { 0: seo.title }),
+  const image = seo.image ? absolute(seo.image) : undefined;
+  // Some admin titles already end in the site's name; it isn't added a second time.
+  const branded = /شاپ\s*مجازی|shop\s*majazi/i.test(seo.title);
+  return withShare({
+    title: branded ? seo.title : t("{0} — ShopMajazi", { 0: seo.title }),
     description: seo.description,
     alternates: { canonical: `/blog/${article.post.slug}` },
     openGraph: {
@@ -31,8 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ...(seo.published && { publishedTime: seo.published }),
       ...(image && { images: [{ url: image }] }),
     },
-    ...(image && { twitter: { card: "summary_large_image", images: [image] } }),
-  };
+  });
 }
 
 // The live blog post from the backend, in whichever page design is chosen in /design/page-blog-post (falls back to B).
@@ -60,11 +61,12 @@ export default async function BlogPostPage({ params }: Props) {
     headline: article.post.title,
     description: seo.description,
     inLanguage: "fa",
-    ...(seo.image && { image: await absolute(seo.image) }),
+    ...(seo.image && { image: absolute(seo.image) }),
     ...(seo.published && { datePublished: seo.published }),
     ...(seo.modified && { dateModified: seo.modified }),
     author: { "@type": "Organization", name: t("ShopMajazi"), url: SITE_URL },
-    publisher: { "@type": "Organization", name: t("ShopMajazi"), logo: { "@type": "ImageObject", url: `${SITE_URL}/upload/logo/logo-v5.jpg` } },
+    // The square logo (600×600): the old wide logo-v5.jpg was 284×68, under the 112px search engines ask for.
+    publisher: { "@type": "Organization", name: t("ShopMajazi"), logo: { "@type": "ImageObject", url: absolute(SHARE_LOGO.url), width: SHARE_LOGO.width, height: SHARE_LOGO.height } },
     mainEntityOfPage: `${SITE_URL}/blog/${article.post.slug}`,
   };
 

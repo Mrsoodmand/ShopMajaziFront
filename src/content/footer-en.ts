@@ -1,5 +1,6 @@
 import { Send, Instagram, Youtube, Twitter, type LucideIcon } from "lucide-react";
 import { navGroups } from "./nav-en";
+import { HAS_BLOG } from "@/i18n/edition";
 
 // Footer links. Services come from the header's nav data so both stay in sync.
 export type FooterLink = { label: string; href: string };
@@ -24,7 +25,7 @@ export const footerColumns: FooterColumn[] = [
     title: "Company",
     links: [
       { label: "About us", href: "/about-us" },
-      { label: "Blog", href: "/blog" },
+      ...(HAS_BLOG ? [{ label: "Blog", href: "/blog" }] : []),
       { label: "Contact us", href: "/contact-us" },
       { label: "FAQ", href: "/faq" },
       // "Rules" (/rules) comes back here once that page is written.

@@ -7,11 +7,11 @@ import Link from "@/i18n/Link";
 import { ChevronDown, Globe, X, ArrowRight, Sun, Moon, Search, CornerDownLeft } from "lucide-react";
 import { brand } from "@/content/en";
 import { BrandMark, Wordmark } from "@/components/brand/Brand";
-import { aboutLinks, languages, navLinks } from "@/content/nav-en";
+import { aboutLinks, languages as siteLanguages, navLinks } from "@/content/nav-en";
 import { navFor } from "@/i18n/nav";
 import { NavIcon } from "./NavIcon";
 import { useLocale, useT } from "@/i18n/client";
-import { localePath, stripLocale, type Locale } from "@/i18n/config";
+import { LOCALES, localePath, stripLocale, type Locale } from "@/i18n/config";
 import { useLocalePath } from "@/i18n/Link";
 import { AccountMobile } from "./AccountMenu";
 
@@ -88,18 +88,21 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   );
 }
 
-// FA / EN switcher: opens the same page in the other language (Persian at /, English under /en).
+// FA / EN switcher: opens the same page in the other language (Persian at /, English under /en). Only on a site that
+// serves more than one language (src/i18n/edition.ts): shopmajazi.com and the English site have none.
 export function LangSwitch({ dark = false, variant = "menu" }: { dark?: boolean; variant?: "menu" | "toggle" | "pill" }) {
   const tx = useT();
   const lang = useLocale();
   const setLang = (code: string) => { if (code !== lang) window.location.assign(localePath(stripLocale(window.location.pathname), code as Locale) + window.location.search + window.location.hash); };
   const [open, setOpen] = useState(false);
   const ref = useClickOutside<HTMLDivElement>(() => setOpen(false));
+  const languages = tx.tr(siteLanguages).filter((l) => LOCALES.includes(l.code as Locale));
+  if (languages.length < 2) return null;
 
   if (variant === "toggle")
     return (
       <div className={`flex rounded-full p-0.5 text-xs font-semibold ${dark ? "bg-white/10" : "bg-slate-100 dark:bg-white/10"}`}>
-        {tx.tr(languages).map((l) => (
+        {languages.map((l) => (
           <button key={l.code} onClick={() => setLang(l.code)}
             className={`rounded-full px-2.5 py-1 transition ${lang === l.code ? "bg-white text-slate-900 shadow-sm" : dark ? "text-slate-300" : "text-slate-500 dark:text-slate-300"}`}>
             {l.code === "fa" ? "فا" : l.short}
@@ -124,7 +127,7 @@ export function LangSwitch({ dark = false, variant = "menu" }: { dark?: boolean;
       )}
       {open && (
         <div className="absolute end-0 top-full z-50 mt-2 w-40 rounded-xl bg-white p-1 shadow-xl ring-1 ring-slate-200 dark:bg-[#0E1424] dark:ring-white/10">
-          {tx.tr(languages).map((l) => (
+          {languages.map((l) => (
             <button key={l.code} onClick={() => { setLang(l.code); setOpen(false); }}
               className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${lang === l.code ? "bg-indigo-50 font-medium text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300" : "text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/5"}`}>
               {l.label}<span className="text-xs text-slate-400">{l.short}</span>
