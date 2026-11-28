@@ -6,7 +6,8 @@ import { HAS_BLOG } from "@/i18n/edition";
 
 // Site navigation, grouped the same way as the hero G tabs.
 // `image`: an admin-uploaded logo (live menu items, i18n/nav.ts), shown instead of `icon`.
-export type NavItem = { label: string; desc: string; href: string; icon: LucideIcon; from: string; image?: string };
+// `from`: a display price, read only by archived gallery headers; the live menu shows no prices.
+export type NavItem = { label: string; desc: string; href: string; icon: LucideIcon; from?: string; image?: string };
 export type NavGroup = { id: string; label: string; icon: LucideIcon; items: NavItem[]; viewAll?: { label: string; href: string } };
 
 export const navGroups: NavGroup[] = [

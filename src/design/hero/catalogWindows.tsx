@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { LocaleProvider, useT } from "@/i18n/client";
 import type { T } from "@/i18n/translate";
-import { pickPrice } from "@/i18n/nav";
+import { livePrice } from "@/i18n/nav";
 
 // The shop window under the home hero (offer G): the product categories and their products. Gallery section
 // "hero-catalog" (/design/hero-catalog) shows each style; the live hero (HeroG.tsx) uses CATALOG_STYLE below.
@@ -67,7 +67,7 @@ export const catalog: Tab[] = [
 ];
 
 // The catalog in this language, with the Subscriptions and Social tabs showing what the admin put on the home page
-// (Api\StorefrontController::prices › picks.home). A chosen item that is also a built-in card keeps that card's
+// (Api\StorefrontController::picks › home; their prices from prices › from). A chosen item that is also a built-in card keeps that card's
 // icon, colours and feature list; a new one gets its logo and description. Nothing chosen = the built-in cards.
 const catalogMemo = new WeakMap<T, Tab[]>();
 const PLAIN_TINT = "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300";
@@ -84,7 +84,7 @@ export function catalogFor(tx: T): Tab[] {
       ...tab,
       cards: chosen.map((p): Card => {
         const known = tab.cards.find((c) => c.href === p.href);
-        const live = { from: pickPrice(p, tx) || known?.from || "", href: p.href };
+        const live = { from: livePrice(p.href, tx) || known?.from || "", href: p.href };
         if (known) return { ...known, ...live };
         return { ...live, name: fa ? p.name : p.name_en || p.name, desc: (fa ? p.desc : p.desc_en || p.desc) ?? "", features: [], icon: tab.icon, tint: PLAIN_TINT, image: p.image ?? undefined };
       }),
@@ -106,6 +106,24 @@ function CardIcon({ c, className }: { c: Card; className: string }) {
 const DEFAULT_TAB = "subs";
 
 const cols: Record<number, string> = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 lg:grid-cols-3", 4: "sm:grid-cols-2 lg:grid-cols-4" };
+
+// Any number of cards (the admin picks how many go on the home page): rows of at most 4, shared out evenly
+// (5 → 3 + 2, 6 → 3 + 3, 7 → 4 + 3), so no card ends up alone or full width. Two columns below lg, where an odd
+// last card spans both; from lg a 12-column grid, each card spanning 12 / the size of its row.
+const SPAN: Record<number, string> = { 1: "lg:col-span-12", 2: "lg:col-span-6", 3: "lg:col-span-4", 4: "lg:col-span-3" };
+const cardGrid = (n: number) => (n > 1 ? "sm:grid-cols-2 lg:grid-cols-12" : "");
+function cardSpan(n: number, i: number): string {
+  if (n < 2) return "";
+  const rows = Math.ceil(n / 4);
+  const base = Math.floor(n / rows), extra = n % rows; // the first `extra` rows get one card more
+  let start = 0, size = 0;
+  for (let r = 0; r < rows; r++) {
+    size = base + (r < extra ? 1 : 0);
+    if (i < start + size) break;
+    start += size;
+  }
+  return `${n % 2 === 1 && i === n - 1 ? "sm:col-span-2" : ""} ${SPAN[size]}`;
+}
 
 
 // A · Catalog Tabs (current): a scrolling row of tabs with a sliding pill, the products as full cards.
@@ -142,9 +160,9 @@ function Tabs() {
         })}
       </div>
 
-      <div className={`grid gap-3 p-2 pt-4 ${cols[tab.cards.length]}`}>
+      <div className={`grid gap-3 p-2 pt-4 ${cardGrid(tab.cards.length)}`}>
         {tab.cards.map((c, i) => (
-          <div key={tab.id + c.name} className="animate-blur-in" style={{ animationDelay: `${i * 70}ms` }}>
+          <div key={tab.id + c.name} className={`animate-blur-in ${cardSpan(tab.cards.length, i)}`} style={{ animationDelay: `${i * 70}ms` }}>
           <Link href={c.href} className="group relative flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-indigo-400/50 dark:hover:shadow-black/30">
             {c.hot && <span className="absolute end-4 top-4 flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-600 dark:bg-orange-500/15 dark:text-orange-300"><Flame className="h-3 w-3" />{tx("Popular")}</span>}
             <span className={`grid h-11 w-11 place-items-center rounded-xl ${c.tint}`}><CardIcon c={c} className="h-5 w-5" /></span>
@@ -354,7 +372,7 @@ function Mini() {
       <div key={tab.id} className={`mt-3 grid grid-cols-2 gap-2.5 ${tab.cards.length > 2 ? "lg:grid-cols-4" : ""}`}>
         {tab.cards.map((c, i) => (
           <Link key={c.name} href={c.href} style={{ animationDelay: `${i * 60}ms` }}
-            className={`group relative flex animate-blur-in flex-col rounded-2xl border border-slate-200 bg-white p-3.5 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg sm:p-5 dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-indigo-400/50 ${ring} ${tab.cards.length === 3 && i === 2 ? "col-span-2 lg:col-span-1" : ""}`}>
+            className={`group relative flex animate-blur-in flex-col rounded-2xl border border-slate-200 bg-white p-3.5 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg sm:p-5 dark:border-white/10 dark:bg-[#0E1424] dark:hover:border-indigo-400/50 ${ring} ${tab.cards.length % 2 === 1 && i === tab.cards.length - 1 ? "col-span-2 lg:col-span-1" : ""}`}>
             {c.hot && <Flame aria-label={tx("Popular")} className="absolute end-3 top-3 h-4 w-4 text-orange-500" />}
             <span className={`grid h-10 w-10 place-items-center rounded-xl ${c.tint}`}><CardIcon c={c} className="h-5 w-5" /></span>
             <span className="mt-3 line-clamp-2 font-display text-[15px] font-semibold leading-snug text-slate-900 sm:text-lg dark:text-white">{c.name}</span>

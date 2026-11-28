@@ -187,7 +187,6 @@ export function MobileMenu({ open, onClose, dark = false, withAbout = false }: {
                       <Link key={it.href} href={it.href} onClick={onClose} style={delay(60 + i * 45)} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${hover} ${rise(shown)}`}>
                         <NavIcon item={it} className={`h-4 w-4 ${muted}`} />
                         <span className="flex-1 text-sm">{it.label}</span>
-                        <span className={`text-xs ${muted}`}>{it.from}</span>
                       </Link>
                     ))}
                     {g.viewAll && <Link href={g.viewAll.href} onClick={onClose} style={delay(60 + g.items.length * 45)} className={`flex items-center gap-1 ${rise(shown)} px-3 py-2 text-sm font-medium text-indigo-500`}>{g.viewAll.label}<ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" /></Link>}
@@ -271,7 +270,6 @@ export function SearchPalette({ onClose, dark = false }: { onClose: () => void; 
               <button onMouseEnter={() => setSel(i)} onClick={() => go(r.href)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start ${i === sel ? selRow : ""}`}>
                 <span className={`grid h-9 w-9 place-items-center rounded-lg ${i === sel ? "bg-indigo-500 text-white" : chip}`}><NavIcon item={r} className="h-4 w-4" /></span>
                 <span className="flex-1"><span className="block text-sm font-medium">{r.label}</span><span className={`block text-xs ${muted}`}>{r.group} · {r.desc}</span></span>
-                <span className={`text-xs ${muted}`}>{r.from}</span>
                 {i === sel && <CornerDownLeft className={`h-4 w-4 ${muted}`} />}
               </button>
             </li>
